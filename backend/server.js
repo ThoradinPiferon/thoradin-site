@@ -9,6 +9,32 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Function to find available port
+const findAvailablePort = async (startPort) => {
+  const net = require('net');
+  
+  const isPortAvailable = (port) => {
+    return new Promise((resolve) => {
+      const server = net.createServer();
+      server.listen(port, () => {
+        server.once('close', () => resolve(true));
+        server.close();
+      });
+      server.on('error', () => resolve(false));
+    });
+  };
+
+  let port = startPort;
+  while (!(await isPortAvailable(port))) {
+    port++;
+    if (port > startPort + 10) {
+      console.error(`No available ports found between ${startPort} and ${startPort + 10}`);
+      process.exit(1);
+    }
+  }
+  return port;
+};
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Security middleware
@@ -92,15 +118,24 @@ app.use('*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 GridPlay Backend running on port ${PORT}`);
-  console.log(`🌍 Environment: ${NODE_ENV}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🎮 Grid API: http://localhost:${PORT}/api/grid`);
-  console.log(`🤖 AI API: http://localhost:${PORT}/api/ai`);
-  if (NODE_ENV === 'development') {
-    console.log(`📱 Frontend should be running on http://localhost:3000`);
+// Start server with port detection
+(async () => {
+  try {
+    const availablePort = await findAvailablePort(PORT);
+    app.listen(availablePort, () => {
+      console.log(`🚀 GridPlay Backend running on port ${availablePort}`);
+      console.log(`🌍 Environment: ${NODE_ENV}`);
+      console.log(`🔗 Health check: http://localhost:${availablePort}/api/health`);
+      console.log(`🎮 Grid API: http://localhost:${availablePort}/api/grid`);
+      console.log(`🤖 AI API: http://localhost:${availablePort}/api/ai`);
+      if (NODE_ENV === 'development') {
+        console.log(`📱 Frontend should be running on http://localhost:3000`);
+      }
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-});
+})();
 
 module.exports = app; 

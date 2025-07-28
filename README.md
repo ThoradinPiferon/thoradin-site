@@ -57,15 +57,29 @@ Thoradin Piferon is a full-stack web application that combines React frontend wi
    
    Edit `.env` with your configuration:
    ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/thoradin"
+   DATABASE_URL="postgresql://username:password@localhost:5432/thoradin_dev"
    OPENAI_API_KEY="your-openai-api-key"
    JWT_SECRET="your-jwt-secret"
    PORT=3001
    ```
 
-4. **Set up database:**
+4. **Set up database (choose one option):**
+
+   **Option A: Automatic Setup (Recommended)**
    ```bash
+   # From the root directory
+   npm run db:setup
+   ```
+
+   **Option B: Manual Setup**
+   ```bash
+   # Install PostgreSQL
+   npm run db:install
+   
+   # Generate Prisma client
    npm run db:generate
+   
+   # Push schema to database
    npm run db:push
    ```
 
@@ -141,11 +155,16 @@ thoradin-site/
 ### Available Scripts
 
 **Root level:**
-- `npm run dev` - Start both frontend and backend
+- `npm run dev` - Start both frontend and backend (with clean startup)
 - `npm run dev:frontend` - Start frontend only
 - `npm run dev:backend` - Start backend only
 - `npm run git:auto` - Auto-commit and push changes to GitHub
 - `npm run git:push` - Manual Git push script
+- `npm run kill-all` - Kill all Node.js and Vite processes
+- `npm run db:setup` - Automatic database setup
+- `npm run db:install` - Install PostgreSQL
+- `npm run db:start` - Start PostgreSQL service
+- `npm run db:stop` - Stop PostgreSQL service
 
 **Backend:**
 - `npm run dev` - Start with nodemon
