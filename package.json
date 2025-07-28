@@ -12,7 +12,9 @@
     "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
     "setup": "npm run install:all && npm run build",
     "test": "cd frontend && npm test && cd ../backend && npm test",
-    "lint": "cd frontend && npm run lint && cd ../backend && npm run lint"
+    "lint": "cd frontend && npm run lint && cd ../backend && npm run lint",
+    "git:push": "./git-auto-push.sh",
+    "git:auto": "npm run git:push"
   },
   "keywords": [
     "fullstack",
