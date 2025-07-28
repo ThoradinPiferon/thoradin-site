@@ -144,6 +144,8 @@ thoradin-site/
 - `npm run dev` - Start both frontend and backend
 - `npm run dev:frontend` - Start frontend only
 - `npm run dev:backend` - Start backend only
+- `npm run git:auto` - Auto-commit and push changes to GitHub
+- `npm run git:push` - Manual Git push script
 
 **Backend:**
 - `npm run dev` - Start with nodemon
@@ -162,9 +164,36 @@ thoradin-site/
 - `POST /api/ai/generate` - Generate AI response
 - `POST /api/grid/test` - Test grid interaction
 
-## 🚀 Deployment
+## 🔄 Auto Git Push
 
-### Frontend Deployment
+This project includes an automated Git push system for seamless development workflow:
+
+### Quick Push
+```bash
+npm run git:auto
+```
+
+### Manual Push
+```bash
+./git-auto-push.sh
+```
+
+The auto-push script will:
+- ✅ Check for changes in your working directory
+- 📦 Add all modified files
+- 💾 Create a timestamped commit
+- 🚀 Push to GitHub automatically
+- 🌐 Show the repository URL
+
+### What Gets Pushed
+- All source code changes
+- Configuration updates
+- Documentation changes
+- Build artifacts (if not in .gitignore)
+
+**Note**: The script only pushes when there are actual changes to commit.
+
+## 🚀 Deployment
 The frontend can be deployed to any static hosting service (Vercel, Netlify, etc.):
 
 ```bash
