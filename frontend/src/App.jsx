@@ -1,5 +1,5 @@
 import React from 'react';
-import LayeredInterface from './LayeredInterface';
+import LayeredInterface from './components/LayeredInterface.jsx';
 
 function App() {
   return (

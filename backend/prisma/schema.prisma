@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Grid interactions
+  gridInteractions GridInteraction[]
+  
+  // AI responses
+  aiResponses AIResponse[]
+
+  @@map("users")
+}
+
+model GridInteraction {
+  id          String   @id @default(cuid())
+  userId      String
+  gridRow     Int
+  gridCol     Int
+  interactionType String // "click", "hover", "longPress"
+  emotionalState String? // "joy", "melancholy", "curiosity", etc.
+  symbolicContext String? // User's symbolic interpretation
+  timestamp   DateTime @default(now())
+  
+  // User relationship
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // AI response relationship
+  aiResponse AIResponse?
+
+  @@map("grid_interactions")
+}
+
+model AIResponse {
+  id                String   @id @default(cuid())
+  gridInteractionId String   @unique
+  userId            String
+  prompt            String   // The prompt sent to OpenAI
+  response          String   // OpenAI's response
+  model             String   // "gpt-4", "gpt-3.5-turbo", etc.
+  tokensUsed        Int?
+  responseTime      Int?     // Response time in milliseconds
+  createdAt         DateTime @default(now())
+  
+  // Relationships
+  gridInteraction GridInteraction @relation(fields: [gridInteractionId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ai_responses")
+} 
