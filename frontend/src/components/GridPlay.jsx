@@ -21,6 +21,9 @@ const GridPlay = ({
   // Overlay elements that span multiple grids
   overlayElements = [],
   
+  // Interactive UI elements that should be above click handlers
+  interactiveElements = [],
+  
   // Additional props
   className = '',
   style = {}
@@ -62,8 +65,8 @@ const GridPlay = ({
       gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
       gridTemplateRows: `repeat(${gridRows}, 1fr)`,
       gap: 0,
-      zIndex: 10, // Increased z-index to be above click handlers
-      pointerEvents: 'auto' // Allow UI elements to be interactive
+      zIndex: 3,
+      pointerEvents: 'none' // Let clicks pass through to Layer 4
     }}>
       {uiElements}
       
@@ -90,7 +93,22 @@ const GridPlay = ({
     </div>
   );
 
-  // Layer 4: Invisible Click Handlers Layer
+  // Layer 4: Interactive UI Elements Layer (above click handlers)
+  const InteractiveElementsLayer = () => (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 5,
+      pointerEvents: 'auto'
+    }}>
+      {interactiveElements}
+    </div>
+  );
+
+  // Layer 5: Invisible Click Handlers Layer
   const ClickHandlersLayer = () => {
     const handleGridClick = (event) => {
       // Check if intro animation is complete (if background has intro)
@@ -139,7 +157,7 @@ const GridPlay = ({
           right: 0,
           bottom: 0,
           cursor: 'pointer',
-          zIndex: 5 // Lower than UI elements
+          zIndex: 4
         }}
         onClick={handleGridClick}
         title="Click anywhere on the grid"
@@ -182,7 +200,10 @@ const GridPlay = ({
       {/* Layer 3: Stickers/UI */}
       <StickersLayer />
       
-      {/* Layer 4: Click Handlers */}
+      {/* Layer 4: Interactive Elements */}
+      <InteractiveElementsLayer />
+      
+      {/* Layer 5: Click Handlers */}
       <ClickHandlersLayer />
     </div>
   );

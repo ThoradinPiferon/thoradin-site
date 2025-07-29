@@ -161,7 +161,7 @@ const AIInteraction = () => {
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 40
+      zIndex: 20
     }}>
       <div style={{
         flex: 1,
@@ -216,7 +216,7 @@ const AIInteraction = () => {
     </div>
   );
 
-  // Input Box (G5.7-G7.7) - Now with higher z-index
+  // Input Box (G5.7-G7.7) - Now in interactive layer
   const inputBox = (
     <div style={{
       ...getGridCellStyle(5, 7, 3, 1),
@@ -226,9 +226,7 @@ const AIInteraction = () => {
       padding: '10px',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
-      zIndex: 50, // Much higher z-index to be on top
-      position: 'relative'
+      gap: '10px'
     }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
         <input
@@ -288,7 +286,7 @@ const AIInteraction = () => {
         fontSize: '12px',
         fontWeight: 'bold',
         transition: 'all 0.3s ease',
-        zIndex: 45
+        zIndex: 25
       }}
       onMouseEnter={(e) => {
         e.target.style.backgroundColor = 'rgba(255, 0, 0, 1)';
@@ -315,17 +313,21 @@ const AIInteraction = () => {
       fontSize: '18px',
       fontWeight: 'bold',
       textAlign: 'center',
-      zIndex: 45
+      zIndex: 25
     }}>
       AI GRID INTERFACE
     </div>
   );
 
-  // UI Elements array
+  // UI Elements array (non-interactive)
   const uiElements = [
     backButton,
     title,
-    responseWindow,
+    responseWindow
+  ];
+
+  // Interactive Elements array (above click handlers)
+  const interactiveElements = [
     inputBox
   ];
 
@@ -338,6 +340,7 @@ const AIInteraction = () => {
       gridCols={gridCols}
       gridRows={gridRows}
       uiElements={uiElements}
+      interactiveElements={interactiveElements}
       gridActions={[]} // Disable all grid clicks
     />
   );
