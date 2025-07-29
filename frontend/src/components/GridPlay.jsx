@@ -110,8 +110,15 @@ const GridPlay = ({
     ) : null
   );
 
-  // Layer 5: Invisible Click Handlers Layer
+  // Layer 5: Invisible Click Handlers Layer (only if grid actions exist)
   const ClickHandlersLayer = () => {
+    // Only render if there are any grid actions defined
+    const hasGridActions = gridActions && gridActions.some(action => action !== null && action !== undefined);
+    
+    if (!hasGridActions) {
+      return null; // Don't render click handlers if no actions
+    }
+
     const handleGridClick = (event) => {
       // Check if intro animation is complete (if background has intro)
       if (backgroundComponent && !introComplete) {
