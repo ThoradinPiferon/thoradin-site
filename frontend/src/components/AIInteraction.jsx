@@ -71,6 +71,7 @@ const AIInteraction = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -88,6 +89,13 @@ const AIInteraction = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsLoading(true);
+    
+    // Keep focus on input after submission
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 100);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/chat`, {
@@ -218,19 +226,23 @@ const AIInteraction = () => {
 
   // Input Box (G5.7-G7.7) - Using grid positioning
   const inputBox = (
-    <div style={{
-      ...getGridCellStyle(5, 7, 3, 1),
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-      border: '2px solid #00ff00',
-      borderRadius: '8px',
-      padding: '10px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '10px',
-      zIndex: 10
-    }}>
+    <div 
+      onClick={() => inputRef.current?.focus()}
+      style={{
+        ...getGridCellStyle(5, 7, 3, 1),
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        border: '2px solid #00ff00',
+        borderRadius: '8px',
+        padding: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        zIndex: 10,
+        cursor: 'text'
+      }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
         <input
+          ref={inputRef}
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
