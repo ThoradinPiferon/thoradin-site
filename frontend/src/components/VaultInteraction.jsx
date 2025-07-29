@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import GridPageTemplate from './GridPageTemplate';
-import { PAGES } from '../utils/gridActionSystem';
+import GridPlay from './GridPlay';
 import { 
   createBackButton, 
   createTitle, 
@@ -290,8 +289,8 @@ const VaultInteraction = () => {
     isLoading || connectionStatus !== 'connected'
   );
 
-  // Assemble UI elements
-  const uiElements = [
+  // Assemble interactive elements (Layer 4 - above click handlers)
+  const interactiveElements = [
     backButton,
     title,
     statusIndicator,
@@ -299,18 +298,16 @@ const VaultInteraction = () => {
     inputBox
   ];
 
-  // Context for vault page (mostly empty since vault is non-interactive)
-  const vaultContext = {
-    // Add any vault-specific context here if needed
-  };
+  // No grid actions for vault page (non-interactive grid)
+  const gridActions = [];
 
   return (
-    <GridPageTemplate
-      pageId={PAGES.VAULT}
-      context={vaultContext}
-      uiElements={uiElements}
+    <GridPlay
       backgroundComponent={<StarryBackground />}
-      pageName="Digital Vault"
+      gridCols={gridConfigs.standard.gridCols}
+      gridRows={gridConfigs.standard.gridRows}
+      interactiveElements={interactiveElements}
+      gridActions={gridActions}
     />
   );
 };
