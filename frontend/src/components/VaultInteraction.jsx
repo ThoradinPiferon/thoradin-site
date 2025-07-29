@@ -66,7 +66,7 @@ const StarryBackground = () => {
   );
 };
 
-const AIInteraction = () => {
+const VaultInteraction = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -158,8 +158,8 @@ const AIInteraction = () => {
 
       if (response.ok) {
         const data = await response.json();
-        const aiMessage = { 
-          type: 'ai', 
+        const vaultMessage = { 
+          type: 'vault', 
           content: data.response || data.message || 'I received your message but had trouble processing it.', 
           timestamp: new Date(),
           metadata: {
@@ -168,7 +168,7 @@ const AIInteraction = () => {
             language: data.language
           }
         };
-        setMessages(prev => [...prev, aiMessage]);
+        setMessages(prev => [...prev, vaultMessage]);
         setConnectionStatus('connected');
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -181,14 +181,14 @@ const AIInteraction = () => {
         setConnectionStatus('error');
       }
     } catch (error) {
-      console.error('AI Chat Error:', error);
+      console.error('Vault Chat Error:', error);
       
       let errorContent = 'Connection error. Please check your internet connection.';
       
       if (error.name === 'AbortError') {
         errorContent = 'Request timed out. Please try again.';
       } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        errorContent = 'Cannot connect to AI service. Please check your connection.';
+        errorContent = 'Cannot connect to vault service. Please check your connection.';
       }
       
       const errorMessage = { 
@@ -236,7 +236,7 @@ const AIInteraction = () => {
     </div>
   );
 
-  // AI Response Window (G5.1-G7.4)
+  // Vault Response Window (G5.1-G7.4)
   const responseWindow = (
     <div style={{
       ...getGridCellStyle(5, 1, 3, 4),
@@ -260,7 +260,7 @@ const AIInteraction = () => {
       }}>
         {messages.length === 0 ? (
           <div style={{ color: '#666', fontStyle: 'italic' }}>
-            Welcome to the AI Grid Interface. Ask me anything about consciousness, creativity, or the digital realm...
+            Welcome to the Digital Vault Interface. Ask me anything about consciousness, creativity, or the digital realm...
             {connectionStatus !== 'connected' && (
               <div style={{ color: '#ffaa00', marginTop: '10px' }}>
                 ⚠ Connection status: {connectionStatus}
@@ -274,17 +274,17 @@ const AIInteraction = () => {
               padding: '10px',
               borderRadius: '5px',
               backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 
-                             message.type === 'ai' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
+                             message.type === 'vault' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
               borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : 
-                                     message.type === 'ai' ? '#0088ff' : '#ff0000'}`
+                                     message.type === 'vault' ? '#0088ff' : '#ff0000'}`
             }}>
               <div style={{ 
                 fontWeight: 'bold', 
                 marginBottom: '5px',
                 color: message.type === 'user' ? '#00ff00' : 
-                       message.type === 'ai' ? '#0088ff' : '#ff0000'
+                       message.type === 'vault' ? '#0088ff' : '#ff0000'
               }}>
-                {message.type === 'user' ? 'You' : message.type === 'ai' ? 'AI' : 'System'}
+                {message.type === 'user' ? 'You' : message.type === 'vault' ? 'Vault' : 'System'}
               </div>
               <div style={{ lineHeight: '1.4' }}>
                 {message.content}
@@ -326,7 +326,7 @@ const AIInteraction = () => {
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />
-            AI is thinking...
+            Vault is processing...
           </div>
         )}
         <div ref={messagesEndRef} />
@@ -357,7 +357,7 @@ const AIInteraction = () => {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder={connectionStatus === 'connected' ? "Ask the AI anything..." : "API disconnected - check connection"}
+          placeholder={connectionStatus === 'connected' ? "Ask the vault anything..." : "Vault disconnected - check connection"}
           style={{
             flex: 1,
             backgroundColor: 'transparent',
@@ -444,7 +444,7 @@ const AIInteraction = () => {
       textAlign: 'center',
       zIndex: 25
     }}>
-      AI GRID INTERFACE
+      DIGITAL VAULT INTERFACE
     </div>
   );
 
@@ -475,4 +475,4 @@ const AIInteraction = () => {
   );
 };
 
-export default AIInteraction; 
+export default VaultInteraction; 

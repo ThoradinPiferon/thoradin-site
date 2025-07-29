@@ -15,8 +15,8 @@ const LayeredInterface = () => {
   // Grid index calculation: (row - 1) * gridCols + (col - 1)
   // For G11.7: (7 - 1) * 11 + (11 - 1) = 6 * 11 + 10 = 66 + 10 = 76
   gridActions[76] = (col, row, gridIndex) => {
-    console.log(`Clicked G${col}.${row} - Navigating to AI page`);
-    window.location.href = '/ai';
+    console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
+    window.location.href = '/vault';
   };
   
   // Create MatrixSpiralCanvas as background component
