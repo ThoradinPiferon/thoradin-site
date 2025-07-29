@@ -238,9 +238,10 @@ const AIInteraction = () => {
         alignItems: 'center',
         gap: '10px',
         zIndex: 10,
-        cursor: 'text'
+        cursor: 'text',
+        pointerEvents: 'auto'
       }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px', pointerEvents: 'auto' }}>
         <input
           ref={inputRef}
           type="text"
@@ -256,7 +257,9 @@ const AIInteraction = () => {
             color: '#00ff00',
             fontFamily: 'monospace',
             fontSize: '14px',
-            outline: 'none'
+            outline: 'none',
+            pointerEvents: 'auto',
+            cursor: 'text'
           }}
           disabled={isLoading}
           autoFocus
@@ -273,7 +276,8 @@ const AIInteraction = () => {
             fontFamily: 'monospace',
             fontSize: '14px',
             cursor: 'pointer',
-            opacity: isLoading || !inputValue.trim() ? 0.5 : 1
+            opacity: isLoading || !inputValue.trim() ? 0.5 : 1,
+            pointerEvents: 'auto'
           }}
         >
           {isLoading ? '...' : 'Send'}
