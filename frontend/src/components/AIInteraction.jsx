@@ -70,8 +70,19 @@ const AIInteraction = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState('connected'); // 'connected', 'disconnected', 'error'
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Get API base URL with fallback
+  const getApiBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_API_BASE_URL;
+    if (envUrl) {
+      return envUrl;
+    }
+    // Fallback for development
+    return 'http://localhost:3001';
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -81,9 +92,36 @@ const AIInteraction = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Test API connection on component mount
+  useEffect(() => {
+    const testConnection = async () => {
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/health`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          // Add timeout
+          signal: AbortSignal.timeout(5000)
+        });
+        
+        if (response.ok) {
+          setConnectionStatus('connected');
+        } else {
+          setConnectionStatus('error');
+        }
+      } catch (error) {
+        console.warn('API connection test failed:', error);
+        setConnectionStatus('disconnected');
+      }
+    };
+
+    testConnection();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage = { type: 'user', content: inputValue, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
@@ -98,7 +136,10 @@ const AIInteraction = () => {
     }, 100);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/ai/chat`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      const response = await fetch(`${getApiBaseUrl()}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,34 +147,54 @@ const AIInteraction = () => {
         body: JSON.stringify({
           message: inputValue,
           language: 'en'
-        })
+        }),
+        signal: controller.signal
       });
 
-      const data = await response.json();
-      
+      clearTimeout(timeoutId);
+
       if (response.ok) {
+        const data = await response.json();
         const aiMessage = { 
           type: 'ai', 
-          content: data.response || data.message, 
-          timestamp: new Date() 
+          content: data.response || data.message || 'I received your message but had trouble processing it.', 
+          timestamp: new Date(),
+          metadata: {
+            model: data.model,
+            responseTime: data.responseTime,
+            language: data.language
+          }
         };
         setMessages(prev => [...prev, aiMessage]);
+        setConnectionStatus('connected');
       } else {
+        const errorData = await response.json().catch(() => ({}));
         const errorMessage = { 
           type: 'error', 
-          content: 'Sorry, I encountered an error. Please try again.', 
+          content: errorData.message || `Server error (${response.status}). Please try again.`, 
           timestamp: new Date() 
         };
         setMessages(prev => [...prev, errorMessage]);
+        setConnectionStatus('error');
       }
     } catch (error) {
       console.error('AI Chat Error:', error);
+      
+      let errorContent = 'Connection error. Please check your internet connection.';
+      
+      if (error.name === 'AbortError') {
+        errorContent = 'Request timed out. Please try again.';
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorContent = 'Cannot connect to AI service. Please check your connection.';
+      }
+      
       const errorMessage = { 
         type: 'error', 
-        content: 'Connection error. Please check your internet connection.', 
+        content: errorContent, 
         timestamp: new Date() 
       };
       setMessages(prev => [...prev, errorMessage]);
+      setConnectionStatus('disconnected');
     } finally {
       setIsLoading(false);
     }
@@ -154,6 +215,23 @@ const AIInteraction = () => {
     position: 'relative',
     zIndex: 10
   });
+
+  // Connection Status Indicator (G11.1)
+  const connectionIndicator = (
+    <div style={{
+      ...getGridCellStyle(11, 1, 1, 1),
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      color: connectionStatus === 'connected' ? '#00ff00' : connectionStatus === 'error' ? '#ffaa00' : '#ff0000',
+      fontFamily: 'monospace',
+      fontSize: '10px',
+      fontWeight: 'bold',
+      zIndex: 25
+    }}>
+      {connectionStatus === 'connected' ? '●' : connectionStatus === 'error' ? '⚠' : '✗'}
+    </div>
+  );
 
   // AI Response Window (G5.1-G7.4)
   const responseWindow = (
@@ -180,6 +258,11 @@ const AIInteraction = () => {
         {messages.length === 0 ? (
           <div style={{ color: '#666', fontStyle: 'italic' }}>
             Welcome to the AI Grid Interface. Ask me anything about consciousness, creativity, or the digital realm...
+            {connectionStatus !== 'connected' && (
+              <div style={{ color: '#ffaa00', marginTop: '10px' }}>
+                ⚠ Connection status: {connectionStatus}
+              </div>
+            )}
           </div>
         ) : (
           messages.map((message, index) => (
@@ -187,19 +270,32 @@ const AIInteraction = () => {
               marginBottom: '15px',
               padding: '10px',
               borderRadius: '5px',
-              backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 'rgba(0, 0, 255, 0.1)',
-              borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : '#0088ff'}`
+              backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 
+                             message.type === 'ai' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
+              borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : 
+                                     message.type === 'ai' ? '#0088ff' : '#ff0000'}`
             }}>
               <div style={{ 
                 fontWeight: 'bold', 
                 marginBottom: '5px',
-                color: message.type === 'user' ? '#00ff00' : '#0088ff'
+                color: message.type === 'user' ? '#00ff00' : 
+                       message.type === 'ai' ? '#0088ff' : '#ff0000'
               }}>
                 {message.type === 'user' ? 'You' : message.type === 'ai' ? 'AI' : 'System'}
               </div>
               <div style={{ lineHeight: '1.4' }}>
                 {message.content}
               </div>
+              {message.metadata && (
+                <div style={{ 
+                  fontSize: '10px', 
+                  color: '#666', 
+                  marginTop: '5px',
+                  fontStyle: 'italic'
+                }}>
+                  Model: {message.metadata.model} | Time: {message.metadata.responseTime}ms
+                </div>
+              )}
               <div style={{ 
                 fontSize: '11px', 
                 color: '#666', 
@@ -214,8 +310,19 @@ const AIInteraction = () => {
           <div style={{
             padding: '10px',
             color: '#00ff00',
-            fontStyle: 'italic'
+            fontStyle: 'italic',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
           }}>
+            <div style={{
+              width: '16px',
+              height: '16px',
+              border: '2px solid #00ff00',
+              borderTop: '2px solid transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }} />
             AI is thinking...
           </div>
         )}
@@ -247,7 +354,7 @@ const AIInteraction = () => {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Ask the AI anything..."
+          placeholder={connectionStatus === 'connected' ? "Ask the AI anything..." : "API disconnected - check connection"}
           style={{
             flex: 1,
             backgroundColor: 'transparent',
@@ -259,14 +366,15 @@ const AIInteraction = () => {
             fontSize: '14px',
             outline: 'none',
             pointerEvents: 'auto',
-            cursor: 'text'
+            cursor: 'text',
+            opacity: connectionStatus === 'connected' ? 1 : 0.6
           }}
-          disabled={isLoading}
+          disabled={isLoading || connectionStatus !== 'connected'}
           autoFocus
         />
         <button
           type="submit"
-          disabled={isLoading || !inputValue.trim()}
+          disabled={isLoading || !inputValue.trim() || connectionStatus !== 'connected'}
           style={{
             backgroundColor: '#00ff00',
             color: '#000',
@@ -275,8 +383,8 @@ const AIInteraction = () => {
             padding: '8px 16px',
             fontFamily: 'monospace',
             fontSize: '14px',
-            cursor: 'pointer',
-            opacity: isLoading || !inputValue.trim() ? 0.5 : 1,
+            cursor: connectionStatus === 'connected' ? 'pointer' : 'not-allowed',
+            opacity: (isLoading || !inputValue.trim() || connectionStatus !== 'connected') ? 0.5 : 1,
             pointerEvents: 'auto'
           }}
         >
@@ -341,6 +449,7 @@ const AIInteraction = () => {
   const uiElements = [
     backButton,
     title,
+    connectionIndicator,
     responseWindow,
     inputBox
   ];
