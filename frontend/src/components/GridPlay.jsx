@@ -95,17 +95,19 @@ const GridPlay = ({
 
   // Layer 4: Interactive UI Elements Layer (above click handlers)
   const InteractiveElementsLayer = () => (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 5,
-      pointerEvents: 'auto'
-    }}>
-      {interactiveElements}
-    </div>
+    interactiveElements && interactiveElements.length > 0 ? (
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 6,
+        pointerEvents: 'auto'
+      }}>
+        {interactiveElements}
+      </div>
+    ) : null
   );
 
   // Layer 5: Invisible Click Handlers Layer
@@ -157,7 +159,7 @@ const GridPlay = ({
           right: 0,
           bottom: 0,
           cursor: 'pointer',
-          zIndex: 4
+          zIndex: 5
         }}
         onClick={handleGridClick}
         title="Click anywhere on the grid"
