@@ -1,5 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
-import GridPlay from './GridPlay';
+import GridPageTemplate from './GridPageTemplate';
+import { 
+  createBackButton, 
+  createTitle, 
+  createStatusIndicator, 
+  createWindow, 
+  createInputBox,
+  createLoadingSpinner,
+  createGridAction,
+  gridConfigs
+} from '../utils/gridElements';
 
 // Starry Background Component
 const StarryBackground = () => {
@@ -70,7 +80,7 @@ const VaultInteraction = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('connected'); // 'connected', 'disconnected', 'error'
+  const [connectionStatus, setConnectionStatus] = useState('connected');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -78,12 +88,11 @@ const VaultInteraction = () => {
   const getApiBaseUrl = () => {
     const envUrl = import.meta.env.VITE_API_BASE_URL;
     if (envUrl) {
-      console.log('Using API URL:', envUrl); // Debug log
+      console.log('Using API URL:', envUrl);
       return envUrl;
     }
-    // Fallback for development
     const fallbackUrl = 'http://localhost:3001';
-    console.log('Using fallback API URL:', fallbackUrl); // Debug log
+    console.log('Using fallback API URL:', fallbackUrl);
     return fallbackUrl;
   };
 
@@ -104,7 +113,6 @@ const VaultInteraction = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          // Add timeout
           signal: AbortSignal.timeout(5000)
         });
         
@@ -131,7 +139,6 @@ const VaultInteraction = () => {
     setInputValue('');
     setIsLoading(true);
     
-    // Keep focus on input after submission
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.focus();
@@ -140,7 +147,7 @@ const VaultInteraction = () => {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       const response = await fetch(`${getApiBaseUrl()}/api/ai/chat`, {
         method: 'POST',
@@ -207,252 +214,91 @@ const VaultInteraction = () => {
     window.location.href = '/';
   };
 
-  // Grid configuration
-  const gridCols = 11;
-  const gridRows = 7;
-
-  // Helper function for grid cell styling
-  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
-    gridColumn: `${col} / span ${spanCols}`,
-    gridRow: `${row} / span ${spanRows}`,
-    position: 'relative',
-    zIndex: 10
-  });
-
-  // Connection Status Indicator (G11.1)
-  const connectionIndicator = (
+  // Create UI elements using the template system
+  const backButton = createBackButton(handleBackToHome);
+  const title = createTitle("DIGITAL VAULT INTERFACE");
+  const statusIndicator = createStatusIndicator(connectionStatus);
+  
+  // Create response window content
+  const responseWindowContent = (
     <div style={{
-      ...getGridCellStyle(11, 1, 1, 1),
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: connectionStatus === 'connected' ? '#00ff00' : connectionStatus === 'error' ? '#ffaa00' : '#ff0000',
-      fontFamily: 'monospace',
-      fontSize: '10px',
-      fontWeight: 'bold',
-      zIndex: 25
+      flex: 1,
+      overflowY: 'auto',
+      marginBottom: '10px',
+      paddingRight: '10px'
     }}>
-      {connectionStatus === 'connected' ? '●' : connectionStatus === 'error' ? '⚠' : '✗'}
-    </div>
-  );
-
-  // Vault Response Window (G5.1-G7.4)
-  const responseWindow = (
-    <div style={{
-      ...getGridCellStyle(5, 1, 3, 4),
-      backgroundColor: 'rgba(0, 0, 0, 0.8)',
-      border: '2px solid #00ff00',
-      borderRadius: '8px',
-      padding: '15px',
-      color: '#00ff00',
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      zIndex: 20
-    }}>
-      <div style={{
-        flex: 1,
-        overflowY: 'auto',
-        marginBottom: '10px',
-        paddingRight: '10px'
-      }}>
-        {messages.length === 0 ? (
-          <div style={{ color: '#666', fontStyle: 'italic' }}>
-            Welcome to the Digital Vault Interface. Ask me anything about consciousness, creativity, or the digital realm...
-            {connectionStatus !== 'connected' && (
-              <div style={{ color: '#ffaa00', marginTop: '10px' }}>
-                ⚠ Connection status: {connectionStatus}
+      {messages.length === 0 ? (
+        <div style={{ color: '#666', fontStyle: 'italic' }}>
+          Welcome to the Digital Vault Interface. Ask me anything about consciousness, creativity, or the digital realm...
+          {connectionStatus !== 'connected' && (
+            <div style={{ color: '#ffaa00', marginTop: '10px' }}>
+              ⚠ Connection status: {connectionStatus}
+            </div>
+          )}
+        </div>
+      ) : (
+        messages.map((message, index) => (
+          <div key={index} style={{
+            marginBottom: '15px',
+            padding: '10px',
+            borderRadius: '5px',
+            backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 
+                           message.type === 'vault' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
+            borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : 
+                                   message.type === 'vault' ? '#0088ff' : '#ff0000'}`
+          }}>
+            <div style={{ 
+              fontWeight: 'bold', 
+              marginBottom: '5px',
+              color: message.type === 'user' ? '#00ff00' : 
+                     message.type === 'vault' ? '#0088ff' : '#ff0000'
+            }}>
+              {message.type === 'user' ? 'You' : message.type === 'vault' ? 'Vault' : 'System'}
+            </div>
+            <div style={{ lineHeight: '1.4' }}>
+              {message.content}
+            </div>
+            {message.metadata && (
+              <div style={{ 
+                fontSize: '10px', 
+                color: '#666', 
+                marginTop: '5px',
+                fontStyle: 'italic'
+              }}>
+                Model: {message.metadata.model} | Time: {message.metadata.responseTime}ms
               </div>
             )}
-          </div>
-        ) : (
-          messages.map((message, index) => (
-            <div key={index} style={{
-              marginBottom: '15px',
-              padding: '10px',
-              borderRadius: '5px',
-              backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 
-                             message.type === 'vault' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
-              borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : 
-                                     message.type === 'vault' ? '#0088ff' : '#ff0000'}`
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#666', 
+              marginTop: '5px' 
             }}>
-              <div style={{ 
-                fontWeight: 'bold', 
-                marginBottom: '5px',
-                color: message.type === 'user' ? '#00ff00' : 
-                       message.type === 'vault' ? '#0088ff' : '#ff0000'
-              }}>
-                {message.type === 'user' ? 'You' : message.type === 'vault' ? 'Vault' : 'System'}
-              </div>
-              <div style={{ lineHeight: '1.4' }}>
-                {message.content}
-              </div>
-              {message.metadata && (
-                <div style={{ 
-                  fontSize: '10px', 
-                  color: '#666', 
-                  marginTop: '5px',
-                  fontStyle: 'italic'
-                }}>
-                  Model: {message.metadata.model} | Time: {message.metadata.responseTime}ms
-                </div>
-              )}
-              <div style={{ 
-                fontSize: '11px', 
-                color: '#666', 
-                marginTop: '5px' 
-              }}>
-                {message.timestamp.toLocaleTimeString()}
-              </div>
+              {message.timestamp.toLocaleTimeString()}
             </div>
-          ))
-        )}
-        {isLoading && (
-          <div style={{
-            padding: '10px',
-            color: '#00ff00',
-            fontStyle: 'italic',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            <div style={{
-              width: '16px',
-              height: '16px',
-              border: '2px solid #00ff00',
-              borderTop: '2px solid transparent',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }} />
-            Vault is processing...
           </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+        ))
+      )}
+      {isLoading && createLoadingSpinner("Vault is processing...")}
+      <div ref={messagesEndRef} />
     </div>
   );
 
-  // Input Box (G5.7-G7.7) - Using grid positioning
-  const inputBox = (
-    <div 
-      onClick={() => inputRef.current?.focus()}
-      style={{
-        ...getGridCellStyle(5, 7, 3, 1),
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        border: '2px solid #00ff00',
-        borderRadius: '8px',
-        padding: '10px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        zIndex: 10,
-        cursor: 'text',
-        pointerEvents: 'auto'
-      }}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px', pointerEvents: 'auto' }}>
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder={connectionStatus === 'connected' ? "Ask the vault anything..." : "Vault disconnected - check connection"}
-          style={{
-            flex: 1,
-            backgroundColor: 'transparent',
-            border: '1px solid #00ff00',
-            borderRadius: '4px',
-            padding: '8px 12px',
-            color: '#00ff00',
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            outline: 'none',
-            pointerEvents: 'auto',
-            cursor: 'text',
-            opacity: connectionStatus === 'connected' ? 1 : 0.6
-          }}
-          disabled={isLoading || connectionStatus !== 'connected'}
-          autoFocus
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !inputValue.trim() || connectionStatus !== 'connected'}
-          style={{
-            backgroundColor: '#00ff00',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 16px',
-            fontFamily: 'monospace',
-            fontSize: '14px',
-            cursor: connectionStatus === 'connected' ? 'pointer' : 'not-allowed',
-            opacity: (isLoading || !inputValue.trim() || connectionStatus !== 'connected') ? 0.5 : 1,
-            pointerEvents: 'auto'
-          }}
-        >
-          {isLoading ? '...' : 'Send'}
-        </button>
-      </form>
-    </div>
+  const responseWindow = createWindow(responseWindowContent, 5, 1, 3, 4);
+  
+  const inputBox = createInputBox(
+    inputRef,
+    inputValue,
+    (e) => setInputValue(e.target.value),
+    handleSubmit,
+    connectionStatus === 'connected' ? "Ask the vault anything..." : "Vault disconnected - check connection",
+    isLoading || connectionStatus !== 'connected'
   );
 
-  // Back Button (G1.1)
-  const backButton = (
-    <div 
-      onClick={handleBackToHome}
-      style={{
-        ...getGridCellStyle(1, 1, 1, 1),
-        backgroundColor: 'rgba(255, 0, 0, 0.8)',
-        border: '2px solid #ff0000',
-        borderRadius: '8px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        color: '#fff',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        fontWeight: 'bold',
-        transition: 'all 0.3s ease',
-        zIndex: 25
-      }}
-      onMouseEnter={(e) => {
-        e.target.style.backgroundColor = 'rgba(255, 0, 0, 1)';
-        e.target.style.transform = 'scale(1.05)';
-      }}
-      onMouseLeave={(e) => {
-        e.target.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
-        e.target.style.transform = 'scale(1)';
-      }}
-    >
-      ← HOME
-    </div>
-  );
-
-  // Title (G2.1-G4.1)
-  const title = (
-    <div style={{
-      ...getGridCellStyle(2, 1, 3, 1),
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#00ff00',
-      fontFamily: 'monospace',
-      fontSize: '18px',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      zIndex: 25
-    }}>
-      DIGITAL VAULT INTERFACE
-    </div>
-  );
-
-  // UI Elements array (all elements including input box)
+  // Assemble UI elements
   const uiElements = [
     backButton,
     title,
-    connectionIndicator,
+    statusIndicator,
     responseWindow,
     inputBox
   ];
@@ -460,17 +306,18 @@ const VaultInteraction = () => {
   // No interactive elements needed
   const interactiveElements = [];
 
-  // Background component - Starry background
-  const backgroundComponent = <StarryBackground />;
+  // No grid actions (non-interactive grid)
+  const gridActions = [];
 
   return (
-    <GridPlay
-      backgroundComponent={backgroundComponent}
-      gridCols={gridCols}
-      gridRows={gridRows}
+    <GridPageTemplate
+      gridCols={gridConfigs.standard.gridCols}
+      gridRows={gridConfigs.standard.gridRows}
       uiElements={uiElements}
       interactiveElements={interactiveElements}
-      gridActions={[]} // Disable all grid clicks
+      gridActions={gridActions}
+      backgroundComponent={<StarryBackground />}
+      pageName="Digital Vault"
     />
   );
 };
