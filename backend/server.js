@@ -86,6 +86,7 @@ app.use('/api/users', require('./routes/users'));
 app.use('/api/data', require('./routes/data'));
 app.use('/api/grid', require('./routes/grid'));
 app.use('/api/ai', require('./routes/ai'));
+app.use('/api/config', require('./routes/config'));
 
 // Serve static files in production
 if (NODE_ENV === 'production') {

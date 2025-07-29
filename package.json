@@ -22,7 +22,10 @@
     "db:setup": "./setup-database.sh",
     "db:install": "brew install postgresql && brew services start postgresql",
     "db:start": "brew services start postgresql",
-    "db:stop": "brew services stop postgresql"
+    "db:stop": "brew services stop postgresql",
+    "db:init-config": "cd backend && node scripts/init-config.js",
+    "config:init": "npm run db:init-config",
+    "config:reset": "cd backend && node scripts/init-config.js --reset"
   },
   "keywords": [
     "interactive",
