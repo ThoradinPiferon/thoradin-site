@@ -1,20 +1,76 @@
 import React, { useState, useRef, useEffect } from 'react';
 import GridPlay from './GridPlay';
-import MatrixSpiralCanvas from './MatrixSpiralCanvas';
+
+// Starry Background Component
+const StarryBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const stars = [];
+    const numStars = 200;
+
+    // Initialize stars
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5 + 0.1,
+        brightness: Math.random()
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw stars
+      stars.forEach(star => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Move stars
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+      
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#000011',
+        zIndex: 1
+      }}
+      width={window.innerWidth}
+      height={window.innerHeight}
+    />
+  );
+};
 
 const AIInteraction = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
-
-  // Helper function for grid cell styling
-  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
-    gridColumn: `${col} / span ${spanCols}`,
-    gridRow: `${row} / span ${spanRows}`,
-    position: 'relative',
-    zIndex: 10
-  });
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,7 +97,7 @@ const AIInteraction = () => {
         },
         body: JSON.stringify({
           message: inputValue,
-          language: 'en' // You can make this dynamic based on user preference
+          language: 'en'
         })
       });
 
@@ -83,6 +139,14 @@ const AIInteraction = () => {
   const gridCols = 11;
   const gridRows = 7;
 
+  // Helper function for grid cell styling
+  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
+    gridColumn: `${col} / span ${spanCols}`,
+    gridRow: `${row} / span ${spanRows}`,
+    position: 'relative',
+    zIndex: 10
+  });
+
   // AI Response Window (G5.1-G7.4)
   const responseWindow = (
     <div style={{
@@ -96,7 +160,8 @@ const AIInteraction = () => {
       fontSize: '14px',
       overflow: 'hidden',
       display: 'flex',
-      flexDirection: 'column'
+      flexDirection: 'column',
+      zIndex: 20
     }}>
       <div style={{
         flex: 1,
@@ -151,7 +216,7 @@ const AIInteraction = () => {
     </div>
   );
 
-  // Input Box (G5.7-G7.7)
+  // Input Box (G5.7-G7.7) - Now with higher z-index
   const inputBox = (
     <div style={{
       ...getGridCellStyle(5, 7, 3, 1),
@@ -161,7 +226,8 @@ const AIInteraction = () => {
       padding: '10px',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px'
+      gap: '10px',
+      zIndex: 30 // Higher z-index to be on top
     }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
         <input
@@ -220,7 +286,8 @@ const AIInteraction = () => {
         fontFamily: 'monospace',
         fontSize: '12px',
         fontWeight: 'bold',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        zIndex: 25
       }}
       onMouseEnter={(e) => {
         e.target.style.backgroundColor = 'rgba(255, 0, 0, 1)';
@@ -246,7 +313,8 @@ const AIInteraction = () => {
       fontFamily: 'monospace',
       fontSize: '18px',
       fontWeight: 'bold',
-      textAlign: 'center'
+      textAlign: 'center',
+      zIndex: 25
     }}>
       AI GRID INTERFACE
     </div>
@@ -260,8 +328,8 @@ const AIInteraction = () => {
     inputBox
   ];
 
-  // Background component
-  const backgroundComponent = <MatrixSpiralCanvas />;
+  // Background component - Starry background
+  const backgroundComponent = <StarryBackground />;
 
   return (
     <GridPlay
@@ -269,6 +337,7 @@ const AIInteraction = () => {
       gridCols={gridCols}
       gridRows={gridRows}
       uiElements={uiElements}
+      gridActions={[]} // Disable all grid clicks
     />
   );
 };
