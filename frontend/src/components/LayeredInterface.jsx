@@ -1,12 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 
 // Homepage with Matrix Animation Background
 const LayeredInterface = () => {
-  const navigate = useNavigate();
-  
   // Grid configuration
   const gridCols = 11;
   const gridRows = 7;
@@ -19,7 +16,7 @@ const LayeredInterface = () => {
   // For G11.7: (7 - 1) * 11 + (11 - 1) = 6 * 11 + 10 = 66 + 10 = 76
   gridActions[76] = (col, row, gridIndex) => {
     console.log(`Clicked G${col}.${row} - Navigating to AI page`);
-    navigate('/ai');
+    window.location.href = '/ai';
   };
   
   // Create MatrixSpiralCanvas as background component

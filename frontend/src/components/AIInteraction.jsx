@@ -8,6 +8,14 @@ const AIInteraction = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // Helper function for grid cell styling
+  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
+    gridColumn: `${col} / span ${spanCols}`,
+    gridRow: `${row} / span ${spanRows}`,
+    position: 'relative',
+    zIndex: 10
+  });
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -243,14 +251,6 @@ const AIInteraction = () => {
       AI GRID INTERFACE
     </div>
   );
-
-  // Helper function for grid cell styling
-  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
-    gridColumn: `${col} / span ${spanCols}`,
-    gridRow: `${row} / span ${spanRows}`,
-    position: 'relative',
-    zIndex: 10
-  });
 
   // UI Elements array
   const uiElements = [
