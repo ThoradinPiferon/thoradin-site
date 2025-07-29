@@ -78,10 +78,13 @@ const AIInteraction = () => {
   const getApiBaseUrl = () => {
     const envUrl = import.meta.env.VITE_API_BASE_URL;
     if (envUrl) {
+      console.log('Using API URL:', envUrl); // Debug log
       return envUrl;
     }
     // Fallback for development
-    return 'http://localhost:3001';
+    const fallbackUrl = 'http://localhost:3001';
+    console.log('Using fallback API URL:', fallbackUrl); // Debug log
+    return fallbackUrl;
   };
 
   const scrollToBottom = () => {
