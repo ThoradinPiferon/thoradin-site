@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import GridPageTemplate from './GridPageTemplate';
+import { PAGES } from '../utils/gridActionSystem';
 import { 
   createBackButton, 
   createTitle, 
@@ -7,7 +8,6 @@ import {
   createWindow, 
   createInputBox,
   createLoadingSpinner,
-  createGridAction,
   gridConfigs
 } from '../utils/gridElements';
 
@@ -210,12 +210,8 @@ const VaultInteraction = () => {
     }
   };
 
-  const handleBackToHome = () => {
-    window.location.href = '/';
-  };
-
   // Create UI elements using the template system
-  const backButton = createBackButton(handleBackToHome);
+  const backButton = createBackButton(() => window.location.href = '/');
   const title = createTitle("DIGITAL VAULT INTERFACE");
   const statusIndicator = createStatusIndicator(connectionStatus);
   
@@ -303,19 +299,16 @@ const VaultInteraction = () => {
     inputBox
   ];
 
-  // No interactive elements needed
-  const interactiveElements = [];
-
-  // No grid actions (non-interactive grid)
-  const gridActions = [];
+  // Context for vault page (mostly empty since vault is non-interactive)
+  const vaultContext = {
+    // Add any vault-specific context here if needed
+  };
 
   return (
     <GridPageTemplate
-      gridCols={gridConfigs.standard.gridCols}
-      gridRows={gridConfigs.standard.gridRows}
+      pageId={PAGES.VAULT}
+      context={vaultContext}
       uiElements={uiElements}
-      interactiveElements={interactiveElements}
-      gridActions={gridActions}
       backgroundComponent={<StarryBackground />}
       pageName="Digital Vault"
     />

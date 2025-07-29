@@ -1,5 +1,6 @@
 import React from 'react';
 import GridPlay from './GridPlay';
+import { getGridActionsArray, PAGES } from '../utils/gridActionSystem';
 
 /**
  * Reusable Grid Page Template
@@ -9,7 +10,8 @@ import GridPlay from './GridPlay';
  * @param {number} config.gridRows - Number of grid rows (default: 7)
  * @param {Array} config.uiElements - Array of UI elements to render
  * @param {Array} config.interactiveElements - Array of interactive elements
- * @param {Array} config.gridActions - Array of grid click handlers
+ * @param {string} config.pageId - Page identifier (from PAGES enum)
+ * @param {Object} config.context - Additional context for grid actions
  * @param {React.Component} config.backgroundComponent - Background component
  * @param {string} config.pageName - Name of the page for logging
  */
@@ -18,21 +20,17 @@ const GridPageTemplate = ({
   gridRows = 7, 
   uiElements = [], 
   interactiveElements = [], 
-  gridActions = [], 
+  pageId = PAGES.HOME,
+  context = {},
   backgroundComponent = null,
   pageName = "Grid Page"
 }) => {
   
-  // Helper function for grid cell styling
-  const getGridCellStyle = (col, row, spanCols = 1, spanRows = 1) => ({
-    gridColumn: `${col} / span ${spanCols}`,
-    gridRow: `${row} / span ${spanRows}`,
-    position: 'relative',
-    zIndex: 10
-  });
+  // Get grid actions from the centralized system
+  const gridActions = getGridActionsArray(pageId, context);
 
   // Log page creation
-  console.log(`Rendering ${pageName} with ${gridCols}x${gridRows} grid`);
+  console.log(`Rendering ${pageName} (${pageId}) with ${gridCols}x${gridRows} grid`);
 
   return (
     <GridPlay

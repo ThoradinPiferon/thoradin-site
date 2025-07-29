@@ -1,33 +1,33 @@
 import React from 'react';
-import GridPlay from './GridPlay';
+import GridPageTemplate from './GridPageTemplate';
+import { PAGES } from '../utils/gridActionSystem';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 
-// Homepage with Matrix Animation Background
 const LayeredInterface = () => {
-  // Grid configuration
-  const gridCols = 11;
-  const gridRows = 7;
-  
-  // Grid actions - array of functions for each grid cell
-  const gridActions = new Array(gridCols * gridRows).fill(null);
-  
-  // G11.7 (bottom right) - Navigate to AI page
-  // Grid index calculation: (row - 1) * gridCols + (col - 1)
-  // For G11.7: (7 - 1) * 11 + (11 - 1) = 6 * 11 + 10 = 66 + 10 = 76
-  gridActions[76] = (col, row, gridIndex) => {
-    console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
-    window.location.href = '/vault';
+  // Context for home page actions (animation controllers, etc.)
+  const homeContext = {
+    animationController: {
+      fastForward: () => {
+        console.log('Fast forward animation triggered');
+        // Add your animation logic here
+      }
+    },
+    zoomController: {
+      toggle: () => {
+        console.log('Zoom toggled');
+        // Add your zoom logic here
+      }
+    }
   };
-  
-  // Create MatrixSpiralCanvas as background component
+
   const backgroundComponent = <MatrixSpiralCanvas />;
 
   return (
-    <GridPlay
+    <GridPageTemplate
+      pageId={PAGES.HOME}
+      context={homeContext}
       backgroundComponent={backgroundComponent}
-      gridCols={gridCols}
-      gridRows={gridRows}
-      gridActions={gridActions}
+      pageName="Home Interface"
     />
   );
 };

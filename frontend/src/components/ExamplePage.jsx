@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import GridPageTemplate from './GridPageTemplate';
+import { PAGES } from '../utils/gridActionSystem';
 import { 
   createBackButton, 
   createTitle, 
   createWindow, 
   createInputBox,
-  createGridAction,
   gridConfigs
 } from '../utils/gridElements';
 
@@ -26,10 +26,6 @@ const ExamplePage = () => {
   const [inputValue, setInputValue] = useState('');
   const [messages, setMessages] = useState([]);
 
-  const handleBackToHome = () => {
-    window.location.href = '/';
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -42,13 +38,8 @@ const ExamplePage = () => {
     setInputValue('');
   };
 
-  // Example grid action - clicking G5.5 shows an alert
-  const handleGridClick = (col, row, index) => {
-    alert(`You clicked grid G${col}.${row}!`);
-  };
-
   // Create UI elements
-  const backButton = createBackButton(handleBackToHome);
+  const backButton = createBackButton(() => window.location.href = '/');
   const title = createTitle("EXAMPLE PAGE", 2, 1, 3);
   
   const content = (
@@ -59,6 +50,7 @@ const ExamplePage = () => {
         <li>Click G5.5 to see a grid action</li>
         <li>Use the input box below</li>
         <li>All styling is handled by the template</li>
+        <li>Grid actions are centralized and modular</li>
       </ul>
       {messages.map((msg, index) => (
         <div key={index} style={{ 
@@ -93,17 +85,18 @@ const ExamplePage = () => {
     inputBox
   ];
 
-  // Create grid actions - only G5.5 is interactive
-  const gridActions = new Array(gridConfigs.standard.gridCols * gridConfigs.standard.gridRows).fill(null);
-  gridActions[49] = createGridAction(49, handleGridClick, "Example grid action"); // G5.5
+  // Context for example page
+  const exampleContext = {
+    // Add any example-specific context here
+    user: { name: 'Example User' },
+    settings: { theme: 'dark' }
+  };
 
   return (
     <GridPageTemplate
-      gridCols={gridConfigs.standard.gridCols}
-      gridRows={gridConfigs.standard.gridRows}
+      pageId={PAGES.EXAMPLE}
+      context={exampleContext}
       uiElements={uiElements}
-      interactiveElements={[]}
-      gridActions={gridActions}
       backgroundComponent={<ExampleBackground />}
       pageName="Example Page"
     />
