@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Database Setup Script for Thoradin Site
+# Database Setup Script for Interactive Storytelling Grid
 # This script sets up PostgreSQL and Prisma for development
 
-echo "🗄️ Database Setup - Thoradin Site"
+echo "🗄️ Database Setup - Interactive Storytelling Grid"
 echo "=================================="
 
 # Check if we're in the right directory
@@ -45,7 +45,7 @@ sleep 3
 
 # Create database if it doesn't exist
 echo "🗄️ Setting up database..."
-psql -U postgres -c "CREATE DATABASE thoradin_dev;" 2>/dev/null || echo "Database might already exist"
+psql -U postgres -c "CREATE DATABASE interactive_grid_dev;" 2>/dev/null || echo "Database might already exist"
 
 # Navigate to backend and setup Prisma
 echo "🔧 Setting up Prisma..."
@@ -69,6 +69,6 @@ echo "✅ Database setup complete!"
 echo ""
 echo "📝 Next steps:"
 echo "1. Update backend/.env with your database URL:"
-echo "   DATABASE_URL=\"postgresql://username:password@localhost:5432/thoradin_dev\""
+echo "   DATABASE_URL=\"postgresql://username:password@localhost:5432/interactive_grid_dev\""
 echo "2. Run 'npm run db:push' in the backend directory"
 echo "3. Start the application with 'npm run dev'" 

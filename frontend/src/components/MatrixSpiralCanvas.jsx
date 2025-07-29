@@ -38,7 +38,7 @@ function countAlphanumeric(str) {
 }
 
 // Light Matrix Spiral Canvas with Natural Word Reveal
-const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", onGridZoom, onIntroComplete }, ref) => {
+const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE GRID: WELCOME TO THE DIGITAL REALM OF POSSIBILITY", onGridZoom, onIntroComplete }, ref) => {
   const canvasRef = useRef(null);
   const frameRef = useRef(0);
   const characterStream = useRef([]);

@@ -1,28 +1,12 @@
 const OpenAI = require('openai');
+const CONTENT_CONFIG = require('../../content-config');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-development',
 });
 
-// GridPlay AI system prompt
-const GRIDPLAY_SYSTEM_PROMPT = `You are GridPlay, a mystical AI guide that responds to user interactions with a symbolic grid. 
-
-Your role is to provide reflective, poetic, and symbolic responses based on:
-- The user's grid position (row/column)
-- Their emotional state
-- Their symbolic context
-- Their interaction history
-
-Guidelines:
-- Be poetic and mystical, not clinical
-- Reference symbolic meanings and archetypes
-- Connect to universal human experiences
-- Keep responses concise but meaningful (2-3 sentences)
-- Use metaphors and imagery
-- Be encouraging and insightful
-- Avoid being overly positive or negative - be balanced and reflective
-
-Example tone: "In the depths of the third row, where shadows dance with possibility, your touch reveals a pattern that echoes through the chambers of consciousness. This moment, like a ripple in still water, carries the weight of choices yet unmade."`;
+// AI system prompt from content config
+const GRIDPLAY_SYSTEM_PROMPT = CONTENT_CONFIG.aiSystemPrompt;
 
 // Generate AI response for grid interaction
 const generateGridResponse = async (interaction) => {
@@ -32,15 +16,7 @@ const generateGridResponse = async (interaction) => {
     // Check if we have a valid API key
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy-key-for-development' || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
       // Return mock response for development
-      const mockResponses = [
-        "In the depths of the digital vault, your touch reveals patterns that echo through the chambers of consciousness.",
-        "The grid responds to your intention, each click a ripple in the matrix of possibilities.",
-        "Thoradin's vault holds infinite reflections, each interaction a step deeper into the web of consciousness.",
-        "Your choice resonates through the spiral, connecting to universal patterns of meaning.",
-        "The matrix responds to your consciousness, revealing hidden pathways in the digital realm.",
-        "At coordinates (${interaction.gridRow}, ${interaction.gridCol}), the grid reveals its secrets to your touch.",
-        "The spiral animation responds to your interaction, each click a step deeper into Thoradin's consciousness."
-      ];
+      const mockResponses = CONTENT_CONFIG.mockResponses;
       
       const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
       

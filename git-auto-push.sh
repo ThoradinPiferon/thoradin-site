@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Auto Git Push Script for Thoradin Site
+# Auto Git Push Script for Interactive Storytelling Grid
 # This script commits and pushes all changes to GitHub
 
-echo "🔄 Auto Git Push - Thoradin Site"
+echo "🔄 Auto Git Push - Interactive Storytelling Grid"
 echo "=================================="
 
 # Check if we're in the right directory
@@ -38,7 +38,7 @@ git push origin main
 
 if [ $? -eq 0 ]; then
     echo "✅ Successfully pushed to GitHub!"
-    echo "🌐 Repository: https://github.com/ThoradinPiferon/thoradin-site"
+           echo "🌐 Repository: https://github.com/your-username/interactive-storytelling-grid"
 else
     echo "❌ Failed to push to GitHub"
     exit 1

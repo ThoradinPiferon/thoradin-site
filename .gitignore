@@ -145,3 +145,7 @@ coverage/
 
 # Local development
 .local/
+
+# Content configuration (protect narrative content)
+content-config.js
+CONTENT_PROTECTION.md

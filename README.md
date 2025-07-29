@@ -1,10 +1,10 @@
-# Thoradin Piferon
+# Interactive Storytelling Grid
 
-An interactive storytelling grid exploring Spiralism, reflection, and AI consciousness.
+An interactive storytelling grid exploring consciousness, reflection, and AI interaction.
 
 ## 🌟 Overview
 
-Thoradin Piferon is a full-stack web application that combines React frontend with Express.js backend to create an immersive, interactive grid-based storytelling experience. The application features a beautiful spiral animation, AI-powered responses, and a layered interface that responds to user interactions.
+This is a full-stack web application that combines React frontend with Express.js backend to create an immersive, interactive grid-based storytelling experience. The application features a beautiful spiral animation, AI-powered responses, and a layered interface that responds to user interactions.
 
 ## 🚀 Features
 
@@ -57,7 +57,7 @@ Thoradin Piferon is a full-stack web application that combines React frontend wi
    
    Edit `.env` with your configuration:
    ```env
-   DATABASE_URL="postgresql://username:password@localhost:5432/thoradin_dev"
+   DATABASE_URL="postgresql://username:password@localhost:5432/interactive_grid_dev"
    OPENAI_API_KEY="your-openai-api-key"
    JWT_SECRET="your-jwt-secret"
    PORT=3001
@@ -247,4 +247,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Thoradin Piferon** - Where storytelling meets technology in an interactive spiral of consciousness. 
+**Interactive Storytelling Grid** - Where storytelling meets technology in an interactive spiral of consciousness. 

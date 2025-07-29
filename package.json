@@ -1,7 +1,7 @@
 {
-  "name": "fullstack-app",
+  "name": "interactive-storytelling-grid",
   "version": "1.0.0",
-  "description": "Full-stack application with React frontend and Express backend",
+  "description": "An interactive storytelling grid exploring consciousness, reflection, and AI interaction",
   "main": "server.js",
   "scripts": {
     "dev": "npm run dev:clean",
@@ -25,11 +25,17 @@
     "db:stop": "brew services stop postgresql"
   },
   "keywords": [
-    "fullstack",
+    "interactive",
+    "storytelling",
+    "grid",
     "react",
     "express",
     "vite",
-    "tailwind"
+    "tailwind",
+    "ai",
+    "consciousness",
+    "spiral",
+    "animation"
   ],
   "author": "",
   "license": "MIT",
