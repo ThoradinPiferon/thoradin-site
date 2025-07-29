@@ -66,7 +66,7 @@ const GridPlay = ({
       gridTemplateRows: `repeat(${gridRows}, 1fr)`,
       gap: 0,
       zIndex: 3,
-      pointerEvents: 'none' // Let clicks pass through to Layer 4
+      pointerEvents: 'auto' // Allow UI elements to be interactive
     }}>
       {uiElements}
       

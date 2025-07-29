@@ -216,7 +216,7 @@ const AIInteraction = () => {
     </div>
   );
 
-  // Input Box (G5.7-G7.7) - Now in interactive layer
+  // Input Box (G5.7-G7.7) - Using grid positioning
   const inputBox = (
     <div style={{
       ...getGridCellStyle(5, 7, 3, 1),
@@ -226,7 +226,8 @@ const AIInteraction = () => {
       padding: '10px',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px'
+      gap: '10px',
+      zIndex: 10
     }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
         <input
@@ -246,6 +247,7 @@ const AIInteraction = () => {
             outline: 'none'
           }}
           disabled={isLoading}
+          autoFocus
         />
         <button
           type="submit"
@@ -319,17 +321,16 @@ const AIInteraction = () => {
     </div>
   );
 
-  // UI Elements array (non-interactive)
+  // UI Elements array (all elements including input box)
   const uiElements = [
     backButton,
     title,
-    responseWindow
-  ];
-
-  // Interactive Elements array (above click handlers)
-  const interactiveElements = [
+    responseWindow,
     inputBox
   ];
+
+  // No interactive elements needed
+  const interactiveElements = [];
 
   // Background component - Starry background
   const backgroundComponent = <StarryBackground />;
