@@ -237,7 +237,14 @@ The backend can be deployed to services like Heroku, Railway, or any Node.js hos
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project uses a dual-license approach:
+
+- **Technical Infrastructure**: MIT License - see the [LICENSE](LICENSE) file for details
+- **Narrative Content**: All rights reserved - see [LICENSE-CONTENT.md](LICENSE-CONTENT.md) for content protection details
+
+### 🔓 Code = Open | 🛑 Story = Protected
+
+The technical brilliance is open-source, while the narrative vision remains protected. See [CONTENT_PROTECTION.md](CONTENT_PROTECTION.md) for customization guidance.
 
 ## 🙏 Acknowledgments
 

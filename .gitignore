@@ -149,3 +149,4 @@ coverage/
 # Content configuration (protect narrative content)
 content-config.js
 CONTENT_PROTECTION.md
+LICENSE-CONTENT.md
