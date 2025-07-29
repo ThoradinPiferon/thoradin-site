@@ -90,6 +90,45 @@ router.get('/test', async (req, res) => {
   }
 });
 
+// Chat endpoint for AI interaction
+router.post('/chat', async (req, res) => {
+  try {
+    const { message, language = 'en' } = req.body;
+    
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Message is required and must be a non-empty string'
+      });
+    }
+
+    const aiResult = await generateGridResponse({
+      gridRow: 0,
+      gridCol: 0,
+      emotionalState: 'conversational',
+      symbolicContext: message,
+      interactionType: 'chat'
+    }, language);
+
+    res.json({
+      success: true,
+      message: 'AI response generated successfully',
+      response: aiResult.response,
+      model: aiResult.model,
+      responseTime: aiResult.responseTime,
+      language: language
+    });
+
+  } catch (error) {
+    console.error('AI chat error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate AI response',
+      error: error.message
+    });
+  }
+});
+
 // Get AI models info
 router.get('/models', async (req, res) => {
   res.json({
