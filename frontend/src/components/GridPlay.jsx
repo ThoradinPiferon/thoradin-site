@@ -62,8 +62,8 @@ const GridPlay = ({
       gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
       gridTemplateRows: `repeat(${gridRows}, 1fr)`,
       gap: 0,
-      zIndex: 3,
-      pointerEvents: 'none' // Let clicks pass through to Layer 4
+      zIndex: 10, // Increased z-index to be above click handlers
+      pointerEvents: 'auto' // Allow UI elements to be interactive
     }}>
       {uiElements}
       
@@ -139,7 +139,7 @@ const GridPlay = ({
           right: 0,
           bottom: 0,
           cursor: 'pointer',
-          zIndex: 4
+          zIndex: 5 // Lower than UI elements
         }}
         onClick={handleGridClick}
         title="Click anywhere on the grid"

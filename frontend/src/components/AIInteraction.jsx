@@ -161,7 +161,7 @@ const AIInteraction = () => {
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 20
+      zIndex: 40
     }}>
       <div style={{
         flex: 1,
@@ -227,7 +227,8 @@ const AIInteraction = () => {
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
-      zIndex: 30 // Higher z-index to be on top
+      zIndex: 50, // Much higher z-index to be on top
+      position: 'relative'
     }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', width: '100%', gap: '10px' }}>
         <input
@@ -287,7 +288,7 @@ const AIInteraction = () => {
         fontSize: '12px',
         fontWeight: 'bold',
         transition: 'all 0.3s ease',
-        zIndex: 25
+        zIndex: 45
       }}
       onMouseEnter={(e) => {
         e.target.style.backgroundColor = 'rgba(255, 0, 0, 1)';
@@ -314,7 +315,7 @@ const AIInteraction = () => {
       fontSize: '18px',
       fontWeight: 'bold',
       textAlign: 'center',
-      zIndex: 25
+      zIndex: 45
     }}>
       AI GRID INTERFACE
     </div>
