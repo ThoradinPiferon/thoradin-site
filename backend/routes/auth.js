@@ -1,14 +1,17 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
+
+const prisma = new PrismaClient();
 
 // Validation middleware
 const validateRegistration = [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
-  body('name').trim().isLength({ min: 2 })
+  body('username').trim().isLength({ min: 2 })
 ];
 
 const validateLogin = [
@@ -28,32 +31,41 @@ router.post('/register', validateRegistration, async (req, res) => {
       });
     }
 
-    const { email, password, name } = req.body;
+    const { email, password, username } = req.body;
 
-    // TODO: Add database check for existing user
-    // const existingUser = await User.findOne({ email });
-    // if (existingUser) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: 'User already exists'
-    //   });
-    // }
+    // Check for existing user
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { username }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email or username already exists'
+      });
+    }
 
     // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    // TODO: Save user to database
-    // const user = new User({
-    //   email,
-    //   password: hashedPassword,
-    //   name
-    // });
-    // await user.save();
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        username,
+        password: hashedPassword,
+        role: 'USER'
+      }
+    });
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: 'temp-id', email },
+      { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
@@ -63,9 +75,10 @@ router.post('/register', validateRegistration, async (req, res) => {
       message: 'User registered successfully',
       token,
       user: {
-        id: 'temp-id',
-        email,
-        name
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role
       }
     });
 
@@ -92,27 +105,30 @@ router.post('/login', validateLogin, async (req, res) => {
 
     const { email, password } = req.body;
 
-    // TODO: Find user in database
-    // const user = await User.findOne({ email });
-    // if (!user) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: 'Invalid credentials'
-    //   });
-    // }
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
 
-    // TODO: Verify password
-    // const isValidPassword = await bcrypt.compare(password, user.password);
-    // if (!isValidPassword) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: 'Invalid credentials'
-    //   });
-    // }
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
 
-    // For now, accept any login (demo mode)
+    // Verify password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Generate JWT token
     const token = jwt.sign(
-      { userId: 'demo-user', email },
+      { userId: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
@@ -122,9 +138,10 @@ router.post('/login', validateLogin, async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: 'demo-user',
-        email,
-        name: 'Demo User'
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role
       }
     });
 
@@ -151,10 +168,74 @@ router.get('/verify', async (req, res) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
+    // Get user from database
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
     res.json({
       success: true,
       message: 'Token is valid',
-      user: decoded
+      user
+    });
+
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+});
+
+// Get current user profile
+router.get('/profile', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'No token provided'
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+        createdAt: true
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      user
     });
 
   } catch (error) {

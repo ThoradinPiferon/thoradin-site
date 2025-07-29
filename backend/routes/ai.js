@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { generateGridResponse } = require('../config/openai');
+const languageService = require('../services/languageService');
 const router = express.Router();
 
 // Validation middleware
@@ -57,6 +58,7 @@ router.post('/generate', authenticateToken, validateAIPrompt, async (req, res) =
 // Test AI connection
 router.get('/test', async (req, res) => {
   try {
+    const language = languageService.detectLanguage(req);
     const testPrompt = "Test the AI connection with a brief response.";
     
     const aiResult = await generateGridResponse({
@@ -65,7 +67,7 @@ router.get('/test', async (req, res) => {
       emotionalState: 'curious',
       symbolicContext: testPrompt,
       interactionType: 'test'
-    });
+    }, language);
 
     res.json({
       success: true,
@@ -73,7 +75,8 @@ router.get('/test', async (req, res) => {
       data: {
         response: aiResult.response,
         model: aiResult.model,
-        responseTime: aiResult.responseTime
+        responseTime: aiResult.responseTime,
+        language: language
       }
     });
 

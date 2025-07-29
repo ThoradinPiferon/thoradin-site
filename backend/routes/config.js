@@ -176,6 +176,27 @@ router.post('/init', authenticateToken, async (req, res) => {
   }
 });
 
+// Language statistics
+router.get('/language/stats', async (req, res) => {
+  try {
+    const languageService = require('../services/languageService');
+    const stats = await languageService.getLanguageStats();
+    const supportedLanguages = languageService.getSupportedLanguages();
+    
+    res.json({ 
+      success: true, 
+      data: {
+        stats,
+        supportedLanguages,
+        totalContentItems: Object.values(stats).reduce((sum, count) => sum + count, 0)
+      }
+    });
+  } catch (error) {
+    console.error('Error getting language stats:', error);
+    res.status(500).json({ success: false, error: 'Failed to get language stats' });
+  }
+});
+
 // Cache management
 router.get('/cache/stats', authenticateToken, async (req, res) => {
   try {

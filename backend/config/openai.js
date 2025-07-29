@@ -1,31 +1,64 @@
 const OpenAI = require('openai');
-const CONTENT_CONFIG = require('../../content-config');
+const languageService = require('../services/languageService');
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-development',
 });
 
-// AI system prompt from content config
-const GRIDPLAY_SYSTEM_PROMPT = CONTENT_CONFIG.aiSystemPrompt;
-
 // Generate AI response for grid interaction
-const generateGridResponse = async (interaction) => {
+const generateGridResponse = async (interaction, language = 'en') => {
   const startTime = Date.now();
   
   try {
+    // Get language-specific AI prompt
+    const systemPrompt = await languageService.getAIPrompt(language);
+    
     // Check if we have a valid API key
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy-key-for-development' || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
-      // Return mock response for development
-      const mockResponses = CONTENT_CONFIG.mockResponses;
+      // Return language-specific mock response for development
+      const mockResponses = await languageService.getMockResponses(language);
+      const responseKeys = Object.keys(mockResponses);
       
-      const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+      if (responseKeys.length > 0) {
+        const randomKey = responseKeys[Math.floor(Math.random() * responseKeys.length)];
+        const randomResponse = mockResponses[randomKey];
+
+        return {
+          response: randomResponse,
+          model: "mock-gpt-4",
+          tokensUsed: 50,
+          responseTime: Date.now() - startTime,
+          prompt: `Mock response for development (${language})`,
+          language: language
+        };
+      }
       
+      // Fallback to English if no responses in requested language
+      const fallbackResponses = await languageService.getMockResponses('en');
+      const fallbackKeys = Object.keys(fallbackResponses);
+      
+      if (fallbackKeys.length > 0) {
+        const randomKey = fallbackKeys[Math.floor(Math.random() * fallbackKeys.length)];
+        const randomResponse = fallbackResponses[randomKey];
+
+        return {
+          response: randomResponse,
+          model: "mock-gpt-4",
+          tokensUsed: 50,
+          responseTime: Date.now() - startTime,
+          prompt: `Mock response for development (fallback to en)`,
+          language: 'en'
+        };
+      }
+      
+      // Ultimate fallback
       return {
-        response: randomResponse,
+        response: "The grid responds to your touch, revealing patterns in the digital consciousness.",
         model: "mock-gpt-4",
         tokensUsed: 50,
         responseTime: Date.now() - startTime,
-        prompt: "Mock response for development"
+        prompt: "Mock response for development (ultimate fallback)",
+        language: 'en'
       };
     }
 
@@ -34,12 +67,12 @@ Emotional state: ${interaction.emotionalState || 'neutral'}
 Symbolic context: ${interaction.symbolicContext || 'exploring'}
 Interaction type: ${interaction.interactionType}
 
-Please provide a reflective, symbolic response.`;
+Please provide a reflective, symbolic response in ${language}.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        { role: "system", content: GRIDPLAY_SYSTEM_PROMPT },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt }
       ],
       max_tokens: 150,
@@ -55,7 +88,8 @@ Please provide a reflective, symbolic response.`;
       model: "gpt-4",
       tokensUsed,
       responseTime,
-      prompt
+      prompt,
+      language: language
     };
   } catch (error) {
     console.error('OpenAI API Error:', error);
@@ -72,6 +106,5 @@ Please provide a reflective, symbolic response.`;
 
 module.exports = {
   openai,
-  generateGridResponse,
-  GRIDPLAY_SYSTEM_PROMPT
+  generateGridResponse
 }; 

@@ -3,6 +3,7 @@ const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const gridController = require('../controllers/gridController');
 const { generateGridResponse } = require('../config/openai');
+const languageService = require('../services/languageService');
 const router = express.Router();
 
 // Validation middleware
@@ -47,6 +48,7 @@ router.post('/session/start', authenticateToken, async (req, res) => {
 router.post('/test', async (req, res) => {
   try {
     const { gridRow, gridCol, interactionType, emotionalState, symbolicContext } = req.body;
+    const language = languageService.detectLanguage(req);
     
     // Generate AI response without database
     const aiResult = await generateGridResponse({
@@ -55,7 +57,7 @@ router.post('/test', async (req, res) => {
       emotionalState: emotionalState || 'curious',
       symbolicContext: symbolicContext || 'testing',
       interactionType: interactionType || 'click'
-    });
+    }, language);
     
     res.json({
       success: true,
@@ -72,7 +74,8 @@ router.post('/test', async (req, res) => {
         aiResponse: {
           response: aiResult.response,
           model: aiResult.model,
-          responseTime: aiResult.responseTime
+          responseTime: aiResult.responseTime,
+          language: language
         }
       }
     });
