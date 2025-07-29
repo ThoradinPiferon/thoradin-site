@@ -209,11 +209,6 @@ const VaultInteraction = () => {
     }
   };
 
-  // Create UI elements using the template system
-  const backButton = createBackButton(() => window.location.href = '/');
-  const title = createTitle("DIGITAL VAULT INTERFACE");
-  const statusIndicator = createStatusIndicator(connectionStatus);
-  
   // Create response window content
   const responseWindowContent = (
     <div style={{
@@ -278,8 +273,13 @@ const VaultInteraction = () => {
     </div>
   );
 
+  // Create UI elements that will be positioned within the grid
+  const backButton = createBackButton(() => window.location.href = '/');
+  const title = createTitle("DIGITAL VAULT INTERFACE");
+  const statusIndicator = createStatusIndicator(connectionStatus);
   const responseWindow = createWindow(responseWindowContent, 5, 1, 3, 4);
   
+  // Create input box as a UI element within the grid
   const inputBox = createInputBox(
     inputRef,
     inputValue,
@@ -289,8 +289,8 @@ const VaultInteraction = () => {
     isLoading || connectionStatus !== 'connected'
   );
 
-  // Assemble interactive elements (Layer 4 - above click handlers)
-  const interactiveElements = [
+  // Assemble UI elements (Layer 3 - within grid structure)
+  const uiElements = [
     backButton,
     title,
     statusIndicator,
@@ -306,7 +306,7 @@ const VaultInteraction = () => {
       backgroundComponent={<StarryBackground />}
       gridCols={gridConfigs.standard.gridCols}
       gridRows={gridConfigs.standard.gridRows}
-      interactiveElements={interactiveElements}
+      uiElements={uiElements}
       gridActions={gridActions}
     />
   );
