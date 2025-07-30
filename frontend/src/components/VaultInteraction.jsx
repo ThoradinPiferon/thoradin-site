@@ -264,8 +264,10 @@ const VaultInteraction = () => {
     <div style={{
       flex: 1,
       overflowY: 'auto',
+      maxHeight: '400px', // Add max height to ensure scrolling
       marginBottom: '10px',
-      paddingRight: '10px'
+      paddingRight: '10px',
+      scrollBehavior: 'smooth' // Smooth scrolling
     }}>
       {messages.length === 0 ? (
         <div style={{ color: '#666', fontStyle: 'italic' }}>

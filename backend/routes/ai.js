@@ -1,7 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
-const { generateGridResponse } = require('../config/openai');
+const { generateGridResponse, generateChatResponse } = require('../config/openai');
 const languageService = require('../services/languageService');
 const router = express.Router();
 
@@ -102,13 +102,7 @@ router.post('/chat', async (req, res) => {
       });
     }
 
-    const aiResult = await generateGridResponse({
-      gridRow: 0,
-      gridCol: 0,
-      emotionalState: 'conversational',
-      symbolicContext: message,
-      interactionType: 'chat'
-    }, language);
+    const aiResult = await generateChatResponse(message, language);
 
     res.json({
       success: true,
