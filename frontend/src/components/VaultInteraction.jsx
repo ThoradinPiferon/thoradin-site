@@ -93,17 +93,16 @@ const VaultInteraction = () => {
       return envUrl;
     }
     
-    // Production fallback - use the actual backend URL
-    if (import.meta.env.MODE === 'production') {
-      const productionUrl = 'https://thoradin-backend.onrender.com';
-      console.log('Using production fallback URL:', productionUrl);
-      return productionUrl;
+    // Development fallback only
+    if (import.meta.env.MODE === 'development') {
+      const fallbackUrl = 'http://localhost:3001';
+      console.log('Using development fallback URL:', fallbackUrl);
+      return fallbackUrl;
     }
     
-    // Development fallback
-    const fallbackUrl = 'http://localhost:3001';
-    console.log('Using development fallback URL:', fallbackUrl);
-    return fallbackUrl;
+    // Production: require environment variable
+    console.error('VITE_API_BASE_URL is not set in production. Please configure this environment variable.');
+    return null;
   };
 
   const scrollToBottom = () => {
@@ -123,6 +122,13 @@ const VaultInteraction = () => {
     
     // Test URL construction
     const apiUrl = getApiBaseUrl();
+    
+    if (!apiUrl) {
+      console.error('No API URL available. Please set VITE_API_BASE_URL environment variable.');
+      setConnectionStatus('disconnected');
+      return;
+    }
+    
     const healthUrl = `${apiUrl}/api/health`;
     console.log('Constructed health check URL:', healthUrl);
     
@@ -182,10 +188,15 @@ const VaultInteraction = () => {
     }, 100);
 
     try {
+      const apiUrl = getApiBaseUrl();
+      if (!apiUrl) {
+        throw new Error('API URL not configured. Please set VITE_API_BASE_URL environment variable.');
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-      const response = await fetch(`${getApiBaseUrl()}/api/ai/chat`, {
+      const response = await fetch(`${apiUrl}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -228,7 +239,9 @@ const VaultInteraction = () => {
       
       let errorContent = 'Connection error. Please check your internet connection.';
       
-      if (error.name === 'AbortError') {
+      if (error.message.includes('API URL not configured')) {
+        errorContent = 'Backend URL not configured. Please set VITE_API_BASE_URL environment variable.';
+      } else if (error.name === 'AbortError') {
         errorContent = 'Request timed out. Please try again.';
       } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorContent = 'Cannot connect to vault service. Please check your connection.';
