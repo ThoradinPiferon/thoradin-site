@@ -91,14 +91,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/data', require('./routes/data'));
-app.use('/api/grid', require('./routes/grid'));
-app.use('/api/ai', require('./routes/ai'));
-app.use('/api/config', require('./routes/config'));
-
 // Root endpoint - API information
 app.get('/', (req, res) => {
   res.json({
@@ -119,42 +111,33 @@ app.get('/', (req, res) => {
   });
 });
 
-// Serve static files in production (only if frontend dist exists)
-if (NODE_ENV === 'production') {
-  const frontendPath = path.join(__dirname, '../frontend/dist');
-  const indexPath = path.join(frontendPath, 'index.html');
-  
-  // Check if frontend dist exists
-  if (require('fs').existsSync(frontendPath) && require('fs').existsSync(indexPath)) {
-    app.use(express.static(frontendPath, {
-      maxAge: '1y',
-      etag: true
-    }));
+// API Routes
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/data', require('./routes/data'));
+app.use('/api/grid', require('./routes/grid'));
+app.use('/api/ai', require('./routes/ai'));
+app.use('/api/config', require('./routes/config'));
 
-    // Handle client-side routing
-    app.get('*', (req, res) => {
-      res.sendFile(indexPath);
-    });
-  } else {
-    // If frontend dist doesn't exist, return API info for all non-API routes
-    app.get('*', (req, res) => {
-      if (!req.path.startsWith('/api/')) {
-        res.json({
-          success: false,
-          message: 'Frontend not found. This is the backend API only.',
-          apiEndpoints: {
-            health: '/api/health',
-            auth: '/api/auth',
-            users: '/api/users',
-            data: '/api/data',
-            grid: '/api/grid',
-            ai: '/api/ai',
-            config: '/api/config'
-          }
-        });
-      }
-    });
-  }
+// Handle non-API routes in production
+if (NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api/')) {
+      res.json({
+        success: false,
+        message: 'Frontend not found. This is the backend API only.',
+        apiEndpoints: {
+          health: '/api/health',
+          auth: '/api/auth',
+          users: '/api/users',
+          data: '/api/data',
+          grid: '/api/grid',
+          ai: '/api/ai',
+          config: '/api/config'
+        }
+      });
+    }
+  });
 }
 
 // Error handling middleware
