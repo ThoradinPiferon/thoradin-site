@@ -87,12 +87,22 @@ const VaultInteraction = () => {
   const getApiBaseUrl = () => {
     const envUrl = import.meta.env.VITE_API_BASE_URL;
     console.log('Environment variable VITE_API_BASE_URL:', envUrl);
-    if (envUrl) {
+    
+    if (envUrl && envUrl !== 'undefined' && envUrl.trim() !== '') {
       console.log('Using API URL:', envUrl);
       return envUrl;
     }
+    
+    // Production fallback - use the actual backend URL
+    if (import.meta.env.MODE === 'production') {
+      const productionUrl = 'https://thoradin-backend.onrender.com';
+      console.log('Using production fallback URL:', productionUrl);
+      return productionUrl;
+    }
+    
+    // Development fallback
     const fallbackUrl = 'http://localhost:3001';
-    console.log('Using fallback API URL:', fallbackUrl);
+    console.log('Using development fallback URL:', fallbackUrl);
     return fallbackUrl;
   };
 
@@ -109,20 +119,29 @@ const VaultInteraction = () => {
     // Log all environment variables for debugging
     console.log('All environment variables:', import.meta.env);
     console.log('VITE_API_BASE_URL specifically:', import.meta.env.VITE_API_BASE_URL);
+    console.log('MODE:', import.meta.env.MODE);
+    
+    // Test URL construction
+    const apiUrl = getApiBaseUrl();
+    const healthUrl = `${apiUrl}/api/health`;
+    console.log('Constructed health check URL:', healthUrl);
     
     const testConnection = async () => {
-      const apiUrl = getApiBaseUrl();
       console.log('Testing connection to:', apiUrl);
       
       try {
-        const response = await fetch(`${apiUrl}/api/health`, {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(healthUrl, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
-          signal: AbortSignal.timeout(5000)
+          signal: controller.signal
         });
         
+        clearTimeout(timeoutId);
         console.log('Health check response status:', response.status);
         
         if (response.ok) {
@@ -135,6 +154,11 @@ const VaultInteraction = () => {
         }
       } catch (error) {
         console.error('API connection test failed:', error);
+        if (error.name === 'AbortError') {
+          console.error('Request timed out');
+        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          console.error('Network error - possible CORS or mixed content issue');
+        }
         setConnectionStatus('disconnected');
       }
     };
