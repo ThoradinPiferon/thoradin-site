@@ -65,7 +65,7 @@ app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 const corsOptions = {
   origin: NODE_ENV === 'development' 
     ? ['http://localhost:3000', 'http://localhost:5173'] 
-    : ['https://thoradin-site.vercel.app', 'https://thoradin-site-git-main-thoradinpiferon.vercel.app', 'https://thoradin-site-thoradinpiferon.vercel.app', process.env.FRONTEND_URL].filter(Boolean),
+    : ['https://thoradin-site.vercel.app', 'https://thoradin-site-git-main-thoradinpiferon.vercel.app', 'https://thoradin-site-thoradinpiferon.vercel.app', 'https://www.thoradinpiferon.com', process.env.FRONTEND_URL].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
