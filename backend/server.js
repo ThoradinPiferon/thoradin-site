@@ -99,17 +99,62 @@ app.use('/api/grid', require('./routes/grid'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/config', require('./routes/config'));
 
-// Serve static files in production
-if (NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist'), {
-    maxAge: '1y',
-    etag: true
-  }));
-
-  // Handle client-side routing
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+// Root endpoint - API information
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'GridPlay Backend API',
+    version: '1.0.0',
+    environment: NODE_ENV,
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth',
+      users: '/api/users',
+      data: '/api/data',
+      grid: '/api/grid',
+      ai: '/api/ai',
+      config: '/api/config'
+    },
+    documentation: 'This is the backend API for the GridPlay application. The frontend is deployed separately on Vercel.'
   });
+});
+
+// Serve static files in production (only if frontend dist exists)
+if (NODE_ENV === 'production') {
+  const frontendPath = path.join(__dirname, '../frontend/dist');
+  const indexPath = path.join(frontendPath, 'index.html');
+  
+  // Check if frontend dist exists
+  if (require('fs').existsSync(frontendPath) && require('fs').existsSync(indexPath)) {
+    app.use(express.static(frontendPath, {
+      maxAge: '1y',
+      etag: true
+    }));
+
+    // Handle client-side routing
+    app.get('*', (req, res) => {
+      res.sendFile(indexPath);
+    });
+  } else {
+    // If frontend dist doesn't exist, return API info for all non-API routes
+    app.get('*', (req, res) => {
+      if (!req.path.startsWith('/api/')) {
+        res.json({
+          success: false,
+          message: 'Frontend not found. This is the backend API only.',
+          apiEndpoints: {
+            health: '/api/health',
+            auth: '/api/auth',
+            users: '/api/users',
+            data: '/api/data',
+            grid: '/api/grid',
+            ai: '/api/ai',
+            config: '/api/config'
+          }
+        });
+      }
+    });
+  }
 }
 
 // Error handling middleware
