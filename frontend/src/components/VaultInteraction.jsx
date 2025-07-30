@@ -106,8 +106,11 @@ const VaultInteraction = () => {
   // Test API connection on component mount
   useEffect(() => {
     const testConnection = async () => {
+      const apiUrl = getApiBaseUrl();
+      console.log('Testing connection to:', apiUrl);
+      
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/health`, {
+        const response = await fetch(`${apiUrl}/api/health`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -115,13 +118,18 @@ const VaultInteraction = () => {
           signal: AbortSignal.timeout(5000)
         });
         
+        console.log('Health check response status:', response.status);
+        
         if (response.ok) {
+          const data = await response.json();
+          console.log('Health check response:', data);
           setConnectionStatus('connected');
         } else {
+          console.error('Health check failed with status:', response.status);
           setConnectionStatus('error');
         }
       } catch (error) {
-        console.warn('API connection test failed:', error);
+        console.error('API connection test failed:', error);
         setConnectionStatus('disconnected');
       }
     };
