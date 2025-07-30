@@ -13,6 +13,19 @@ const generateGridResponse = async (interaction, language = 'en') => {
     // Get language-specific AI prompt
     const systemPrompt = await languageService.getAIPrompt(language);
     
+    // Check if we have a valid system prompt
+    if (!systemPrompt) {
+      console.error('Error getting content for key ai_system_prompt in language en: No system prompt found');
+      // Return a fallback response instead of throwing
+      return {
+        response: "The grid responds to your touch, revealing patterns in the digital consciousness.",
+        model: "fallback",
+        tokensUsed: 0,
+        responseTime: Date.now() - startTime,
+        prompt: "Fallback response due to missing system prompt"
+      };
+    }
+    
     // Check if we have a valid API key
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'dummy-key-for-development' || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
       // Return language-specific mock response for development

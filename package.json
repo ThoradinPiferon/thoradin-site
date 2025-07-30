@@ -31,7 +31,8 @@
     "custom:init": "cd backend && node scripts/init-customizable.js",
     "lang:setup": "npm run db:init-config && npm run admin:init && npm run lang:init",
     "custom:setup": "npm run db:init-config && npm run admin:init && npm run custom:init",
-    "setup:full": "npm run install:all && cd backend && npx prisma generate && cd .. && npm run db:setup && npm run custom:setup"
+    "setup:full": "npm run install:all && cd backend && npx prisma generate && cd .. && npm run db:setup && npm run custom:setup",
+    "test:db": "cd backend && node test-db-connection.js"
   },
   "keywords": [
     "interactive",
