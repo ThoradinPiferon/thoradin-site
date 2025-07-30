@@ -86,6 +86,7 @@ const VaultInteraction = () => {
   // Get API base URL with fallback
   const getApiBaseUrl = () => {
     const envUrl = import.meta.env.VITE_API_BASE_URL;
+    console.log('Environment variable VITE_API_BASE_URL:', envUrl);
     if (envUrl) {
       console.log('Using API URL:', envUrl);
       return envUrl;
@@ -105,6 +106,10 @@ const VaultInteraction = () => {
 
   // Test API connection on component mount
   useEffect(() => {
+    // Log all environment variables for debugging
+    console.log('All environment variables:', import.meta.env);
+    console.log('VITE_API_BASE_URL specifically:', import.meta.env.VITE_API_BASE_URL);
+    
     const testConnection = async () => {
       const apiUrl = getApiBaseUrl();
       console.log('Testing connection to:', apiUrl);
