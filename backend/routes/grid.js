@@ -1,7 +1,8 @@
 import express from 'express';
-import sceneEngine from '../services/sceneEngine.js';
+import SceneEngine from '../services/sceneEngine.js';
 
 const router = express.Router();
+const sceneEngine = new SceneEngine();
 
 /**
  * Grid action handler with modular scene engine
