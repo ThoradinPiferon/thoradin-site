@@ -9,6 +9,15 @@ const GridPlay = ({
   uiElements = [],
   showSceneViewer = false
 }) => {
+  console.log('GridPlay rendering with props:', { 
+    backgroundComponent: !!backgroundComponent, 
+    gridCols, 
+    gridRows, 
+    gridActionsLength: gridActions.length,
+    uiElementsLength: uiElements.length,
+    showSceneViewer 
+  });
+
   const [selectedScene, setSelectedScene] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);

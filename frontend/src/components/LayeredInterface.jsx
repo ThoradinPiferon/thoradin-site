@@ -3,6 +3,8 @@ import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 
 const LayeredInterface = () => {
+  console.log('LayeredInterface rendering...');
+  
   // Grid configuration
   const gridCols = 11;
   const gridRows = 7;
@@ -22,12 +24,14 @@ const LayeredInterface = () => {
   const backgroundComponent = <MatrixSpiralCanvas />;
 
   return (
-    <GridPlay
-      backgroundComponent={backgroundComponent}
-      gridCols={gridCols}
-      gridRows={gridRows}
-      gridActions={gridActions}
-    />
+    <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black' }}>
+      <GridPlay
+        backgroundComponent={backgroundComponent}
+        gridCols={gridCols}
+        gridRows={gridRows}
+        gridActions={gridActions}
+      />
+    </div>
   );
 };
 
