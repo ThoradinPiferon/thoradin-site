@@ -7,7 +7,9 @@ const GridPlay = ({
   gridRows = 11,
   gridActions = [],
   uiElements = [],
-  showSceneViewer = false
+  showSceneViewer = false,
+  showInvisibleButtons = false,
+  currentScene = 1
 }) => {
   console.log('GridPlay rendering with props:', { 
     backgroundComponent: !!backgroundComponent, 
@@ -15,7 +17,9 @@ const GridPlay = ({
     gridRows, 
     gridActionsLength: gridActions.length,
     uiElementsLength: uiElements.length,
-    showSceneViewer 
+    showSceneViewer,
+    showInvisibleButtons,
+    currentScene
   });
 
   const [selectedScene, setSelectedScene] = useState(null);
@@ -67,26 +71,50 @@ const GridPlay = ({
     const gridIndex = (row - 1) * gridCols + (col - 1);
     const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
     
+    // Determine button styling based on scene and visibility
+    let buttonStyle = '';
+    let buttonText = gridId;
+    
+    if (showInvisibleButtons) {
+      // Invisible buttons for Matrix animation
+      buttonStyle = `
+        w-full h-full 
+        bg-transparent border-transparent
+        hover:bg-transparent hover:border-transparent
+        text-transparent hover:text-transparent
+        transition-all duration-200 ease-in-out
+        flex items-center justify-center
+        text-xs font-mono
+        focus:outline-none focus:ring-0
+        active:scale-100
+        cursor-pointer
+      `;
+      buttonText = ''; // No text visible
+    } else {
+      // Normal visible buttons
+      buttonStyle = `
+        w-full h-full 
+        ${hasAction 
+          ? 'bg-gradient-to-br from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 border-green-400 hover:border-green-500 text-green-700 hover:text-green-800' 
+          : 'bg-gradient-to-br from-gray-100 to-gray-200 hover:from-blue-100 hover:to-blue-200 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-700'
+        }
+        border transition-all duration-200 ease-in-out
+        flex items-center justify-center
+        text-xs font-mono
+        focus:outline-none focus:ring-2 focus:ring-opacity-50
+        active:scale-95
+        ${hasAction ? 'focus:ring-green-500' : 'focus:ring-blue-500'}
+      `;
+    }
+    
     return (
       <button
         key={`${row}-${col}`}
         onClick={() => handleTileClick(row, col)}
-        className={`
-          w-full h-full 
-          ${hasAction 
-            ? 'bg-gradient-to-br from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 border-green-400 hover:border-green-500 text-green-700 hover:text-green-800' 
-            : 'bg-gradient-to-br from-gray-100 to-gray-200 hover:from-blue-100 hover:to-blue-200 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-700'
-          }
-          border transition-all duration-200 ease-in-out
-          flex items-center justify-center
-          text-xs font-mono
-          focus:outline-none focus:ring-2 focus:ring-opacity-50
-          active:scale-95
-          ${hasAction ? 'focus:ring-green-500' : 'focus:ring-blue-500'}
-        `}
+        className={buttonStyle}
         title={hasAction ? `Click to interact with ${gridId}` : `Click to view scene ${gridId}`}
       >
-        {gridId}
+        {buttonText}
       </button>
     );
   };

@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
+  
+  const [currentScene, setCurrentScene] = useState(1); // 1, 2, or 3
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const matrixRef = useRef(null);
   
   // Grid configuration
   const gridCols = 11;
@@ -12,38 +16,59 @@ const LayeredInterface = () => {
   // Grid actions - array of functions for each grid cell
   const gridActions = new Array(gridCols * gridRows).fill(null);
   
-  // G11.7 (bottom right) - Navigate to Vault page
-  // Grid index calculation: (row - 1) * gridCols + (col - 1)
-  // For G11.7: (7 - 1) * 11 + (11 - 1) = 6 * 11 + 10 = 66 + 10 = 76
-  gridActions[76] = (col, row, gridIndex) => {
-    console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
-    window.location.href = '/vault';
+  // Handle grid clicks based on current scene
+  const handleGridClick = (col, row, gridIndex) => {
+    console.log(`Grid click: G${col}.${row} in Scene ${currentScene}`);
+    
+    if (currentScene === 1) {
+      // Scene 1: Any click fast-forwards Matrix animation
+      if (matrixRef.current && matrixRef.current.fastForwardToEnd) {
+        console.log('Fast-forwarding Matrix animation...');
+        matrixRef.current.fastForwardToEnd();
+        setCurrentScene(2);
+      }
+      return;
+    }
+    
+    if (currentScene === 2) {
+      // Scene 2: Any click restarts Matrix animation
+      if (matrixRef.current && matrixRef.current.restartAnimation) {
+        console.log('Restarting Matrix animation...');
+        matrixRef.current.restartAnimation();
+        setCurrentScene(1);
+        setAnimationComplete(false);
+      }
+      return;
+    }
+    
+    if (currentScene === 3) {
+      // Scene 3: Only G11.7 navigates to Vault
+      if (col === 11 && row === 7) {
+        console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
+        window.location.href = '/vault';
+      }
+      return;
+    }
   };
   
-  // Create a simple test background instead of MatrixSpiralCanvas
+  // Set up all grid actions
+  for (let i = 0; i < gridActions.length; i++) {
+    gridActions[i] = handleGridClick;
+  }
+  
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    console.log('Matrix animation completed - entering Scene 3');
+    setAnimationComplete(true);
+    setCurrentScene(3);
+  };
+  
+  // Create MatrixSpiralCanvas as background component
   const backgroundComponent = (
-    <div style={{
-      width: '100%',
-      height: '100%',
-      backgroundColor: '#000',
-      background: 'linear-gradient(45deg, #000 0%, #1a1a1a 50%, #000 100%)',
-      position: 'relative'
-    }}>
-      <div style={{
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        color: '#00ff00',
-        fontSize: '24px',
-        fontFamily: 'monospace',
-        textAlign: 'center'
-      }}>
-        MATRIX BACKGROUND TEST
-        <br />
-        <small style={{ fontSize: '12px' }}>Click G11.7 to go to Vault</small>
-      </div>
-    </div>
+    <MatrixSpiralCanvas 
+      ref={matrixRef}
+      onIntroComplete={handleAnimationComplete}
+    />
   );
 
   return (
@@ -53,6 +78,8 @@ const LayeredInterface = () => {
         gridCols={gridCols}
         gridRows={gridRows}
         gridActions={gridActions}
+        showInvisibleButtons={true}
+        currentScene={currentScene}
       />
     </div>
   );
