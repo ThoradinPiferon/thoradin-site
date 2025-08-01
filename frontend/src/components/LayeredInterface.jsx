@@ -213,18 +213,6 @@ const LayeredInterface = () => {
   // Generate grid actions using the configuration
   const gridActions = generateGridActions(gridConfig, handleGridClick);
   
-  // Create MatrixSpiralCanvas as background component
-  const backgroundComponent = (
-    <MatrixSpiralCanvas 
-      ref={matrixRef}
-      onAnimationComplete={() => {
-        console.log('Matrix animation completed - but staying in current scene');
-        setAnimationComplete(true);
-        // Don't automatically change scene - let backend control it
-      }}
-    />
-  );
-  
   // Debug the invisible button logic
   const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
   console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
