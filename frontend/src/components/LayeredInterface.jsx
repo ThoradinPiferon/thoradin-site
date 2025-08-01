@@ -196,6 +196,9 @@ const LayeredInterface = () => {
   const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
   console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
   console.log(`🎭 Grid Config: Scene ${currentScene}.${currentSubscene} - ${gridConfig.rows}x${gridConfig.cols} (${gridConfig.rows * gridConfig.cols} tiles)`);
+  console.log(`🎭 Grid Config Details:`, gridConfig);
+  console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
+  console.log(`🎭 Should be invisible: ${currentScene === 1 && currentSubscene === 1}`);
   
   return (
     <GridPlay
