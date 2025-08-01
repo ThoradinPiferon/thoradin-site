@@ -8,6 +8,7 @@ const LayeredInterface = () => {
   const [currentScene, setCurrentScene] = useState(1); // Main scene ID
   const [currentSubscene, setCurrentSubscene] = useState(1); // Subscene ID
   const [animationComplete, setAnimationComplete] = useState(false);
+  const [isZooming, setIsZooming] = useState(false);
   const matrixRef = useRef(null);
   
   // Grid configuration
@@ -39,27 +40,57 @@ const LayeredInterface = () => {
         const data = await response.json();
         console.log('Backend response:', data);
         
-        // Backend controls the scene transitions
-        if (data.newScene && data.newSubscene) {
-          setCurrentScene(data.newScene);
-          setCurrentSubscene(data.newSubscene);
-        }
-        
-        // Backend controls Matrix animation
-        if (data.matrixAction === 'fastForward' && matrixRef.current) {
-          matrixRef.current.fastForwardToEnd();
-        } else if (data.matrixAction === 'restart' && matrixRef.current) {
-          matrixRef.current.restartAnimation();
-        }
-        
-        // Backend controls navigation/scenarios
-        if (data.navigateTo) {
-          // This will be handled by the backend response
-          console.log('Backend requested navigation to:', data.navigateTo);
+        // Handle zoom functionality first
+        if (data.zoomTo && matrixRef.current) {
+          console.log(`Zooming to ${data.zoomTo}...`);
+          setIsZooming(true);
+          
+          // Extract grid coordinates from zoomTo (e.g., "G3.4" -> col=3, row=4)
+          const match = data.zoomTo.match(/G(\d+)\.(\d+)/);
+          if (match) {
+            const zoomCol = parseInt(match[1]);
+            const zoomRow = parseInt(match[2]);
+            
+            // Trigger zoom animation
+            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+            
+            // Wait for zoom to complete, then handle next action
+            setTimeout(() => {
+              setIsZooming(false);
+              handleNextAction(data.nextAction);
+            }, 1000); // Adjust timing as needed
+          }
+        } else {
+          // No zoom needed, handle action directly
+          handleNextAction(data);
         }
       }
     } catch (error) {
       console.error('Error calling backend grid action:', error);
+    }
+  };
+  
+  // Handle the next action after zoom (or immediately if no zoom)
+  const handleNextAction = (data) => {
+    // Backend controls the scene transitions
+    if (data.newScene) {
+      setCurrentScene(data.newScene);
+    }
+    if (data.newSubscene) {
+      setCurrentSubscene(data.newSubscene);
+    }
+    
+    // Backend controls Matrix animation
+    if (data.matrixAction === 'fastForward' && matrixRef.current) {
+      matrixRef.current.fastForwardToEnd();
+    } else if (data.matrixAction === 'restart' && matrixRef.current) {
+      matrixRef.current.restartAnimation();
+    }
+    
+    // Backend controls navigation/scenarios
+    if (data.navigateTo) {
+      console.log('Backend requested navigation to:', data.navigateTo);
+      // In a single-page app, this would trigger a state change to render the Vault scenario
     }
   };
   
@@ -88,9 +119,10 @@ const LayeredInterface = () => {
       gridCols={gridCols}
       gridRows={gridRows}
       gridActions={gridActions}
-      showInvisibleButtons={currentScene === 1 && currentSubscene === 1} // Invisible during Scene 1.1 (Matrix running)
+      showInvisibleButtons={currentScene === 1 && currentSubscene === 1} // Invisible during Matrix animation
       currentScene={currentScene}
       currentSubscene={currentSubscene}
+      isZooming={isZooming}
     />
   );
 };

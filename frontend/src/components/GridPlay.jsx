@@ -10,7 +10,8 @@ const GridPlay = ({
   showSceneViewer = false,
   showInvisibleButtons = false,
   currentScene = 1,
-  currentSubscene = 1
+  currentSubscene = 1,
+  isZooming = false
 }) => {
   console.log('GridPlay rendering with props:', { 
     backgroundComponent: !!backgroundComponent, 
@@ -21,7 +22,8 @@ const GridPlay = ({
     showSceneViewer,
     showInvisibleButtons,
     currentScene,
-    currentSubscene
+    currentSubscene,
+    isZooming
   });
 
   const [selectedScene, setSelectedScene] = useState(null);
@@ -29,6 +31,12 @@ const GridPlay = ({
   const [error, setError] = useState(null);
 
   const handleTileClick = async (row, col) => {
+    // Disable clicks during zooming
+    if (isZooming) {
+      console.log('Click disabled during zoom animation');
+      return;
+    }
+    
     const gridIndex = (row - 1) * gridCols + (col - 1);
     
     // Check if there's a custom action for this tile
@@ -37,25 +45,19 @@ const GridPlay = ({
       return;
     }
 
-    // Default scene functionality (only if showSceneViewer is true)
+    // Default scene functionality (if not overridden by custom action)
     if (showSceneViewer) {
-      const gridId = `G${row}.${col}`;
-      
       setIsLoading(true);
       setError(null);
       setSelectedScene(null);
-
       try {
-        const response = await fetch(`/api/scene/${gridId}`);
-        const data = await response.json();
-
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/scene/G${row}.${col}`);
         if (!response.ok) {
-          throw new Error(data.message || `Failed to fetch scene for ${gridId}`);
+          throw new Error(`Scene G${row}.${col} not found`);
         }
-
-        setSelectedScene(data.data);
+        const data = await response.json();
+        setSelectedScene(data);
       } catch (err) {
-        console.error('Error fetching scene:', err);
         setError(err.message);
       } finally {
         setIsLoading(false);
@@ -75,7 +77,7 @@ const GridPlay = ({
     
     // Debug logging for first few tiles
     if (row <= 2 && col <= 2) {
-      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}`);
+      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}, isZooming: ${isZooming}`);
     }
     
     // Determine button styling based on scene and visibility
@@ -99,10 +101,7 @@ const GridPlay = ({
         border: 'none',
         color: 'transparent',
         opacity: 0,
-        pointerEvents: 'auto',
-        outline: 'none',
-        boxShadow: 'none',
-        textShadow: 'none'
+        pointerEvents: 'auto'
       };
     } else {
       // Normal visible buttons for other scenes
@@ -116,6 +115,7 @@ const GridPlay = ({
         text-xs font-mono
         focus:outline-none focus:ring-2 focus:ring-blue-500/50
         ${hasAction ? 'cursor-pointer' : 'cursor-default opacity-50'}
+        ${isZooming ? 'pointer-events-none opacity-30' : ''}
       `;
       inlineStyles = {};
     }
@@ -126,6 +126,7 @@ const GridPlay = ({
         className={buttonStyle}
         onClick={() => handleTileClick(row, col)}
         style={inlineStyles}
+        disabled={isZooming}
       >
         {buttonText}
       </button>

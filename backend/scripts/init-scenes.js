@@ -69,12 +69,25 @@ async function seedSceneSubscenes() {
   }
   
   console.log('🎉 Scene/Subscene seeding completed!');
+  
+  // Display all active scenes
+  const activeScenes = await prisma.sceneSubscene.findMany({
+    where: { isActive: true },
+    orderBy: [
+      { sceneId: 'asc' },
+      { subsceneId: 'asc' }
+    ]
+  });
+  
+  console.log('\n📋 All active scenes:');
+  activeScenes.forEach(scene => {
+    console.log(`  Scene ${scene.sceneId}.${scene.subsceneId}: ${scene.title} (${scene.backgroundType})`);
+  });
 }
 
 async function main() {
   try {
     await seedSceneSubscenes();
-    console.log('✅ Scene initialization completed successfully!');
   } catch (error) {
     console.error('❌ Error seeding scenes:', error);
   } finally {
