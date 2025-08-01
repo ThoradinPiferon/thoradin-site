@@ -12,33 +12,7 @@ import {
 
 // Word Balloon Component
 const WordBalloon = ({ message, isVisible, onClose }) => {
-  const [currentText, setCurrentText] = useState('');
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isTyping, setIsTyping] = useState(false);
-
   console.log('WordBalloon props:', { message, isVisible, onClose });
-
-  useEffect(() => {
-    if (isVisible && message) {
-      console.log('Starting typing animation for message:', message);
-      setIsTyping(true);
-      setCurrentIndex(0);
-      setCurrentText('');
-      
-      const typeText = () => {
-        if (currentIndex < message.length) {
-          setCurrentText(prev => prev + message[currentIndex]);
-          setCurrentIndex(prev => prev + 1);
-        } else {
-          setIsTyping(false);
-          console.log('Typing animation completed');
-        }
-      };
-
-      const interval = setInterval(typeText, 50);
-      return () => clearInterval(interval);
-    }
-  }, [isVisible, message, currentIndex]);
 
   if (!isVisible) {
     console.log('WordBalloon not visible');
@@ -93,30 +67,27 @@ const WordBalloon = ({ message, isVisible, onClose }) => {
           borderTop: '8px solid #00ff88'
         }} />
 
-        <div style={{ marginBottom: '15px' }}>
-          {currentText}
-          {isTyping && <span style={{ color: '#00ff88' }}>|</span>}
+        <div style={{ marginBottom: '15px', whiteSpace: 'pre-line' }}>
+          {message}
         </div>
 
-        {!isTyping && (
-          <button
-            onClick={onClose}
-            style={{
-              backgroundColor: 'transparent',
-              border: '1px solid #00ff88',
-              color: '#00ff88',
-              padding: '8px 16px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              marginTop: '10px'
-            }}
-            onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-          >
-            Enter the Vault
-          </button>
-        )}
+        <button
+          onClick={onClose}
+          style={{
+            backgroundColor: 'transparent',
+            border: '1px solid #00ff88',
+            color: '#00ff88',
+            padding: '8px 16px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            marginTop: '10px'
+          }}
+          onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+        >
+          Enter the Vault
+        </button>
       </div>
     </div>
   );
@@ -197,46 +168,6 @@ const VaultInteraction = () => {
   const inputRef = useRef(null);
 
   console.log('VaultInteraction rendering, showWelcome:', showWelcome);
-
-  // Simple test - just show a basic message first
-  if (showWelcome) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: '#000011',
-        color: '#ffffff',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '24px',
-        textAlign: 'center',
-        zIndex: 1000
-      }}>
-        <div>
-          <h1>Welcome to the Vault</h1>
-          <p>Hello, brave little being.</p>
-          <button 
-            onClick={() => setShowWelcome(false)}
-            style={{
-              backgroundColor: 'transparent',
-              border: '2px solid #00ff88',
-              color: '#00ff88',
-              padding: '10px 20px',
-              fontSize: '16px',
-              cursor: 'pointer',
-              marginTop: '20px'
-            }}
-          >
-            Enter the Vault
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // Get user's location and time info
   const getUserInfo = () => {
