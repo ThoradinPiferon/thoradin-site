@@ -512,8 +512,8 @@ Would you like me to speak to you in ${language}?`;
     });
   }
 
-  // Input field (G4.6-G7.6)
-  if (hasStartedChat) {
+  // Input field (G4.6-G7.6) - show when chat has started or language choice is active
+  if (hasStartedChat || showLanguageChoice) {
     uiElements.push(
       createInputBox(
         inputRef,
