@@ -1,61 +1,33 @@
 import React from 'react';
+import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 
 const LayeredInterface = () => {
-  const handleVaultClick = () => {
-    console.log('Clicked G11.7 - Navigating to Vault page');
+  // Grid configuration
+  const gridCols = 11;
+  const gridRows = 7;
+  
+  // Grid actions - array of functions for each grid cell
+  const gridActions = new Array(gridCols * gridRows).fill(null);
+  
+  // G11.7 (bottom right) - Navigate to Vault page
+  // Grid index calculation: (row - 1) * gridCols + (col - 1)
+  // For G11.7: (7 - 1) * 11 + (11 - 1) = 6 * 11 + 10 = 66 + 10 = 76
+  gridActions[76] = (col, row, gridIndex) => {
+    console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
     window.location.href = '/vault';
   };
+  
+  // Create MatrixSpiralCanvas as background component
+  const backgroundComponent = <MatrixSpiralCanvas />;
 
   return (
-    <div style={{ 
-      position: 'relative', 
-      width: '100vw', 
-      height: '100vh',
-      overflow: 'hidden'
-    }}>
-      {/* Matrix Spiral Background */}
-      <MatrixSpiralCanvas />
-      
-      {/* G11.7 Button - Bottom Right */}
-      <button
-        onClick={handleVaultClick}
-        style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          width: '80px',
-          height: '80px',
-          backgroundColor: 'rgba(0, 255, 0, 0.2)',
-          border: '2px solid #00ff00',
-          borderRadius: '8px',
-          color: '#00ff00',
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-          zIndex: 10,
-          transition: 'all 0.3s ease',
-          backdropFilter: 'blur(5px)',
-          boxShadow: '0 4px 15px rgba(0, 255, 0, 0.3)'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.backgroundColor = 'rgba(0, 255, 0, 0.4)';
-          e.target.style.boxShadow = '0 6px 20px rgba(0, 255, 0, 0.5)';
-          e.target.style.transform = 'scale(1.05)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
-          e.target.style.boxShadow = '0 4px 15px rgba(0, 255, 0, 0.3)';
-          e.target.style.transform = 'scale(1)';
-        }}
-      >
-        G11.7<br />Vault
-      </button>
-    </div>
+    <GridPlay
+      backgroundComponent={backgroundComponent}
+      gridCols={gridCols}
+      gridRows={gridRows}
+      gridActions={gridActions}
+    />
   );
 };
 
