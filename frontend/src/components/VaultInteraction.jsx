@@ -345,13 +345,13 @@ Would you like me to speak to you in ${language}?`;
   // Create grid elements
   const uiElements = [];
 
-  // Welcome message window (G1.1-G3.4) - Dune style
+  // Welcome message window (G4.1-G7.3) - Dune style
   if (!hasStartedChat) {
     uiElements.push(
       React.createElement('div', {
         key: 'welcome-window',
         style: {
-          ...getGridCellStyle(1, 1, 3, 3),
+          ...getGridCellStyle(4, 1, 4, 3),
           background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.1), rgba(160, 82, 45, 0.05))',
           border: '1px solid rgba(210, 180, 140, 0.3)',
           borderRadius: '8px',
@@ -374,13 +374,13 @@ Would you like me to speak to you in ${language}?`;
     );
   }
 
-  // Chat messages window (G1.1-G3.4) - Dune style
+  // Chat messages window (G4.1-G7.3) - Dune style
   if (hasStartedChat) {
     uiElements.push(
       React.createElement('div', {
         key: 'chat-window',
         style: {
-          ...getGridCellStyle(1, 1, 3, 3),
+          ...getGridCellStyle(4, 1, 4, 3),
           background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.08), rgba(160, 82, 45, 0.03))',
           border: '1px solid rgba(210, 180, 140, 0.2)',
           borderRadius: '8px',
