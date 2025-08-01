@@ -118,6 +118,7 @@ app.use('/api/data', require('./routes/data'));
 app.use('/api/grid', require('./routes/grid'));
 app.use('/api/ai', require('./routes/ai'));
 app.use('/api/config', require('./routes/config'));
+app.use('/api/scene', require('./routes/scene'));
 
 // Handle non-API routes in production
 if (NODE_ENV === 'production') {

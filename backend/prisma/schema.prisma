@@ -167,4 +167,18 @@ enum ContentType {
   AI_PROMPT
   MOCK_RESPONSE
   METADATA
+}
+
+// Scene Management
+model Scene {
+  id           String   @id @default(cuid())
+  gridId       String   @unique // e.g., "G1.1", "G2.3"
+  title        String
+  description  String
+  animationUrl String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("scenes")
 } 
