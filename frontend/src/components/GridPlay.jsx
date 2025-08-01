@@ -26,6 +26,10 @@ const GridPlay = ({
     isZooming
   });
 
+  // Debug the invisible button logic
+  console.log(`🔍 Invisible button check: showInvisibleButtons=${showInvisibleButtons}, currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
+  console.log(`🔍 Should be invisible: ${currentScene === 1 && currentSubscene === 1}`);
+
   const [selectedScene, setSelectedScene] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -167,6 +171,11 @@ const GridPlay = ({
             const gridIndex = row * gridCols + col;
             const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
             
+            // Debug logging for first few tiles
+            if (row <= 1 && col <= 1) {
+              console.log(`Grid tile ${gridId}: showInvisibleButtons=${showInvisibleButtons}, currentScene=${currentScene}.${currentSubscene}`);
+            }
+            
             // If buttons should be invisible, render transparent divs instead
             if (showInvisibleButtons) {
               return (
@@ -176,6 +185,9 @@ const GridPlay = ({
                   style={{
                     backgroundColor: 'transparent',
                     border: 'none',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    textShadow: 'none',
                     opacity: 0,
                     pointerEvents: 'auto',
                     cursor: 'pointer'
@@ -188,7 +200,7 @@ const GridPlay = ({
             // Otherwise render normal buttons
             return renderTile(row + 1, col + 1);
           })
-        ).flat()}
+        )}
       </div>
 
       {/* UI Elements Layer */}
