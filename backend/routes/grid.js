@@ -21,16 +21,25 @@ router.post('/action', async (req, res) => {
     
     // Scene 2: Matrix animation ended
     if (currentScene === 2) {
-      // Any grid click restarts Matrix animation
-      return res.json({
-        success: true,
-        newScene: 1,
-        matrixAction: 'restart',
-        message: 'Restarting Matrix animation'
-      });
+      // G11.7 navigates to Vault scenario
+      if (gridId === 'G11.7') {
+        return res.json({
+          success: true,
+          navigateTo: 'vault',
+          message: 'Navigating to Vault scenario'
+        });
+      } else {
+        // Any other grid click restarts Matrix animation
+        return res.json({
+          success: true,
+          newScene: 1,
+          matrixAction: 'restart',
+          message: 'Restarting Matrix animation'
+        });
+      }
     }
     
-    // Scene 3: Matrix animation completed
+    // Scene 3: Matrix animation completed (fallback)
     if (currentScene === 3) {
       // Only G11.7 navigates to Vault scenario
       if (gridId === 'G11.7') {

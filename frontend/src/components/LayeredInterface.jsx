@@ -72,9 +72,9 @@ const LayeredInterface = () => {
     <MatrixSpiralCanvas 
       ref={matrixRef}
       onAnimationComplete={() => {
-        console.log('Matrix animation completed - entering Scene 3');
+        console.log('Matrix animation completed - but staying in current scene');
         setAnimationComplete(true);
-        setCurrentScene(3);
+        // Don't automatically change scene - let backend control it
       }}
     />
   );

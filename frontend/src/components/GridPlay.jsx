@@ -86,42 +86,38 @@ const GridPlay = ({
         flex items-center justify-center
         text-xs font-mono
         focus:outline-none focus:ring-0
-        active:scale-100
-        cursor-pointer
         opacity-0
         pointer-events-auto
+        cursor-pointer
       `;
-      buttonText = ''; // No text visible
+      buttonText = ''; // No text at all
     } else {
-      // Normal visible buttons
+      // Normal visible buttons for other scenes
       buttonStyle = `
         w-full h-full 
-        ${hasAction 
-          ? 'bg-gradient-to-br from-green-100 to-green-200 hover:from-green-200 hover:to-green-300 border-green-400 hover:border-green-500 text-green-700 hover:text-green-800' 
-          : 'bg-gradient-to-br from-gray-100 to-gray-200 hover:from-blue-100 hover:to-blue-200 border-gray-300 hover:border-blue-400 text-gray-600 hover:text-blue-700'
-        }
-        border transition-all duration-200 ease-in-out
+        bg-gray-800/20 border border-gray-600/30
+        hover:bg-gray-700/30 hover:border-gray-500/50
+        text-gray-300 hover:text-white
+        transition-all duration-200
         flex items-center justify-center
         text-xs font-mono
-        focus:outline-none focus:ring-2 focus:ring-opacity-50
-        active:scale-95
-        ${hasAction ? 'focus:ring-green-500' : 'focus:ring-blue-500'}
+        focus:outline-none focus:ring-2 focus:ring-blue-500/50
+        ${hasAction ? 'cursor-pointer' : 'cursor-default opacity-50'}
       `;
     }
     
     return (
       <button
-        key={`${row}-${col}`}
-        onClick={() => handleTileClick(row, col)}
+        key={gridId}
         className={buttonStyle}
-        title={hasAction ? `Click to interact with ${gridId}` : `Click to view scene ${gridId}`}
-        style={showInvisibleButtons ? { 
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: 'transparent',
-          outline: 'none',
-          boxShadow: 'none'
-        } : {}}
+        onClick={() => handleTileClick(row, col)}
+        style={{
+          backgroundColor: showInvisibleButtons ? 'transparent' : undefined,
+          border: showInvisibleButtons ? 'none' : undefined,
+          color: showInvisibleButtons ? 'transparent' : undefined,
+          opacity: showInvisibleButtons ? 0 : undefined,
+          pointerEvents: 'auto'
+        }}
       >
         {buttonText}
       </button>
