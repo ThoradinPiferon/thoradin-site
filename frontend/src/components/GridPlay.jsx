@@ -71,26 +71,37 @@ const GridPlay = ({
     const gridIndex = (row - 1) * gridCols + (col - 1);
     const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
     
+    // Debug logging for first few tiles
+    if (row <= 2 && col <= 2) {
+      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}`);
+    }
+    
     // Determine button styling based on scene and visibility
     let buttonStyle = '';
     let buttonText = gridId;
+    let inlineStyles = {};
     
     if (showInvisibleButtons) {
       // Completely invisible buttons for Matrix animation
       buttonStyle = `
         w-full h-full 
-        bg-transparent border-transparent
-        hover:bg-transparent hover:border-transparent
-        text-transparent hover:text-transparent
-        transition-none
         flex items-center justify-center
         text-xs font-mono
         focus:outline-none focus:ring-0
-        opacity-0
         pointer-events-auto
         cursor-pointer
       `;
       buttonText = ''; // No text at all
+      inlineStyles = {
+        backgroundColor: 'transparent',
+        border: 'none',
+        color: 'transparent',
+        opacity: 0,
+        pointerEvents: 'auto',
+        outline: 'none',
+        boxShadow: 'none',
+        textShadow: 'none'
+      };
     } else {
       // Normal visible buttons for other scenes
       buttonStyle = `
@@ -104,6 +115,7 @@ const GridPlay = ({
         focus:outline-none focus:ring-2 focus:ring-blue-500/50
         ${hasAction ? 'cursor-pointer' : 'cursor-default opacity-50'}
       `;
+      inlineStyles = {};
     }
     
     return (
@@ -111,13 +123,7 @@ const GridPlay = ({
         key={gridId}
         className={buttonStyle}
         onClick={() => handleTileClick(row, col)}
-        style={{
-          backgroundColor: showInvisibleButtons ? 'transparent' : undefined,
-          border: showInvisibleButtons ? 'none' : undefined,
-          color: showInvisibleButtons ? 'transparent' : undefined,
-          opacity: showInvisibleButtons ? 0 : undefined,
-          pointerEvents: 'auto'
-        }}
+        style={inlineStyles}
       >
         {buttonText}
       </button>
@@ -153,9 +159,32 @@ const GridPlay = ({
         padding: '20px'
       }}>
         {Array.from({ length: gridRows }, (_, row) =>
-          Array.from({ length: gridCols }, (_, col) =>
-            renderTile(row + 1, col + 1)
-          )
+          Array.from({ length: gridCols }, (_, col) => {
+            const gridId = `G${row + 1}.${col + 1}`;
+            const gridIndex = row * gridCols + col;
+            const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
+            
+            // If buttons should be invisible, render transparent divs instead
+            if (showInvisibleButtons) {
+              return (
+                <div
+                  key={gridId}
+                  className="w-full h-full"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    opacity: 0,
+                    pointerEvents: 'auto',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleTileClick(row + 1, col + 1)}
+                />
+              );
+            }
+            
+            // Otherwise render normal buttons
+            return renderTile(row + 1, col + 1);
+          })
         ).flat()}
       </div>
 
