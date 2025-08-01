@@ -5,6 +5,7 @@ import {
   getAutoAdvanceConfig,
   getSceneConfig 
 } from './sceneSeed.js';
+import { getSceneLogic } from './sceneLogic.js';
 
 const prisma = new PrismaClient();
 
@@ -75,6 +76,13 @@ class SceneEngine {
           },
           echo: 'auto_advance_triggered'
         };
+      }
+      
+      // Check for custom scene logic first
+      const sceneLogic = getSceneLogic(currentSceneId, subsceneId);
+      if (sceneLogic && sceneLogic.processAction) {
+        console.log(`🎭 Using custom scene logic for Scene ${currentSceneId}.${subsceneId}`);
+        return sceneLogic.processAction(gridId, action, sceneData);
       }
       
       // Check for choices-based logic
