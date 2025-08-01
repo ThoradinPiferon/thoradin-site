@@ -1,4 +1,4 @@
-const express = require('express');
+import express from('express');
 const router = express.Router();
 
 // Get user profile
@@ -53,4 +53,4 @@ router.put('/profile', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

@@ -1,19 +1,25 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const compression = require('compression');
-const path = require('path');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import compression from 'compression';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import dotenv from 'dotenv';
+import net from 'net';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Function to find available port
 const findAvailablePort = async (startPort) => {
-  const net = require('net');
-  
   const isPortAvailable = (port) => {
     return new Promise((resolve) => {
       const server = net.createServer();
@@ -112,13 +118,21 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/data', require('./routes/data'));
-app.use('/api/grid', require('./routes/grid'));
-app.use('/api/ai', require('./routes/ai'));
-app.use('/api/config', require('./routes/config'));
-app.use('/api/scene', require('./routes/scene'));
+import authRoutes from './routes/auth.js';
+import usersRoutes from './routes/users.js';
+import dataRoutes from './routes/data.js';
+import gridRoutes from './routes/grid.js';
+import aiRoutes from './routes/ai.js';
+import configRoutes from './routes/config.js';
+import sceneRoutes from './routes/scene.js';
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/data', dataRoutes);
+app.use('/api/grid', gridRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/config', configRoutes);
+app.use('/api/scene', sceneRoutes);
 
 // Handle non-API routes in production
 if (NODE_ENV === 'production') {
@@ -179,4 +193,4 @@ app.use('*', (req, res) => {
   }
 })();
 
-module.exports = app; 
+export default app; 

@@ -1,10 +1,10 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
-const router = express.Router();
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
 
+const router = express.Router();
 const prisma = new PrismaClient();
 
 // Validation middleware
@@ -246,4 +246,4 @@ router.get('/profile', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

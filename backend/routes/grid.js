@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import sceneEngine from '../services/sceneEngine.js';
+
 const router = express.Router();
-const sceneEngine = require('../services/sceneEngine');
 
 /**
  * Grid action handler with modular scene engine
@@ -170,4 +171,4 @@ router.post('/test-transition', async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

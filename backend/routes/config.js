@@ -1,4 +1,4 @@
-const express = require('express');
+import express from('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const configService = require('../services/configService');
@@ -218,4 +218,4 @@ router.delete('/cache', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router; 
+export default router; 

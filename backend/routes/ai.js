@@ -1,4 +1,4 @@
-const express = require('express');
+import express from('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { generateGridResponse, generateChatResponse } = require('../config/openai');
@@ -146,4 +146,4 @@ router.get('/models', async (req, res) => {
   });
 });
 
-module.exports = router; 
+export default router; 
