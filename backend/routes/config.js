@@ -1,7 +1,10 @@
 import express from 'express';
-const { body, validationResult } = require('express-validator');
-const { authenticateToken } = require('../middleware/auth');
-const configService = require('../services/configService');
+import { body, validationResult } from 'express-validator';
+import { authenticateToken } from '../middleware/auth.js';
+import configService from '../services/configService.js';
+import { prisma } from '../config/database.js';
+import languageService from '../services/languageService.js';
+
 const router = express.Router();
 
 // Validation middleware
@@ -30,9 +33,6 @@ router.get('/', async (req, res) => {
       res.json({ success: true, data: configs });
     } else {
       // Get all active configurations
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      
       const configs = await prisma.configuration.findMany({
         where: { isActive: true },
         orderBy: [{ category: 'asc' }, { key: 'asc' }]
@@ -93,9 +93,6 @@ router.get('/content/all', async (req, res) => {
       res.json({ success: true, data: content });
     } else {
       // Get all active content
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      
       const content = await prisma.content.findMany({
         where: { isActive: true },
         orderBy: [{ type: 'asc' }, { key: 'asc' }]
@@ -179,7 +176,6 @@ router.post('/init', authenticateToken, async (req, res) => {
 // Language statistics
 router.get('/language/stats', async (req, res) => {
   try {
-    const languageService = require('../services/languageService');
     const stats = await languageService.getLanguageStats();
     const supportedLanguages = languageService.getSupportedLanguages();
     

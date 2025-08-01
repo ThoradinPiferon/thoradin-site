@@ -17,6 +17,16 @@ const LayeredInterface = () => {
   // Get grid configuration based on current scene state
   const gridConfig = getSceneGridConfig(currentScene, currentSubscene);
   
+  // Handle animation completion
+  const handleAnimationComplete = () => {
+    console.log('🎬 Matrix animation completed');
+    // Auto-advance to Scene 1.2 when animation completes
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('⏰ Animation completed - triggering auto-advance');
+      handleAutoAdvance();
+    }
+  };
+
   // Handle full-screen click for Scene 1.1 (Matrix Awakening)
   const handleFullScreenClick = async () => {
     if (currentScene === 1 && currentSubscene === 1) {

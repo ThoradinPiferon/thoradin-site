@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class ConfigService {
@@ -267,4 +267,4 @@ class ConfigService {
   }
 }
 
-module.exports = new ConfigService(); 
+export default new ConfigService(); 

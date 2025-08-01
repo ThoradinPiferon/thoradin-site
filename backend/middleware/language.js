@@ -1,4 +1,4 @@
-const languageService = require('../services/languageService');
+import languageService from '../services/languageService.js';
 
 // Language detection middleware
 const languageMiddleware = (req, res, next) => {
@@ -21,4 +21,4 @@ const languageMiddleware = (req, res, next) => {
   }
 };
 
-module.exports = { languageMiddleware }; 
+export { languageMiddleware }; 

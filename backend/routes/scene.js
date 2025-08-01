@@ -1,8 +1,7 @@
 import express from 'express';
-const { PrismaClient } = require('@prisma/client');
-const router = express.Router();
+import { prisma } from '../config/database.js';
 
-const prisma = new PrismaClient();
+const router = express.Router();
 
 // GET /api/scene/:id - Get scene by grid ID (e.g., G1.1, G2.3)
 router.get('/:id', async (req, res) => {
