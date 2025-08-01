@@ -512,7 +512,7 @@ Would you like me to speak to you in ${language}?`;
     });
   }
 
-  // Input field (G4.5-G4.7)
+  // Input field (G4.6-G7.6)
   if (hasStartedChat) {
     uiElements.push(
       createInputBox(
@@ -522,7 +522,7 @@ Would you like me to speak to you in ${language}?`;
         handleSubmit,
         'Ask Thoradin anything...',
         isLoading,
-        5, 4, 3
+        4, 6, 4
       )
     );
   }
