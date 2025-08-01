@@ -11,17 +11,25 @@ import {
 } from '../utils/gridConfig';
 
 const GridPlay = ({ 
-  backgroundComponent = null,
-  gridConfig = null, // New: Use grid configuration object
-  gridActions = [],
-  uiElements = [],
-  showSceneViewer = false,
-  showInvisibleButtons = false,
-  currentScene = 1,
-  currentSubscene = 1,
-  isZooming = false,
-  sceneName = 'homepage' // New: Scene name for configuration
+  gridConfig, 
+  sceneName, 
+  onTileClick, 
+  showInvisibleButtons, 
+  currentScene, 
+  currentSubscene 
 }) => {
+  console.log(`🎮 GridPlay rendering: ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, config:`, gridConfig);
+  
+  const { rows, cols, gap, padding, debug } = gridConfig;
+  
+  // Generate grid tiles
+  const tiles = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      tiles.push({ row, col });
+    }
+  }
+
   // Get grid configuration based on scene name or use provided config
   const config = gridConfig || getGridConfig(sceneName);
   
@@ -97,16 +105,13 @@ const GridPlay = ({
   const renderTile = (row, col) => {
     const gridId = getGridId(col, row);
     const gridIndex = row * config.cols + col;
-    const hasAction = finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function';
     
-    // Debug logging for first few tiles
-    if (row <= 1 && col <= 1) {
-      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}, isZooming: ${isZooming}`);
-    }
+    // Debug logging for scene state
+    console.log(`🎯 Rendering tile ${gridId} in ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, scene: ${currentScene}.${currentSubscene}`);
     
     // Get tile styles and classes based on configuration
-    const tileStyles = getTileStyles(config, showInvisibleButtons, isZooming, gridId, hasAction);
-    const tileClasses = getTileClasses(config, showInvisibleButtons, isZooming, hasAction);
+    const tileStyles = getTileStyles(config, showInvisibleButtons, false, gridId, true);
+    const tileClasses = getTileClasses(config, showInvisibleButtons, false, true);
     
     // Determine button text based on configuration
     let buttonText = showInvisibleButtons ? '' : gridId;
@@ -114,7 +119,7 @@ const GridPlay = ({
     // Disable click handler for Scene 1.1
     const handleClick = (currentScene === 1 && currentSubscene === 1) ? 
       () => { console.log('🚫 Click disabled for Scene 1.1'); } : 
-      () => handleTileClick(row, col);
+      () => onTileClick(row, col, gridIndex);
     
     return (
       <button
@@ -122,7 +127,7 @@ const GridPlay = ({
         className={tileClasses}
         onClick={handleClick}
         style={tileStyles}
-        disabled={isZooming || (currentScene === 1 && currentSubscene === 1)}
+        disabled={currentScene === 1 && currentSubscene === 1}
       >
         {buttonText}
       </button>
@@ -133,77 +138,21 @@ const GridPlay = ({
   const gridStyles = getGridStyles(config);
 
   return (
-    <div style={{ 
-      position: 'relative', 
-      width: '100vw', 
-      height: '100vh',
-      overflow: 'hidden'
-    }}>
-      {/* Background Component */}
-      {backgroundComponent && (
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-          {backgroundComponent}
-        </div>
-      )}
-
-      {/* Grid Container */}
-      <div style={gridStyles}>
-        {Array.from({ length: config.rows }, (_, row) =>
-          Array.from({ length: config.cols }, (_, col) => {
-            const gridId = getGridId(col, row);
-            const gridIndex = row * config.cols + col;
-            const hasAction = finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function';
-            
-            // Debug logging for first few tiles
-            if (row <= 1 && col <= 1) {
-              console.log(`Grid tile ${gridId}: showInvisibleButtons=${showInvisibleButtons}, currentScene=${currentScene}.${currentSubscene}`);
-            }
-            
-            // Always render clickable buttons, just make them invisible when needed
-            console.log(`🎭 Rendering ${showInvisibleButtons ? 'invisible' : 'visible'} button for ${gridId}`);
-            return renderTile(row, col);
-          })
-        )}
-      </div>
-
-      {/* UI Elements Layer */}
-      {uiElements.length > 0 && (
-        <div style={{ 
-          position: 'absolute', 
-          top: 0, 
-          left: 0, 
-          width: '100%', 
-          height: '100%', 
-          zIndex: 20,
-          pointerEvents: 'none'
-        }}>
-          {uiElements.map((element, index) => (
-            <div key={index} style={{ pointerEvents: 'auto' }}>
-              {element}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Scene Viewer Modal - only if showSceneViewer is true */}
-      {showSceneViewer && (selectedScene || isLoading || error) && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          maxWidth: '90vw',
-          width: '600px'
-        }}>
-          <SceneViewer
-            scene={selectedScene}
-            isLoading={isLoading}
-            error={error}
-            onClose={handleCloseScene}
-          />
-        </div>
-      )}
+    <div 
+      className="grid-container" 
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
+        gap: gap || '2px',
+        padding: padding || '10px',
+        width: '100%',
+        height: '100%',
+        position: 'relative',
+        zIndex: 5
+      }}
+    >
+      {tiles.map(({ row, col }) => renderTile(row, col))}
     </div>
   );
 };

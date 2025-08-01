@@ -17,6 +17,23 @@ const LayeredInterface = () => {
   // Get grid configuration based on current scene state
   const gridConfig = getSceneGridConfig(currentScene, currentSubscene);
   
+  // Handle full-screen click for Scene 1.1 (Matrix Awakening)
+  const handleFullScreenClick = async () => {
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('🎬 Full-screen click detected in Scene 1.1 - triggering skip');
+      
+      // Clear auto-advance timer
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+        setAutoAdvanceTimer(null);
+        console.log('⏰ Auto-advance cancelled by user click');
+      }
+      
+      // Trigger the same transition as auto-advance
+      await handleAutoAdvance();
+    }
+  };
+
   // Handle auto-advance functionality
   useEffect(() => {
     // Clear any existing timer
@@ -207,16 +224,46 @@ const LayeredInterface = () => {
   console.log(`🎭 Should be invisible: ${currentScene === 1 && currentSubscene === 1}`);
   
   return (
-    <GridPlay
-      backgroundComponent={backgroundComponent}
-      gridConfig={gridConfig}
-      gridActions={gridActions}
-      showInvisibleButtons={shouldShowInvisibleButtons} // Invisible during Matrix animation
-      currentScene={currentScene}
-      currentSubscene={currentSubscene}
-      isZooming={isZooming}
-      sceneName={`scene_${currentScene}_${currentSubscene}`}
-    />
+    <div className="layered-interface" style={{ position: 'relative', width: '100vw', height: '100vh' }}>
+      {/* Background Layer */}
+      <div className="background-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+        <MatrixSpiralCanvas 
+          isRunning={currentScene === 1 && currentSubscene === 1}
+          isStatic={currentScene === 1 && currentSubscene === 2}
+          onAnimationComplete={handleAnimationComplete}
+        />
+      </div>
+
+      {/* Full-screen click handler for Scene 1.1 */}
+      {(currentScene === 1 && currentSubscene === 1) && (
+        <div 
+          className="full-screen-click-handler"
+          onClick={handleFullScreenClick}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 10,
+            cursor: 'pointer',
+            background: 'transparent'
+          }}
+        />
+      )}
+
+      {/* Grid Layer */}
+      <div className="grid-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+        <GridPlay
+          gridConfig={gridConfig}
+          sceneName={`Scene ${currentScene}.${currentSubscene}`}
+          onTileClick={handleGridClick}
+          showInvisibleButtons={shouldShowInvisibleButtons}
+          currentScene={currentScene}
+          currentSubscene={currentSubscene}
+        />
+      </div>
+    </div>
   );
 };
 

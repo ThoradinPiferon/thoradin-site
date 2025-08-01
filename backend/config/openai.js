@@ -1,5 +1,5 @@
-const OpenAI = require('openai');
-const languageService = require('../services/languageService');
+import OpenAI from 'openai';
+import languageService from '../services/languageService.js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'dummy-key-for-development',
@@ -221,7 +221,7 @@ const generateChatResponse = async (message, language = 'en') => {
   }
 };
 
-module.exports = {
+export {
   openai,
   generateGridResponse,
   generateChatResponse

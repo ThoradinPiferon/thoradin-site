@@ -1,4 +1,4 @@
-const { prisma } = require('../config/database');
+import { prisma } from '../config/database.js';
 
 class LanguageService {
   constructor() {
@@ -406,4 +406,4 @@ class LanguageService {
   }
 }
 
-module.exports = new LanguageService(); 
+export default new LanguageService(); 
