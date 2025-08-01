@@ -196,6 +196,8 @@ const VaultInteraction = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
+  console.log('VaultInteraction rendering, showWelcome:', showWelcome);
+
   // Get user's location and time info
   const getUserInfo = () => {
     const now = new Date();
@@ -572,9 +574,12 @@ Would you like me to speak to you in ${language}?`;
           justifyContent: 'center'
         }}>
           <WordBalloon
-            message={getWelcomeMessage()}
+            message={getWelcomeMessage() || "Hello, brave little being. Welcome to the Vault."}
             isVisible={true}
-            onClose={() => setShowWelcome(false)}
+            onClose={() => {
+              console.log('Closing word balloon');
+              setShowWelcome(false);
+            }}
           />
         </div>
       )}
