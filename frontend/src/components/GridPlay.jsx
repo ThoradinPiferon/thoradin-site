@@ -9,7 +9,8 @@ const GridPlay = ({
   uiElements = [],
   showSceneViewer = false,
   showInvisibleButtons = false,
-  currentScene = 1
+  currentScene = 1,
+  currentSubscene = 1
 }) => {
   console.log('GridPlay rendering with props:', { 
     backgroundComponent: !!backgroundComponent, 
@@ -19,7 +20,8 @@ const GridPlay = ({
     uiElementsLength: uiElements.length,
     showSceneViewer,
     showInvisibleButtons,
-    currentScene
+    currentScene,
+    currentSubscene
   });
 
   const [selectedScene, setSelectedScene] = useState(null);
@@ -73,7 +75,7 @@ const GridPlay = ({
     
     // Debug logging for first few tiles
     if (row <= 2 && col <= 2) {
-      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}`);
+      console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}`);
     }
     
     // Determine button styling based on scene and visibility

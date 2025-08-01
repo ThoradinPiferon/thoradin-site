@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,58 +7,45 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User Management
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  username  String   @unique
-  password  String
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  gridInteractions GridInteraction[]
+  id               String            @id @default(cuid())
+  email            String            @unique
+  username         String            @unique
+  password         String
+  role             UserRole          @default(USER)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  aiResponses      AIResponse[]
   configurations   Configuration[]
-  themes          Theme[]
-  contents        Content[]
-  aiResponses     AIResponse[]
-  gridSessions    GridSession[]
+  contents         Content[]
+  gridInteractions GridInteraction[]
+  gridSessions     GridSession[]
+  themes           Theme[]
 
   @@map("users")
 }
 
-enum UserRole {
-  ADMIN
-  MODERATOR
-  USER
-}
-
-// Grid Interactions
 model GridInteraction {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   userId          String?
   gridRow         Int
   gridCol         Int
-  interactionType String   // click, hover, longPress
+  interactionType String
   emotionalState  String?
   symbolicContext String?
   aiResponse      String?
   responseTime    Int?
   tokensUsed      Int?
   model           String?
-  createdAt       DateTime @default(now())
-
-  // Relations
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
   aiResponses     AIResponse[]
+  user            User?        @relation(fields: [userId], references: [id])
 
   @@map("grid_interactions")
 }
 
-// AI Responses
 model AIResponse {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   gridInteractionId String
   userId            String?
   prompt            String
@@ -69,16 +53,13 @@ model AIResponse {
   model             String
   tokensUsed        Int?
   responseTime      Int?
-  createdAt         DateTime @default(now())
-
-  // Relations
-  gridInteraction GridInteraction @relation(fields: [gridInteractionId], references: [id], onDelete: Cascade)
-  user            User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+  gridInteraction   GridInteraction @relation(fields: [gridInteractionId], references: [id], onDelete: Cascade)
+  user              User?           @relation(fields: [userId], references: [id])
 
   @@map("ai_responses")
 }
 
-// Grid Sessions
 model GridSession {
   id          String   @id @default(cuid())
   userId      String
@@ -86,30 +67,75 @@ model GridSession {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("grid_sessions")
 }
 
-// Configuration Management
 model Configuration {
+  id        String     @id @default(cuid())
+  key       String     @unique
+  value     String
+  type      ConfigType
+  category  String
+  isActive  Boolean    @default(true)
+  version   Int        @default(1)
+  createdBy String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User?      @relation(fields: [createdBy], references: [id])
+
+  @@map("configurations")
+}
+
+model Theme {
   id          String   @id @default(cuid())
-  key         String   @unique
-  value       String
-  type        ConfigType
-  category    String   // animation, ui, content, theme
+  name        String   @unique
+  description String?
   isActive    Boolean  @default(true)
-  version     Int      @default(1)
+  isDefault   Boolean  @default(false)
+  config      Json
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  user        User?    @relation(fields: [createdBy], references: [id])
 
-  // Relations
-  user User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  @@map("themes")
+}
 
-  @@map("configurations")
+model Content {
+  id          String      @id @default(cuid())
+  key         String
+  content     String
+  type        ContentType
+  language    String      @default("en")
+  isProtected Boolean     @default(false)
+  isActive    Boolean     @default(true)
+  version     Int         @default(1)
+  createdBy   String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User?       @relation(fields: [createdBy], references: [id])
+
+  @@unique([key, language])
+  @@map("contents")
+}
+
+model scenes {
+  id           String   @id
+  gridId       String   @unique
+  title        String
+  description  String
+  animationUrl String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+}
+
+enum UserRole {
+  ADMIN
+  MODERATOR
+  USER
 }
 
 enum ConfigType {
@@ -120,46 +146,6 @@ enum ConfigType {
   ARRAY
 }
 
-// Theme Management
-model Theme {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
-  isActive    Boolean  @default(true)
-  isDefault   Boolean  @default(false)
-  config      Json     // Theme-specific configurations
-  createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  user User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-
-  @@map("themes")
-}
-
-// Content Management
-model Content {
-  id          String   @id @default(cuid())
-  key         String
-  content     String
-  type        ContentType
-  language    String   @default("en")
-  isProtected Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  version     Int      @default(1)
-  createdBy   String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  user User? @relation(fields: [createdBy], references: [id], onDelete: SetNull)
-
-  // Composite unique constraint for key + language
-  @@unique([key, language])
-  @@map("contents")
-}
-
 enum ContentType {
   ANIMATION_TEXT
   UI_TEXT
@@ -168,17 +154,3 @@ enum ContentType {
   MOCK_RESPONSE
   METADATA
 }
-
-// Scene Management
-model Scene {
-  id           String   @id @default(cuid())
-  gridId       String   @unique // e.g., "G1.1", "G2.3"
-  title        String
-  description  String
-  animationUrl String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("scenes")
-} 

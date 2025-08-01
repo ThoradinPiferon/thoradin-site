@@ -5,7 +5,8 @@ import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
   
-  const [currentScene, setCurrentScene] = useState(1); // 1, 2, or 3
+  const [currentScene, setCurrentScene] = useState(1); // Main scene ID
+  const [currentSubscene, setCurrentSubscene] = useState(1); // Subscene ID
   const [animationComplete, setAnimationComplete] = useState(false);
   const matrixRef = useRef(null);
   
@@ -18,7 +19,7 @@ const LayeredInterface = () => {
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (col, row, gridIndex) => {
-    console.log(`Grid click: G${col}.${row} in Scene ${currentScene}`);
+    console.log(`Grid click: G${col}.${row} in Scene ${currentScene}.${currentSubscene}`);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
@@ -29,6 +30,7 @@ const LayeredInterface = () => {
         body: JSON.stringify({
           gridId: `G${col}.${row}`,
           currentScene: currentScene,
+          currentSubscene: currentSubscene,
           action: 'grid_click'
         })
       });
@@ -38,8 +40,9 @@ const LayeredInterface = () => {
         console.log('Backend response:', data);
         
         // Backend controls the scene transitions
-        if (data.newScene) {
+        if (data.newScene && data.newSubscene) {
           setCurrentScene(data.newScene);
+          setCurrentSubscene(data.newSubscene);
         }
         
         // Backend controls Matrix animation
@@ -85,8 +88,9 @@ const LayeredInterface = () => {
       gridCols={gridCols}
       gridRows={gridRows}
       gridActions={gridActions}
-      showInvisibleButtons={currentScene === 1} // Invisible during Matrix animation
+      showInvisibleButtons={currentScene === 1 && currentSubscene === 1} // Invisible during Scene 1.1 (Matrix running)
       currentScene={currentScene}
+      currentSubscene={currentSubscene}
     />
   );
 };
