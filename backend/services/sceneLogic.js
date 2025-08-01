@@ -159,7 +159,7 @@ function validateSceneLogic(logic) {
   return true;
 }
 
-module.exports = {
+export {
   getSceneLogic,
   registerSceneLogic,
   getRegisteredSceneKeys,
