@@ -196,13 +196,20 @@ export function getTileStyles(config, showInvisibleButtons, isZooming, gridId, h
       cursor: 'pointer',
       position: 'relative',
       zIndex: 5,
+      // Force visibility to hidden for truly invisible buttons
+      visibility: 'hidden',
+      // Ensure no background or borders show through
+      background: 'transparent',
+      outline: 'none',
+      boxShadow: 'none',
       // Debug overlay for invisible buttons
       ...(debug && {
         backgroundColor: 'rgba(255, 0, 0, 0.1)',
         border: '1px solid rgba(255, 0, 0, 0.3)',
         color: 'rgba(255, 0, 0, 0.8)',
         opacity: 0.8,
-        fontSize: '8px'
+        fontSize: '8px',
+        visibility: 'visible'
       })
     };
   } else {
@@ -214,6 +221,7 @@ export function getTileStyles(config, showInvisibleButtons, isZooming, gridId, h
       transition: 'all 0.2s',
       cursor: hasAction ? 'pointer' : 'default',
       opacity: hasAction ? 1 : 0.5,
+      visibility: 'visible',
       // Debug overlay for visible buttons
       ...(debug && {
         backgroundColor: 'rgba(0, 255, 0, 0.1)',

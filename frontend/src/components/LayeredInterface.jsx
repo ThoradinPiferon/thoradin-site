@@ -200,17 +200,12 @@ const LayeredInterface = () => {
   console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
   console.log(`🎭 Should be invisible: ${currentScene === 1 && currentSubscene === 1}`);
   
-  // TEMPORARY FIX: Force Scene 1.1 for debugging
-  const forceScene1_1 = true;
-  const debugShouldShowInvisibleButtons = forceScene1_1 || shouldShowInvisibleButtons;
-  console.log(`🎭 FORCE DEBUG: showInvisibleButtons=${debugShouldShowInvisibleButtons}`);
-  
   return (
     <GridPlay
       backgroundComponent={backgroundComponent}
       gridConfig={gridConfig}
       gridActions={gridActions}
-      showInvisibleButtons={debugShouldShowInvisibleButtons} // Invisible during Matrix animation
+      showInvisibleButtons={shouldShowInvisibleButtons} // Invisible during Matrix animation
       currentScene={currentScene}
       currentSubscene={currentSubscene}
       isZooming={isZooming}

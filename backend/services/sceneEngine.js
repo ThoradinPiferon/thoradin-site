@@ -197,7 +197,38 @@ class SceneEngine {
   getStaticSpiralLogic(sceneData, gridId, action) {
     console.log(`🎭 Using background type logic: matrix_spiral_static`);
     
-    // Check if zoom is required
+    // For Scene 1.2, use the choices logic
+    if (sceneData.sceneId === 1 && sceneData.subsceneId === 2) {
+      console.log(`🎭 Evaluating choices for Scene 1.2`);
+      
+      // Check if it's K7 (vault entrance)
+      if (gridId === 'K7') {
+        return {
+          sceneId: 2,
+          subsceneId: 1,
+          message: 'Navigate to Vault',
+          effects: {
+            animationTrigger: 'scene_transition',
+            transitionType: 'vault_entrance'
+          },
+          echo: 'grid_click'
+        };
+      } else {
+        // Any other grid click restarts the matrix
+        return {
+          sceneId: 1,
+          subsceneId: 1,
+          message: 'Restart Matrix',
+          effects: {
+            animationTrigger: 'matrix_restart',
+            transitionType: 'spiral_reset'
+          },
+          echo: 'grid_click'
+        };
+      }
+    }
+    
+    // Check if zoom is required for other scenes
     if (sceneData.effects?.zoomRequired) {
       return this.getStaticSpiralTransition(sceneData.sceneId, sceneData.subsceneId, gridId, action);
     }
@@ -211,7 +242,38 @@ class SceneEngine {
   getVaultLogic(sceneData, gridId, action) {
     console.log(`🎭 Using background type logic: vault_background`);
     
-    // Check if zoom is required
+    // For Scene 2.1, use the choices logic
+    if (sceneData.sceneId === 2 && sceneData.subsceneId === 1) {
+      console.log(`🎭 Evaluating choices for Scene 2.1`);
+      
+      // Check if it's K7 (return to homepage)
+      if (gridId === 'K7') {
+        return {
+          sceneId: 1,
+          subsceneId: 1,
+          message: 'Return to Homepage',
+          effects: {
+            animationTrigger: 'vault_exit',
+            transitionType: 'return_to_matrix'
+          },
+          echo: 'grid_click'
+        };
+      } else {
+        // Any other grid click stays in vault
+        return {
+          sceneId: 2,
+          subsceneId: 1,
+          message: 'Vault Interaction',
+          effects: {
+            animationTrigger: 'vault_interaction',
+            transitionType: 'none'
+          },
+          echo: 'grid_click'
+        };
+      }
+    }
+    
+    // Check if zoom is required for other scenes
     if (sceneData.effects?.zoomRequired) {
       return this.getVaultTransition(sceneData.sceneId, sceneData.subsceneId, gridId, action);
     }
