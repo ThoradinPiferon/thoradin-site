@@ -18,11 +18,11 @@ export const sceneSeedData = [
     tiles: ["A1"],
     invisibleMode: true,
     effects: {
-      autoAdvanceAfter: 6000, // 6 seconds
+      autoAdvanceAfter: 8000, // 8 seconds
       nextScene: { sceneId: 1, subsceneId: 2 }
     },
     choices: [], // No choices - auto-advance only
-    nextScene: null, // Auto-advance handles transition
+    nextScene: { sceneId: 1, subsceneId: 2 }, // Auto-advance to Scene 1.2
     echoTriggers: ["matrix_awakening"]
   },
   

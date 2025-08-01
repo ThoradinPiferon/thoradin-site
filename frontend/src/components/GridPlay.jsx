@@ -111,13 +111,18 @@ const GridPlay = ({
     // Determine button text based on configuration
     let buttonText = showInvisibleButtons ? '' : gridId;
     
+    // Disable click handler for Scene 1.1
+    const handleClick = (currentScene === 1 && currentSubscene === 1) ? 
+      () => { console.log('🚫 Click disabled for Scene 1.1'); } : 
+      () => handleTileClick(row, col);
+    
     return (
       <button
         key={gridId}
         className={tileClasses}
-        onClick={() => handleTileClick(row, col)}
+        onClick={handleClick}
         style={tileStyles}
-        disabled={isZooming}
+        disabled={isZooming || (currentScene === 1 && currentSubscene === 1)}
       >
         {buttonText}
       </button>

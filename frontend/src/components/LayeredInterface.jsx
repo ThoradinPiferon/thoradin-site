@@ -30,7 +30,7 @@ const LayeredInterface = () => {
       const timer = setTimeout(() => {
         console.log('⏰ Auto-advance triggered for Scene 1.1');
         handleAutoAdvance();
-      }, 6000); // 6 seconds
+      }, 8000); // 8 seconds
       
       setAutoAdvanceTimer(timer);
     }
@@ -53,6 +53,12 @@ const LayeredInterface = () => {
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
+    // Disable clicks for Scene 1.1 (Matrix Awakening)
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening)');
+      return;
+    }
+    
     // Clear auto-advance timer if user clicks during Scene 1.1
     if (currentScene === 1 && currentSubscene === 1) {
       if (autoAdvanceTimer) {

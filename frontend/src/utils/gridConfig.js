@@ -73,7 +73,8 @@ export const SCENE_GRID_CONFIGS = {
     cols: 1,
     gap: '0px',
     padding: '0px',
-    debug: false
+    debug: false,
+    invisibleMode: true
   }
 };
 

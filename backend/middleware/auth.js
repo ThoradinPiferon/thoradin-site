@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import prisma from '../config/database.js';
+import { prisma } from '../config/database.js';
 
 // Verify JWT token middleware
 const authenticateToken = async (req, res, next) => {
