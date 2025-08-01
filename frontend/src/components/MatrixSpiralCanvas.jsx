@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { setMatrixCanvasRef } from '../utils/zoomUtils';
 
 // Light Spiral Calculation with Exponential Speed
 function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
@@ -569,6 +570,17 @@ const MatrixSpiralCanvas = forwardRef(({
     fastForwardToEnd,
     restartAnimation
   }));
+
+  // Register this component with the global zoom utility
+  useEffect(() => {
+    setMatrixCanvasRef({
+      handleGridZoom: (colIndex, rowIndex) => handleGridZoom(colIndex, rowIndex)
+    });
+    
+    return () => {
+      setMatrixCanvasRef(null);
+    };
+  }, []);
 
   return (
     <canvas 

@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
+import GridPlay from './GridPlay';
+import { generateGridActions } from '../utils/gridConfig';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
-import { getSceneGridConfig, generateGridActions } from '../utils/gridConfig';
+import { handleGridZoom, isZooming as getZoomState } from '../utils/zoomUtils';
+import ZoomTestComponent from './ZoomTestComponent';
 
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
@@ -161,21 +163,14 @@ const LayeredInterface = () => {
           console.log('✅ Grid Zoom Started');
           setIsZooming(true);
           
-          // Extract grid coordinates from gridId
-          const zoomCoords = parseGridId(gridId);
-          const zoomCol = zoomCoords.colIndex;
-          const zoomRow = zoomCoords.rowIndex;
+          // Use global zoom utility
+          console.log(`🎬 Starting zoom animation to grid ${gridId}`);
+          await handleGridZoom(gridId);
+          console.log(`🎬 Zoom animation completed for grid ${gridId}`);
           
-          // Trigger zoom animation and wait for completion
-          if (matrixRef.current) {
-            console.log(`🎬 Starting zoom animation to grid ${gridId} (${zoomCol}, ${zoomRow})`);
-            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
-            console.log(`🎬 Zoom animation completed for grid ${gridId}`);
-            
-            // Add a longer pause to let the zoom effect sink in
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            console.log(`🎬 Pause completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
-          }
+          // Add a longer pause to let the zoom effect sink in
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`🎬 Pause completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
           
           // Reset zoom state
           setIsZooming(false);
@@ -190,13 +185,8 @@ const LayeredInterface = () => {
             console.log(`🎬 Zooming to ${data.zoomTo}...`);
             setIsZooming(true);
             
-            // Extract grid coordinates from zoomTo (e.g., "K7" -> col=10, row=6)
-            const zoomCoords = parseGridId(data.zoomTo);
-            const zoomCol = zoomCoords.colIndex;
-            const zoomRow = zoomCoords.rowIndex;
-            
-            // Trigger zoom animation
-            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+            // Use global zoom utility
+            await handleGridZoom(data.zoomTo);
             
             // Reset zoom state
             setIsZooming(false);
@@ -347,6 +337,9 @@ const LayeredInterface = () => {
           isZooming={isZooming}
         />
       </div>
+
+      {/* Zoom Test Component (for development) */}
+      <ZoomTestComponent />
     </div>
   );
 };
