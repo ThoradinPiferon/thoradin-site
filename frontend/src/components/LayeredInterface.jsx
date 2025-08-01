@@ -20,8 +20,31 @@ const LayeredInterface = () => {
     window.location.href = '/vault';
   };
   
-  // Create MatrixSpiralCanvas as background component
-  const backgroundComponent = <MatrixSpiralCanvas />;
+  // Create a simple test background instead of MatrixSpiralCanvas
+  const backgroundComponent = (
+    <div style={{
+      width: '100%',
+      height: '100%',
+      backgroundColor: '#000',
+      background: 'linear-gradient(45deg, #000 0%, #1a1a1a 50%, #000 100%)',
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        color: '#00ff00',
+        fontSize: '24px',
+        fontFamily: 'monospace',
+        textAlign: 'center'
+      }}>
+        MATRIX BACKGROUND TEST
+        <br />
+        <small style={{ fontSize: '12px' }}>Click G11.7 to go to Vault</small>
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black' }}>
