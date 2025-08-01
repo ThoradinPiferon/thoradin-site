@@ -5,11 +5,9 @@ const sceneEngine = require('../services/sceneEngine');
 /**
  * Grid action handler with modular scene engine
  * 
- * This route now uses the SceneEngine to determine what happens when a tile is clicked.
- * The engine can handle complex scene transitions, effects, and logic based on:
- * - Current scene/subscene state
- * - Grid coordinates clicked
- * - Scene logic defined in database or fallback logic
+ * This route now uses the SceneEngine's evaluateSceneTransition to determine 
+ * what happens when a tile is clicked. The engine provides a clean API wrapper
+ * for scene evaluation and transition logic.
  */
 router.post('/action', async (req, res) => {
   try {
@@ -25,20 +23,20 @@ router.post('/action', async (req, res) => {
       });
     }
 
-    // Use the scene engine to determine the next scene state
-    const nextScene = await sceneEngine.getNextScene({
-      currentScene: parseInt(currentScene),
-      currentSubscene: parseInt(currentSubscene),
+    // Use the scene engine to evaluate the scene transition
+    const transition = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: parseInt(currentScene),
+      subsceneId: parseInt(currentSubscene),
       gridId,
       action
     });
 
-    console.log(`✅ Scene Engine Response:`, nextScene);
+    console.log(`✅ Scene Engine Transition Result:`, transition);
 
     // Return the scene engine response
     res.json({
       success: true,
-      ...nextScene
+      ...transition
     });
 
   } catch (error) {
@@ -131,6 +129,42 @@ router.post('/scene', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to create/update scene',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Test scene transition evaluation (debug endpoint)
+ */
+router.post('/test-transition', async (req, res) => {
+  try {
+    const { currentSceneId, subsceneId, gridId, action } = req.body;
+
+    if (!currentSceneId || !subsceneId || !gridId || !action) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required parameters: currentSceneId, subsceneId, gridId, action'
+      });
+    }
+
+    const transition = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: parseInt(currentSceneId),
+      subsceneId: parseInt(subsceneId),
+      gridId,
+      action
+    });
+
+    res.json({
+      success: true,
+      transition,
+      testParams: { currentSceneId, subsceneId, gridId, action }
+    });
+  } catch (error) {
+    console.error('Error testing transition:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to test transition',
       error: error.message
     });
   }

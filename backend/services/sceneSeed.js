@@ -1,5 +1,5 @@
 /**
- * Scene Seed Structure - JSON schema for scene definitions
+ * Scene Seed Structure - Enhanced JSON schema for scene definitions
  * 
  * This module defines the structure for scene seeds that can be used to
  * easily manage scene design outside the database.
@@ -17,6 +17,8 @@
  * @property {Array<Choice>} [choices] - Optional choices array
  * @property {Object} [logic] - Optional logic flags and triggers
  * @property {Array<Effect>} [effects] - Optional effects array
+ * @property {Object} [nextScene] - Default next scene if no choices match
+ * @property {Array<string>} [echoTriggers] - Actions that trigger echo effects
  */
 
 /**
@@ -26,6 +28,7 @@
  * @property {Array<number>} next - [sceneId, subsceneId] for next scene
  * @property {string} [condition] - Optional condition for choice availability
  * @property {Object} [effects] - Optional effects when choice is selected
+ * @property {string} [echo] - Optional echo effect for this choice
  */
 
 /**
@@ -44,9 +47,10 @@
  * @property {Array<string>} [echoTriggers] - Array of echo trigger conditions
  * @property {boolean} [requiresZoom] - Whether scene requires zoom animation
  * @property {boolean} [requiresTransition] - Whether scene requires transition effect
+ * @property {boolean} [requiresUnlock] - Whether scene requires unlock condition
  */
 
-// Default scene seeds for the current system
+// Enhanced scene seeds for the current system
 const defaultSceneSeeds = [
   {
     sceneId: 1,
@@ -69,7 +73,9 @@ const defaultSceneSeeds = [
           targetScene: [1, 2]
         }
       }
-    ]
+    ],
+    nextScene: [1, 2],
+    echoTriggers: ["grid_click"]
   },
   {
     sceneId: 1,
@@ -91,7 +97,8 @@ const defaultSceneSeeds = [
         effects: {
           animationTrigger: "scene_transition",
           transitionType: "vault_entrance"
-        }
+        },
+        echo: "vault_destination"
       },
       {
         label: "Restart Matrix",
@@ -100,7 +107,8 @@ const defaultSceneSeeds = [
         effects: {
           animationTrigger: "matrix_restart",
           transitionType: "spiral_reset"
-        }
+        },
+        echo: "matrix_rebirth"
       }
     ],
     effects: [
@@ -112,7 +120,9 @@ const defaultSceneSeeds = [
           targetGrid: "clicked"
         }
       }
-    ]
+    ],
+    nextScene: [1, 1],
+    echoTriggers: ["grid_click", "zoom_complete"]
   },
   {
     sceneId: 2,
@@ -134,7 +144,18 @@ const defaultSceneSeeds = [
         effects: {
           animationTrigger: "vault_exit",
           transitionType: "return_to_matrix"
-        }
+        },
+        echo: "home_return"
+      },
+      {
+        label: "Vault Interaction",
+        next: [2, 1],
+        condition: "gridId !== 'G11.7'",
+        effects: {
+          animationTrigger: "vault_interaction",
+          transitionType: "none"
+        },
+        echo: "vault_exploration"
       }
     ],
     effects: [
@@ -146,7 +167,9 @@ const defaultSceneSeeds = [
           targetGrid: "clicked"
         }
       }
-    ]
+    ],
+    nextScene: [2, 1],
+    echoTriggers: ["grid_click", "vault_interaction"]
   }
 ];
 
@@ -220,6 +243,16 @@ function validateSceneSeed(seed) {
     });
   }
   
+  // Validate nextScene if present
+  if (seed.nextScene && (!Array.isArray(seed.nextScene) || seed.nextScene.length !== 2)) {
+    errors.push('nextScene must be an array with [sceneId, subsceneId]');
+  }
+  
+  // Validate echoTriggers if present
+  if (seed.echoTriggers && !Array.isArray(seed.echoTriggers)) {
+    errors.push('echoTriggers must be an array');
+  }
+  
   return {
     isValid: errors.length === 0,
     errors
@@ -256,7 +289,7 @@ function databaseToSeed(dbScene) {
     description: dbScene.description,
     backgroundType: dbScene.backgroundType,
     animationUrl: dbScene.animationUrl,
-    // Note: choices, logic, and effects would need to be stored separately
+    // Note: choices, logic, effects, nextScene, and echoTriggers would need to be stored separately
     // or in a JSON field in the database
   };
 }
@@ -281,11 +314,42 @@ function findSceneSeed(sceneId, subsceneId) {
   ) || null;
 }
 
+/**
+ * Get all scene seeds for a specific scene
+ * @param {number} sceneId - Scene ID
+ * @returns {Array<SceneSeed>} Array of scene seeds for the scene
+ */
+function getSceneSeeds(sceneId) {
+  return defaultSceneSeeds.filter(seed => seed.sceneId === sceneId);
+}
+
+/**
+ * Get all available background types
+ * @returns {Array<string>} Array of background types
+ */
+function getBackgroundTypes() {
+  const types = new Set();
+  defaultSceneSeeds.forEach(seed => types.add(seed.backgroundType));
+  return Array.from(types);
+}
+
+/**
+ * Get scene seeds by background type
+ * @param {string} backgroundType - Background type
+ * @returns {Array<SceneSeed>} Array of scene seeds with the background type
+ */
+function getSceneSeedsByBackgroundType(backgroundType) {
+  return defaultSceneSeeds.filter(seed => seed.backgroundType === backgroundType);
+}
+
 module.exports = {
   validateSceneSeed,
   seedToDatabase,
   databaseToSeed,
   getDefaultSceneSeeds,
   findSceneSeed,
+  getSceneSeeds,
+  getBackgroundTypes,
+  getSceneSeedsByBackgroundType,
   defaultSceneSeeds
 }; 

@@ -91,9 +91,9 @@ async function testSceneEngine() {
   try {
     // Test Scene 1.1 logic
     console.log('\n🎭 Testing Scene 1.1 (Matrix Running):');
-    const scene1_1 = await sceneEngine.getNextScene({
-      currentScene: 1,
-      currentSubscene: 1,
+    const scene1_1 = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: 1,
+      subsceneId: 1,
       gridId: 'G1.1',
       action: 'grid_click'
     });
@@ -101,9 +101,9 @@ async function testSceneEngine() {
 
     // Test Scene 1.2 logic
     console.log('\n🎭 Testing Scene 1.2 (Matrix Static - G11.7):');
-    const scene1_2_vault = await sceneEngine.getNextScene({
-      currentScene: 1,
-      currentSubscene: 2,
+    const scene1_2_vault = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: 1,
+      subsceneId: 2,
       gridId: 'G11.7',
       action: 'grid_click'
     });
@@ -111,9 +111,9 @@ async function testSceneEngine() {
 
     // Test Scene 1.2 logic (other grid)
     console.log('\n🎭 Testing Scene 1.2 (Matrix Static - G1.1):');
-    const scene1_2_restart = await sceneEngine.getNextScene({
-      currentScene: 1,
-      currentSubscene: 2,
+    const scene1_2_restart = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: 1,
+      subsceneId: 2,
       gridId: 'G1.1',
       action: 'grid_click'
     });
@@ -121,9 +121,9 @@ async function testSceneEngine() {
 
     // Test Scene 2.1 logic
     console.log('\n🎭 Testing Scene 2.1 (Vault - G11.7):');
-    const scene2_1 = await sceneEngine.getNextScene({
-      currentScene: 2,
-      currentSubscene: 1,
+    const scene2_1 = await sceneEngine.evaluateSceneTransition({
+      currentSceneId: 2,
+      subsceneId: 1,
       gridId: 'G11.7',
       action: 'grid_click'
     });
