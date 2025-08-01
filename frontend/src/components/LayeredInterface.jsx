@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
+import { getGridConfig, generateGridActions } from '../utils/gridConfig';
 
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
@@ -12,12 +13,14 @@ const LayeredInterface = () => {
   const [isZooming, setIsZooming] = useState(false);
   const matrixRef = useRef(null);
   
-  // Grid configuration - 11 columns x 7 rows for Excel-style coordinates
-  const gridCols = 11;
-  const gridRows = 7;
+  // Get grid configuration based on current scene
+  const getSceneName = () => {
+    if (currentScene === 1) return 'homepage';
+    if (currentScene === 2) return 'vault';
+    return 'homepage'; // Default fallback
+  };
   
-  // Grid actions - array of functions for each grid cell
-  const gridActions = new Array(gridRows * gridCols).fill(null);
+  const gridConfig = getGridConfig(getSceneName());
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
@@ -94,12 +97,8 @@ const LayeredInterface = () => {
     }
   };
   
-  // Set up grid actions to call backend
-  for (let i = 0; i < gridActions.length; i++) {
-    const row = Math.floor(i / gridCols);
-    const col = i % gridCols;
-    gridActions[i] = () => handleGridClick(row, col, i);
-  }
+  // Generate grid actions using the configuration
+  const gridActions = generateGridActions(gridConfig, handleGridClick);
   
   // Create MatrixSpiralCanvas as background component
   const backgroundComponent = (
@@ -116,17 +115,18 @@ const LayeredInterface = () => {
   // Debug the invisible button logic
   const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
   console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
+  console.log(`🎭 Grid Config: ${getSceneName()} - ${gridConfig.rows}x${gridConfig.cols} (${gridConfig.rows * gridConfig.cols} tiles)`);
   
   return (
     <GridPlay
       backgroundComponent={backgroundComponent}
-      gridRows={gridRows}
-      gridCols={gridCols}
+      gridConfig={gridConfig}
       gridActions={gridActions}
       showInvisibleButtons={shouldShowInvisibleButtons} // Invisible during Matrix animation
       currentScene={currentScene}
       currentSubscene={currentSubscene}
       isZooming={isZooming}
+      sceneName={getSceneName()}
     />
   );
 };

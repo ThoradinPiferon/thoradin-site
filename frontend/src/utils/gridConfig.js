@@ -1,0 +1,317 @@
+/**
+ * Grid Configuration System
+ * 
+ * This module provides a flexible grid configuration system that supports
+ * variable grid sizes and dynamic tile generation in Excel-style format.
+ */
+
+import { getGridId, getAllGridIds, getGridDimensions } from './gridHelpers.js';
+
+/**
+ * Default grid configuration
+ */
+export const DEFAULT_GRID_CONFIG = {
+  rows: 7,
+  cols: 11,
+  gap: '2px',
+  padding: '20px',
+  debug: false
+};
+
+/**
+ * Grid configuration for different scenes
+ */
+export const SCENE_GRID_CONFIGS = {
+  // Homepage - Matrix spiral experience
+  'homepage': {
+    rows: 7,
+    cols: 11,
+    gap: '2px',
+    padding: '20px',
+    debug: false
+  },
+  
+  // Vault - AI interaction interface
+  'vault': {
+    rows: 7,
+    cols: 11,
+    gap: '2px',
+    padding: '20px',
+    debug: false
+  },
+  
+  // Compact grid for testing
+  'compact': {
+    rows: 3,
+    cols: 3,
+    gap: '4px',
+    padding: '10px',
+    debug: true
+  },
+  
+  // Wide grid for special scenes
+  'wide': {
+    rows: 5,
+    cols: 15,
+    gap: '1px',
+    padding: '15px',
+    debug: false
+  },
+  
+  // Tall grid for vertical layouts
+  'tall': {
+    rows: 10,
+    cols: 7,
+    gap: '3px',
+    padding: '25px',
+    debug: false
+  }
+};
+
+/**
+ * Generate grid configuration for a specific scene
+ * @param {string} sceneName - Scene name (e.g., 'homepage', 'vault')
+ * @param {Object} customConfig - Optional custom configuration overrides
+ * @returns {Object} Grid configuration object
+ */
+export function getGridConfig(sceneName = 'homepage', customConfig = {}) {
+  const baseConfig = SCENE_GRID_CONFIGS[sceneName] || DEFAULT_GRID_CONFIG;
+  return {
+    ...baseConfig,
+    ...customConfig
+  };
+}
+
+/**
+ * Generate all tile IDs for a given grid configuration
+ * @param {Object} config - Grid configuration object
+ * @returns {Array<string>} Array of tile IDs in Excel format
+ */
+export function generateTileIds(config) {
+  const { rows, cols } = config;
+  const tileIds = [];
+  
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      tileIds.push(getGridId(col, row));
+    }
+  }
+  
+  return tileIds;
+}
+
+/**
+ * Generate grid actions array for a given configuration
+ * @param {Object} config - Grid configuration object
+ * @param {Function} clickHandler - Function to handle tile clicks
+ * @returns {Array<Function>} Array of click handlers
+ */
+export function generateGridActions(config, clickHandler) {
+  const { rows, cols } = config;
+  const actions = new Array(rows * cols).fill(null);
+  
+  for (let i = 0; i < actions.length; i++) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    actions[i] = () => clickHandler(row, col, i);
+  }
+  
+  return actions;
+}
+
+/**
+ * Get CSS Grid template styles for a configuration
+ * @param {Object} config - Grid configuration object
+ * @returns {Object} CSS styles object
+ */
+export function getGridStyles(config) {
+  const { rows, cols, gap, padding } = config;
+  
+  return {
+    display: 'grid',
+    gridTemplateColumns: `repeat(${cols}, 1fr)`,
+    gridTemplateRows: `repeat(${rows}, 1fr)`,
+    gap: gap,
+    padding: padding,
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    zIndex: 10,
+    pointerEvents: 'auto'
+  };
+}
+
+/**
+ * Get tile styles based on configuration and state
+ * @param {Object} config - Grid configuration object
+ * @param {boolean} showInvisibleButtons - Whether to show invisible buttons
+ * @param {boolean} isZooming - Whether zoom animation is active
+ * @param {string} gridId - Tile grid ID
+ * @param {boolean} hasAction - Whether tile has a click action
+ * @returns {Object} CSS styles object
+ */
+export function getTileStyles(config, showInvisibleButtons, isZooming, gridId, hasAction) {
+  const { debug } = config;
+  
+  if (showInvisibleButtons) {
+    // Completely invisible buttons for Matrix animation - but still clickable!
+    return {
+      backgroundColor: 'transparent',
+      border: 'none',
+      color: 'transparent',
+      opacity: 0,
+      pointerEvents: 'auto',
+      cursor: 'pointer',
+      position: 'relative',
+      zIndex: 5,
+      // Debug overlay for invisible buttons
+      ...(debug && {
+        backgroundColor: 'rgba(255, 0, 0, 0.1)',
+        border: '1px solid rgba(255, 0, 0, 0.3)',
+        color: 'rgba(255, 0, 0, 0.8)',
+        opacity: 0.8,
+        fontSize: '8px'
+      })
+    };
+  } else {
+    // Normal visible buttons for other scenes
+    return {
+      backgroundColor: 'rgba(31, 41, 55, 0.2)',
+      border: '1px solid rgba(75, 85, 99, 0.3)',
+      color: 'rgb(209, 213, 219)',
+      transition: 'all 0.2s',
+      cursor: hasAction ? 'pointer' : 'default',
+      opacity: hasAction ? 1 : 0.5,
+      // Debug overlay for visible buttons
+      ...(debug && {
+        backgroundColor: 'rgba(0, 255, 0, 0.1)',
+        border: '1px solid rgba(0, 255, 0, 0.3)',
+        color: 'rgba(0, 255, 0, 0.8)',
+        fontSize: '10px'
+      }),
+      // Zoom state
+      ...(isZooming && {
+        pointerEvents: 'none',
+        opacity: 0.3
+      })
+    };
+  }
+}
+
+/**
+ * Get tile CSS classes based on configuration and state
+ * @param {Object} config - Grid configuration object
+ * @param {boolean} showInvisibleButtons - Whether to show invisible buttons
+ * @param {boolean} isZooming - Whether zoom animation is active
+ * @param {boolean} hasAction - Whether tile has a click action
+ * @returns {string} CSS classes string
+ */
+export function getTileClasses(config, showInvisibleButtons, isZooming, hasAction) {
+  const baseClasses = `
+    w-full h-full 
+    flex items-center justify-center
+    text-xs font-mono
+    focus:outline-none focus:ring-0
+    transition-all duration-200
+  `;
+  
+  if (showInvisibleButtons) {
+    return baseClasses + ' cursor-pointer';
+  } else {
+    const hoverClasses = hasAction 
+      ? 'hover:bg-gray-700/30 hover:border-gray-500/50 hover:text-white' 
+      : '';
+    const focusClasses = hasAction 
+      ? 'focus:ring-2 focus:ring-blue-500/50' 
+      : '';
+    const zoomClasses = isZooming ? 'pointer-events-none opacity-30' : '';
+    
+    return `${baseClasses} ${hoverClasses} ${focusClasses} ${zoomClasses}`.trim();
+  }
+}
+
+/**
+ * Validate grid configuration
+ * @param {Object} config - Grid configuration object
+ * @returns {Object} Validation result with isValid and errors
+ */
+export function validateGridConfig(config) {
+  const errors = [];
+  
+  if (!config.rows || typeof config.rows !== 'number' || config.rows < 1) {
+    errors.push('rows must be a positive number');
+  }
+  
+  if (!config.cols || typeof config.cols !== 'number' || config.cols < 1) {
+    errors.push('cols must be a positive number');
+  }
+  
+  if (config.rows > 26) {
+    errors.push('rows cannot exceed 26 (Excel column limit)');
+  }
+  
+  if (config.cols > 1000) {
+    errors.push('cols cannot exceed 1000 (reasonable limit)');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Get grid dimensions for a configuration
+ * @param {Object} config - Grid configuration object
+ * @returns {Object} { rows, cols, totalTiles }
+ */
+export function getGridDimensions(config) {
+  return {
+    rows: config.rows,
+    cols: config.cols,
+    totalTiles: config.rows * config.cols
+  };
+}
+
+/**
+ * Create a grid configuration with custom dimensions
+ * @param {number} rows - Number of rows
+ * @param {number} cols - Number of columns
+ * @param {Object} options - Additional options
+ * @returns {Object} Grid configuration object
+ */
+export function createGridConfig(rows, cols, options = {}) {
+  const config = {
+    rows,
+    cols,
+    gap: options.gap || '2px',
+    padding: options.padding || '20px',
+    debug: options.debug || false
+  };
+  
+  const validation = validateGridConfig(config);
+  if (!validation.isValid) {
+    throw new Error(`Invalid grid configuration: ${validation.errors.join(', ')}`);
+  }
+  
+  return config;
+}
+
+/**
+ * Get all available scene configurations
+ * @returns {Object} Object with scene names and their configurations
+ */
+export function getAllSceneConfigs() {
+  return SCENE_GRID_CONFIGS;
+}
+
+/**
+ * Get scene configuration by name
+ * @param {string} sceneName - Scene name
+ * @returns {Object|null} Grid configuration or null if not found
+ */
+export function getSceneConfig(sceneName) {
+  return SCENE_GRID_CONFIGS[sceneName] || null;
+} 

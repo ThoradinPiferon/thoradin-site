@@ -1,23 +1,34 @@
 import React, { useState } from 'react';
 import SceneViewer from './SceneViewer';
 import { getGridId } from '../utils/gridHelpers';
+import { 
+  getGridConfig, 
+  generateTileIds, 
+  generateGridActions, 
+  getGridStyles, 
+  getTileStyles, 
+  getTileClasses 
+} from '../utils/gridConfig';
 
 const GridPlay = ({ 
   backgroundComponent = null,
-  gridRows = 7,
-  gridCols = 11,
+  gridConfig = null, // New: Use grid configuration object
   gridActions = [],
   uiElements = [],
   showSceneViewer = false,
   showInvisibleButtons = false,
   currentScene = 1,
   currentSubscene = 1,
-  isZooming = false
+  isZooming = false,
+  sceneName = 'homepage' // New: Scene name for configuration
 }) => {
+  // Get grid configuration based on scene name or use provided config
+  const config = gridConfig || getGridConfig(sceneName);
+  
   console.log('GridPlay rendering with props:', { 
     backgroundComponent: !!backgroundComponent, 
-    gridRows, 
-    gridCols, 
+    sceneName,
+    config,
     gridActionsLength: gridActions.length,
     uiElementsLength: uiElements.length,
     showSceneViewer,
@@ -35,6 +46,12 @@ const GridPlay = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Generate tile IDs for this configuration
+  const tileIds = generateTileIds(config);
+  
+  // Generate grid actions if not provided
+  const finalGridActions = gridActions.length > 0 ? gridActions : generateGridActions(config, handleTileClick);
+
   const handleTileClick = async (row, col) => {
     // Disable clicks during zooming
     if (isZooming) {
@@ -42,12 +59,12 @@ const GridPlay = ({
       return;
     }
     
-    const gridIndex = row * gridCols + col;
+    const gridIndex = row * config.cols + col;
     
     // Check if there's a custom action for this tile
-    if (gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function') {
+    if (finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function') {
       console.log(`🎯 Executing custom action for tile ${getGridId(col, row)}`);
-      gridActions[gridIndex](row, col, gridIndex);
+      finalGridActions[gridIndex](row, col, gridIndex);
       return;
     }
 
@@ -79,68 +96,36 @@ const GridPlay = ({
 
   const renderTile = (row, col) => {
     const gridId = getGridId(col, row);
-    const gridIndex = row * gridCols + col;
-    const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
+    const gridIndex = row * config.cols + col;
+    const hasAction = finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function';
     
     // Debug logging for first few tiles
     if (row <= 1 && col <= 1) {
       console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}, isZooming: ${isZooming}`);
     }
     
-    // Determine button styling based on scene and visibility
-    let buttonStyle = '';
-    let buttonText = gridId;
-    let inlineStyles = {};
+    // Get tile styles and classes based on configuration
+    const tileStyles = getTileStyles(config, showInvisibleButtons, isZooming, gridId, hasAction);
+    const tileClasses = getTileClasses(config, showInvisibleButtons, isZooming, hasAction);
     
-    if (showInvisibleButtons) {
-      // Completely invisible buttons for Matrix animation - but still clickable!
-      buttonStyle = `
-        w-full h-full 
-        flex items-center justify-center
-        text-xs font-mono
-        focus:outline-none focus:ring-0
-        cursor-pointer
-      `;
-      buttonText = ''; // No text at all
-      inlineStyles = {
-        backgroundColor: 'transparent',
-        border: 'none',
-        color: 'transparent',
-        opacity: 0,
-        pointerEvents: 'auto',
-        cursor: 'pointer',
-        position: 'relative',
-        zIndex: 5
-      };
-    } else {
-      // Normal visible buttons for other scenes
-      buttonStyle = `
-        w-full h-full 
-        bg-gray-800/20 border border-gray-600/30
-        hover:bg-gray-700/30 hover:border-gray-500/50
-        text-gray-300 hover:text-white
-        transition-all duration-200
-        flex items-center justify-center
-        text-xs font-mono
-        focus:outline-none focus:ring-2 focus:ring-blue-500/50
-        ${hasAction ? 'cursor-pointer' : 'cursor-default opacity-50'}
-        ${isZooming ? 'pointer-events-none opacity-30' : ''}
-      `;
-      inlineStyles = {};
-    }
+    // Determine button text based on configuration
+    let buttonText = showInvisibleButtons ? '' : gridId;
     
     return (
       <button
         key={gridId}
-        className={buttonStyle}
+        className={tileClasses}
         onClick={() => handleTileClick(row, col)}
-        style={inlineStyles}
+        style={tileStyles}
         disabled={isZooming}
       >
         {buttonText}
       </button>
     );
   };
+
+  // Get grid container styles
+  const gridStyles = getGridStyles(config);
 
   return (
     <div style={{ 
@@ -157,25 +142,12 @@ const GridPlay = ({
       )}
 
       {/* Grid Container */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        width: '100%', 
-        height: '100%', 
-        zIndex: 10,
-        display: 'grid',
-        gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
-        gridTemplateRows: `repeat(${gridRows}, 1fr)`,
-        gap: '2px',
-        padding: '20px',
-        pointerEvents: 'auto'
-      }}>
-        {Array.from({ length: gridRows }, (_, row) =>
-          Array.from({ length: gridCols }, (_, col) => {
+      <div style={gridStyles}>
+        {Array.from({ length: config.rows }, (_, row) =>
+          Array.from({ length: config.cols }, (_, col) => {
             const gridId = getGridId(col, row);
-            const gridIndex = row * gridCols + col;
-            const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
+            const gridIndex = row * config.cols + col;
+            const hasAction = finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function';
             
             // Debug logging for first few tiles
             if (row <= 1 && col <= 1) {
