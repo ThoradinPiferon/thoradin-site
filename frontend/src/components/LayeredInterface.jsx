@@ -16,72 +16,78 @@ const LayeredInterface = () => {
   // Grid actions - array of functions for each grid cell
   const gridActions = new Array(gridCols * gridRows).fill(null);
   
-  // Handle grid clicks based on current scene
-  const handleGridClick = (col, row, gridIndex) => {
+  // Handle grid clicks - all actions go through backend
+  const handleGridClick = async (col, row, gridIndex) => {
     console.log(`Grid click: G${col}.${row} in Scene ${currentScene}`);
     
-    if (currentScene === 1) {
-      // Scene 1: Any click fast-forwards Matrix animation
-      if (matrixRef.current && matrixRef.current.fastForwardToEnd) {
-        console.log('Fast-forwarding Matrix animation...');
-        matrixRef.current.fastForwardToEnd();
-        setCurrentScene(2);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gridId: `G${col}.${row}`,
+          currentScene: currentScene,
+          action: 'grid_click'
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Backend response:', data);
+        
+        // Backend controls the scene transitions
+        if (data.newScene) {
+          setCurrentScene(data.newScene);
+        }
+        
+        // Backend controls Matrix animation
+        if (data.matrixAction === 'fastForward' && matrixRef.current) {
+          matrixRef.current.fastForwardToEnd();
+        } else if (data.matrixAction === 'restart' && matrixRef.current) {
+          matrixRef.current.restartAnimation();
+        }
+        
+        // Backend controls navigation/scenarios
+        if (data.navigateTo) {
+          // This will be handled by the backend response
+          console.log('Backend requested navigation to:', data.navigateTo);
+        }
       }
-      return;
-    }
-    
-    if (currentScene === 2) {
-      // Scene 2: Any click restarts Matrix animation
-      if (matrixRef.current && matrixRef.current.restartAnimation) {
-        console.log('Restarting Matrix animation...');
-        matrixRef.current.restartAnimation();
-        setCurrentScene(1);
-        setAnimationComplete(false);
-      }
-      return;
-    }
-    
-    if (currentScene === 3) {
-      // Scene 3: Only G11.7 navigates to Vault
-      if (col === 11 && row === 7) {
-        console.log(`Clicked G${col}.${row} - Navigating to Vault page`);
-        window.location.href = '/vault';
-      }
-      return;
+    } catch (error) {
+      console.error('Error calling backend grid action:', error);
     }
   };
   
-  // Set up all grid actions
+  // Set up grid actions to call backend
   for (let i = 0; i < gridActions.length; i++) {
-    gridActions[i] = handleGridClick;
+    const row = Math.floor(i / gridCols) + 1;
+    const col = (i % gridCols) + 1;
+    gridActions[i] = () => handleGridClick(col, row, i);
   }
-  
-  // Handle animation completion
-  const handleAnimationComplete = () => {
-    console.log('Matrix animation completed - entering Scene 3');
-    setAnimationComplete(true);
-    setCurrentScene(3);
-  };
   
   // Create MatrixSpiralCanvas as background component
   const backgroundComponent = (
     <MatrixSpiralCanvas 
       ref={matrixRef}
-      onIntroComplete={handleAnimationComplete}
+      onAnimationComplete={() => {
+        console.log('Matrix animation completed - entering Scene 3');
+        setAnimationComplete(true);
+        setCurrentScene(3);
+      }}
     />
   );
-
+  
   return (
-    <div style={{ width: '100vw', height: '100vh', backgroundColor: 'black' }}>
-      <GridPlay
-        backgroundComponent={backgroundComponent}
-        gridCols={gridCols}
-        gridRows={gridRows}
-        gridActions={gridActions}
-        showInvisibleButtons={true}
-        currentScene={currentScene}
-      />
-    </div>
+    <GridPlay
+      backgroundComponent={backgroundComponent}
+      gridCols={gridCols}
+      gridRows={gridRows}
+      gridActions={gridActions}
+      showInvisibleButtons={currentScene === 1} // Invisible during Matrix animation
+      currentScene={currentScene}
+    />
   );
 };
 
