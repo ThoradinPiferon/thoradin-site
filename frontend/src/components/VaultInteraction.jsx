@@ -437,7 +437,7 @@ Would you like me to speak to you in ${language}?`;
         key: 'yes-button',
         onClick: () => handleLanguageChoice('yes'),
         style: {
-          ...getGridCellStyle(7, 4, 1, 1),
+          ...getGridCellStyle(4, 7, 1, 1),
           backgroundColor: 'transparent',
           border: '1px solid #00ff88',
           color: '#00ff88',
