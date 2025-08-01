@@ -121,15 +121,21 @@ model Content {
   @@map("contents")
 }
 
-model scenes {
-  id           String   @id
-  gridId       String   @unique
+model SceneSubscene {
+  id           String   @id @default(cuid())
+  sceneId      Int      // e.g., 1, 2, 3 (main scene)
+  subsceneId   Int      // e.g., 1, 2, 3 (subscene within main scene)
   title        String
   description  String
+  backgroundType String  // "matrix_spiral", "static_spiral", "vault", etc.
   animationUrl String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
-  updatedAt    DateTime
+  updatedAt    DateTime @updatedAt
+
+  // Composite unique constraint for scene + subscene
+  @@unique([sceneId, subsceneId])
+  @@map("scene_subscenes")
 }
 
 enum UserRole {
