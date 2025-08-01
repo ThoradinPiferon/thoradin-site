@@ -1,5 +1,6 @@
 import express from 'express';
 import SceneEngine from '../services/sceneEngine.js';
+import { logTileInteraction } from '../services/soulKeyService.js';
 
 const router = express.Router();
 const sceneEngine = new SceneEngine();
@@ -13,7 +14,7 @@ const sceneEngine = new SceneEngine();
  */
 router.post('/action', async (req, res) => {
   try {
-    const { gridId, currentScene, currentSubscene, action } = req.body;
+    const { gridId, currentScene, currentSubscene, action, sessionId } = req.body;
 
     console.log(`🎮 Grid action received: ${gridId} in Scene ${currentScene}.${currentSubscene}, action: ${action}`);
     console.log(`🔍 Backend received: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
@@ -35,6 +36,26 @@ router.post('/action', async (req, res) => {
     });
 
     console.log(`✅ Scene Engine Transition Result:`, transition);
+
+    // Log to SoulKey system if sessionId provided
+    if (sessionId) {
+      try {
+        await logTileInteraction(sessionId, {
+          scene: parseInt(currentScene),
+          subscene: parseInt(currentSubscene),
+          gridTile: gridId,
+          zoomTarget: transition.zoomTo || null,
+          nextScene: transition.sceneId && transition.subsceneId ? {
+            sceneId: transition.sceneId,
+            subsceneId: transition.subsceneId,
+            message: transition.message
+          } : null
+        });
+      } catch (soulKeyError) {
+        console.warn('⚠️ SoulKey logging failed:', soulKeyError.message);
+        // Don't fail the main request if SoulKey logging fails
+      }
+    }
 
     // Return the scene engine response
     res.json({
@@ -195,6 +216,54 @@ router.get('/debug', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Debug failed',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Get SoulKey insights for a session
+ */
+router.get('/soulkey/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { getSessionInsights } = await import('../services/soulKeyService.js');
+    
+    const insights = await getSessionInsights(sessionId);
+    
+    res.json({
+      success: true,
+      insights
+    });
+  } catch (error) {
+    console.error('Error getting SoulKey insights:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get SoulKey insights',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Get all active SoulKey sessions
+ */
+router.get('/soulkey/sessions/active', async (req, res) => {
+  try {
+    const { getActiveSessions } = await import('../services/soulKeyService.js');
+    
+    const activeSessions = getActiveSessions();
+    
+    res.json({
+      success: true,
+      activeSessions,
+      count: activeSessions.length
+    });
+  } catch (error) {
+    console.error('Error getting active sessions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get active sessions',
       error: error.message
     });
   }

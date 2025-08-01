@@ -68,8 +68,23 @@ model GridSession {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  soulKeyLogs SoulKeyLog[]
 
   @@map("grid_sessions")
+}
+
+model SoulKeyLog {
+  id          String      @id @default(cuid())
+  sessionId   String
+  scene       Int
+  subscene    Int
+  gridTile    String
+  timestamp   DateTime    @default(now())
+  zoomTarget  String?
+  nextScene   Json?
+  session     GridSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("soulkey_logs")
 }
 
 model Configuration {

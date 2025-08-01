@@ -5,6 +5,7 @@ import { generateGridActions } from '../utils/gridConfig';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
 import { handleGridZoom, isZooming as getZoomState } from '../utils/zoomUtils';
 import ZoomTestComponent from './ZoomTestComponent';
+import SoulKeyInsights from './SoulKeyInsights.jsx';
 
 const LayeredInterface = () => {
   console.log('🔧 LayeredInterface rendering... - checking for getSceneGridConfig issues');
@@ -16,7 +17,16 @@ const LayeredInterface = () => {
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const matrixRef = useRef(null);
   const currentSceneRef = useRef({ scene: 1, subscene: 1 });
+  const sessionIdRef = useRef(null);
   
+  // Generate session ID on component mount
+  useEffect(() => {
+    if (!sessionIdRef.current) {
+      sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log(`🎭 SoulKey: Session started with ID: ${sessionIdRef.current}`);
+    }
+  }, []);
+
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
     // Special case for Scene 1.1 (Matrix Awakening) - 1x1 invisible grid
@@ -141,7 +151,8 @@ const LayeredInterface = () => {
           gridId: 'A1',
           currentScene: 1,
           currentSubscene: 1,
-          action: 'grid_click'
+          action: 'grid_click',
+          sessionId: sessionIdRef.current
         })
       });
       
@@ -217,7 +228,8 @@ const LayeredInterface = () => {
           gridId: gridId,
           currentScene: currentSceneState.scene,
           currentSubscene: currentSceneState.subscene,
-          action: 'grid_click'
+          action: 'grid_click',
+          sessionId: sessionIdRef.current
         })
       });
       
@@ -419,6 +431,9 @@ const LayeredInterface = () => {
 
       {/* Zoom Test Component (for development) */}
       <ZoomTestComponent />
+      
+      {/* SoulKey Insights Component */}
+      <SoulKeyInsights sessionId={sessionIdRef.current} />
     </div>
   );
 };
