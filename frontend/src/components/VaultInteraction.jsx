@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
+import SceneViewer from './SceneViewer';
 import { 
   createButton,
   createTitle,
@@ -84,6 +85,12 @@ const VaultInteraction = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [showLanguageChoice, setShowLanguageChoice] = useState(false);
   const [hasStartedChat, setHasStartedChat] = useState(false);
+  
+  // Scene state management
+  const [selectedScene, setSelectedScene] = useState(null);
+  const [sceneLoading, setSceneLoading] = useState(false);
+  const [sceneError, setSceneError] = useState(null);
+  
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -613,17 +620,82 @@ Would you like me to speak to you in ${language}?`;
     createBackButton(() => window.location.href = '/')
   );
 
-  // No grid actions (disable clicks)
+  // Scene click handler
+  const handleSceneClick = async (gridId) => {
+    setSceneLoading(true);
+    setSceneError(null);
+    setSelectedScene(null);
+
+    try {
+      const apiBaseUrl = getApiBaseUrl();
+      if (!apiBaseUrl) {
+        throw new Error('API base URL not configured');
+      }
+
+      const response = await fetch(`${apiBaseUrl}/api/scene/${gridId}`);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to fetch scene for ${gridId}`);
+      }
+
+      setSelectedScene(data.data);
+    } catch (err) {
+      console.error('Error fetching scene:', err);
+      setSceneError(err.message);
+    } finally {
+      setSceneLoading(false);
+    }
+  };
+
+  // Close scene viewer
+  const handleCloseScene = () => {
+    setSelectedScene(null);
+    setSceneError(null);
+  };
+
+  // Create grid actions for scene clicks
   const gridActions = [];
+  
+  // Add scene click handlers for all grid tiles (G1.1 to G11.7)
+  for (let row = 1; row <= 11; row++) {
+    for (let col = 1; col <= 7; col++) {
+      const gridId = `G${row}.${col}`;
+      const index = (row - 1) * 7 + (col - 1);
+      gridActions[index] = () => handleSceneClick(gridId);
+    }
+  }
 
   return (
-    <GridPlay
-      backgroundComponent={<StarryBackground />}
-      gridCols={gridConfigs.standard.gridCols}
-      gridRows={gridConfigs.standard.gridRows}
-      uiElements={uiElements}
-      gridActions={gridActions}
-    />
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <GridPlay
+        backgroundComponent={<StarryBackground />}
+        gridCols={gridConfigs.standard.gridCols}
+        gridRows={gridConfigs.standard.gridRows}
+        uiElements={uiElements}
+        gridActions={gridActions}
+      />
+      
+      {/* Scene Viewer - positioned below the grid */}
+      {(selectedScene || sceneLoading || sceneError) && (
+        <div style={{
+          position: 'fixed',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1000,
+          maxWidth: '90vw',
+          width: '600px'
+        }}>
+          <SceneViewer
+            scene={selectedScene}
+            isLoading={sceneLoading}
+            error={sceneError}
+            onClose={handleCloseScene}
+          />
+        </div>
+      )}
+    </div>
   );
 };
 
