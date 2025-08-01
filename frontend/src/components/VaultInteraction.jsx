@@ -6,7 +6,9 @@ import {
   createWindow,
   createInputBox,
   createSpinner,
-  gridConfigs
+  gridConfigs,
+  getGridCellStyle,
+  createBackButton
 } from '../utils/gridElements';
 
 // Starry Background Component
@@ -340,36 +342,19 @@ Would you like me to speak to you in ${language}?`;
   // Welcome message window (G1.1-G3.4)
   if (!hasStartedChat) {
     uiElements.push(
-      createWindow({
-        gridRow: 1,
-        gridCol: 1,
-        width: 3,
-        height: 3,
-        title: 'Welcome to the Vault',
-        content: getWelcomeMessage(),
-        style: {
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          border: '2px solid #00ff88',
-          color: '#ffffff',
-          fontSize: '14px',
-          lineHeight: '1.6',
-          textAlign: 'center',
-          padding: '20px'
-        }
-      })
+      createWindow(
+        getWelcomeMessage(),
+        1, 1, 3, 3,
+        'Welcome to the Vault'
+      )
     );
   }
 
   // Chat messages window (G1.1-G3.4)
   if (hasStartedChat) {
     uiElements.push(
-      createWindow({
-        gridRow: 1,
-        gridCol: 1,
-        width: 3,
-        height: 3,
-        title: 'Thoradin Vault',
-        content: (
+      createWindow(
+        (
           <div style={{ 
             height: '100%', 
             overflowY: 'auto',
@@ -438,11 +423,9 @@ Would you like me to speak to you in ${language}?`;
             <div ref={messagesEndRef} />
           </div>
         ),
-        style: {
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
-          border: '2px solid #00ff88'
-        }
-      })
+        1, 1, 3, 3,
+        'Thoradin Vault'
+      )
     );
   }
 
@@ -450,34 +433,42 @@ Would you like me to speak to you in ${language}?`;
   if (!hasStartedChat) {
     // Yes button (G4.7)
     uiElements.push(
-      createButton({
-        gridRow: 4,
-        gridCol: 7,
-        text: 'Yes',
+      React.createElement('div', {
+        key: 'yes-button',
         onClick: () => handleLanguageChoice('yes'),
         style: {
+          ...getGridCellStyle(7, 4, 1, 1),
           backgroundColor: 'transparent',
           border: '1px solid #00ff88',
           color: '#00ff88',
-          fontSize: '14px'
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          borderRadius: '5px'
         }
-      })
+      }, 'Yes')
     );
 
     // No, choose language button (G7.7)
     uiElements.push(
-      createButton({
-        gridRow: 7,
-        gridCol: 7,
-        text: 'No, choose language',
+      React.createElement('div', {
+        key: 'no-button',
         onClick: () => handleLanguageChoice('no'),
         style: {
+          ...getGridCellStyle(7, 7, 1, 1),
           backgroundColor: 'transparent',
           border: '1px solid #ffaa00',
           color: '#ffaa00',
-          fontSize: '14px'
+          fontSize: '14px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          borderRadius: '5px'
         }
-      })
+      }, 'No, choose language')
     );
   }
 
@@ -501,18 +492,22 @@ Would you like me to speak to you in ${language}?`;
       const col = (index % 2) + 1;
       
       uiElements.push(
-        createButton({
-          gridRow: row,
-          gridCol: col,
-          text: lang.name,
+        React.createElement('div', {
+          key: `lang-${lang.code}`,
           onClick: () => handleLanguageSelect(lang.code),
           style: {
+            ...getGridCellStyle(col, row, 1, 1),
             backgroundColor: 'transparent',
             border: '1px solid #00ff88',
             color: '#00ff88',
-            fontSize: '12px'
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            borderRadius: '3px'
           }
-        })
+        }, lang.name)
       );
     });
   }
@@ -520,43 +515,21 @@ Would you like me to speak to you in ${language}?`;
   // Input field (G4.5-G4.7)
   if (hasStartedChat) {
     uiElements.push(
-      createInputBox({
-        gridRow: 4,
-        gridCol: 5,
-        width: 3,
-        placeholder: 'Ask Thoradin anything...',
-        value: inputValue,
-        onChange: (e) => setInputValue(e.target.value),
-        onSubmit: handleSubmit,
-        disabled: isLoading,
-        style: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          border: '1px solid #00ff88',
-          color: '#ffffff',
-          fontSize: '14px'
-        }
-      })
+      createInputBox(
+        inputRef,
+        inputValue,
+        (e) => setInputValue(e.target.value),
+        handleSubmit,
+        'Ask Thoradin anything...',
+        isLoading,
+        5, 4, 3
+      )
     );
   }
 
   // Back button
   uiElements.push(
-    createButton({
-      gridRow: 1,
-      gridCol: 1,
-      text: '← Back',
-      onClick: () => window.location.href = '/',
-      style: {
-        backgroundColor: 'transparent',
-        border: '1px solid #00ff88',
-        color: '#00ff88',
-        fontSize: '12px',
-        position: 'absolute',
-        top: '10px',
-        left: '10px',
-        zIndex: 10
-      }
-    })
+    createBackButton(() => window.location.href = '/')
   );
 
   // No grid actions (disable clicks)
