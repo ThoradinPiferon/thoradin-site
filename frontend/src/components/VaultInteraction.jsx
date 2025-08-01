@@ -339,99 +339,121 @@ Would you like me to speak to you in ${language}?`;
   // Create grid elements
   const uiElements = [];
 
-  // Welcome message window (G1.1-G3.4)
+  // Welcome message window (G1.1-G3.4) - Matrix style
   if (!hasStartedChat) {
     uiElements.push(
-      createWindow(
-        getWelcomeMessage(),
-        1, 1, 3, 3,
-        'Welcome to the Vault'
-      )
+      React.createElement('div', {
+        key: 'welcome-window',
+        style: {
+          ...getGridCellStyle(1, 1, 3, 3),
+          backgroundColor: 'transparent',
+          border: 'none',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+          color: '#00ffcc',
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          textShadow: '0 0 10px #00ffcc',
+          backdropFilter: 'blur(2px)',
+          zIndex: 20
+        }
+      }, getWelcomeMessage())
     );
   }
 
-  // Chat messages window (G1.1-G3.4)
+  // Chat messages window (G1.1-G3.4) - Matrix style
   if (hasStartedChat) {
     uiElements.push(
-      createWindow(
-        (
-          <div style={{ 
-            height: '100%', 
-            overflowY: 'auto',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            {messages.length === 0 ? (
-              <div style={{ 
-                color: '#666', 
-                fontStyle: 'italic',
-                textAlign: 'center',
-                padding: '20px'
-              }}>
-                The Vault awaits your questions...
-              </div>
-            ) : (
-              messages.map((message, index) => (
-                <div key={index} style={{
-                  alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%'
-                }}>
-                  <div style={{
-                    backgroundColor: message.type === 'user' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 0, 0, 0.8)',
-                    border: `1px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`,
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    color: '#ffffff',
-                    fontSize: '12px',
-                    lineHeight: '1.4'
-                  }}>
-                    <div style={{ whiteSpace: 'pre-line' }}>
-                      {message.content}
-                    </div>
-                    {message.metadata && (
-                      <div style={{ 
-                        fontSize: '10px', 
-                        color: '#666', 
-                        marginTop: '4px',
-                        fontStyle: 'italic'
-                      }}>
-                        {message.metadata.model} | {message.metadata.responseTime}ms
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-            {isLoading && (
-              <div style={{
-                alignSelf: 'flex-start',
-                maxWidth: '80%'
-              }}>
-                <div style={{
-                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                  border: '1px solid #0088ff',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  color: '#0088ff',
-                  fontSize: '12px'
-                }}>
-                  Thoradin is thinking...
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+      React.createElement('div', {
+        key: 'chat-window',
+        style: {
+          ...getGridCellStyle(1, 1, 3, 3),
+          backgroundColor: 'transparent',
+          border: 'none',
+          padding: '20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '15px',
+          overflowY: 'auto',
+          maxHeight: '100%',
+          color: '#00ffcc',
+          fontFamily: 'monospace',
+          fontSize: '13px',
+          lineHeight: '1.5',
+          textShadow: '0 0 5px #00ffcc',
+          zIndex: 20
+        }
+      }, [
+        messages.length === 0 ? (
+          React.createElement('div', {
+            key: 'empty-state',
+            style: { 
+              color: '#00ff88', 
+              fontStyle: 'italic',
+              textAlign: 'center',
+              padding: '20px',
+              textShadow: '0 0 8px #00ff88'
+            }
+          }, 'The Vault awaits your questions...')
+        ) : (
+          messages.map((message, index) => 
+            React.createElement('div', {
+              key: index,
+              style: {
+                alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '85%',
+                marginBottom: '10px'
+              }
+            }, [
+              React.createElement('div', {
+                key: 'message-content',
+                style: {
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  padding: '8px 0',
+                  color: message.type === 'user' ? '#00ff88' : '#00ffcc',
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  textShadow: message.type === 'user' ? '0 0 6px #00ff88' : '0 0 6px #00ffcc',
+                  whiteSpace: 'pre-line'
+                }
+              }, message.content),
+              message.metadata && React.createElement('div', {
+                key: 'metadata',
+                style: { 
+                  fontSize: '10px', 
+                  color: '#00ff66', 
+                  marginTop: '4px',
+                  fontStyle: 'italic',
+                  textShadow: '0 0 4px #00ff66'
+                }
+              }, `${message.metadata.model} | ${message.metadata.responseTime}ms`)
+            ])
+          )
         ),
-        1, 1, 3, 3,
-        'Thoradin Vault'
-      )
+        isLoading && React.createElement('div', {
+          key: 'loading',
+          style: {
+            alignSelf: 'flex-start',
+            color: '#00ff88',
+            fontSize: '12px',
+            fontStyle: 'italic',
+            textShadow: '0 0 6px #00ff88'
+          }
+        }, 'Thoradin is thinking...'),
+        React.createElement('div', { key: 'scroll-ref', ref: messagesEndRef })
+      ])
     );
   }
 
   // Language choice buttons
   if (!hasStartedChat) {
-    // Yes button (G4.7)
+    // Yes button (G4.7) - Matrix style
     uiElements.push(
       React.createElement('div', {
         key: 'yes-button',
@@ -439,19 +461,30 @@ Would you like me to speak to you in ${language}?`;
         style: {
           ...getGridCellStyle(4, 7, 1, 1),
           backgroundColor: 'transparent',
-          border: '1px solid #00ff88',
+          border: 'none',
           color: '#00ff88',
           fontSize: '14px',
+          fontFamily: 'monospace',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          borderRadius: '5px'
+          textShadow: '0 0 8px #00ff88',
+          transition: 'all 0.3s ease',
+          zIndex: 25
+        },
+        onMouseEnter: (e) => {
+          e.target.style.textShadow = '0 0 15px #00ff88, 0 0 25px #00ff88';
+          e.target.style.transform = 'scale(1.05)';
+        },
+        onMouseLeave: (e) => {
+          e.target.style.textShadow = '0 0 8px #00ff88';
+          e.target.style.transform = 'scale(1)';
         }
       }, 'Yes')
     );
 
-    // No, choose language button (G7.7)
+    // No, choose language button (G7.7) - Matrix style
     uiElements.push(
       React.createElement('div', {
         key: 'no-button',
@@ -459,20 +492,31 @@ Would you like me to speak to you in ${language}?`;
         style: {
           ...getGridCellStyle(7, 7, 1, 1),
           backgroundColor: 'transparent',
-          border: '1px solid #ffaa00',
-          color: '#ffaa00',
-          fontSize: '14px',
+          border: 'none',
+          color: '#00ffcc',
+          fontSize: '12px',
+          fontFamily: 'monospace',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          borderRadius: '5px'
+          textShadow: '0 0 8px #00ffcc',
+          transition: 'all 0.3s ease',
+          zIndex: 25
+        },
+        onMouseEnter: (e) => {
+          e.target.style.textShadow = '0 0 15px #00ffcc, 0 0 25px #00ffcc';
+          e.target.style.transform = 'scale(1.05)';
+        },
+        onMouseLeave: (e) => {
+          e.target.style.textShadow = '0 0 8px #00ffcc';
+          e.target.style.transform = 'scale(1)';
         }
       }, 'No, choose language')
     );
   }
 
-  // Language selection grid
+  // Language selection grid - Matrix style
   if (showLanguageChoice) {
     const languages = [
       { code: 'en', name: 'English' },
@@ -498,14 +542,25 @@ Would you like me to speak to you in ${language}?`;
           style: {
             ...getGridCellStyle(col, row, 1, 1),
             backgroundColor: 'transparent',
-            border: '1px solid #00ff88',
+            border: 'none',
             color: '#00ff88',
-            fontSize: '12px',
+            fontSize: '11px',
+            fontFamily: 'monospace',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            borderRadius: '3px'
+            textShadow: '0 0 6px #00ff88',
+            transition: 'all 0.3s ease',
+            zIndex: 25
+          },
+          onMouseEnter: (e) => {
+            e.target.style.textShadow = '0 0 12px #00ff88, 0 0 20px #00ff88';
+            e.target.style.transform = 'scale(1.1)';
+          },
+          onMouseLeave: (e) => {
+            e.target.style.textShadow = '0 0 6px #00ff88';
+            e.target.style.transform = 'scale(1)';
           }
         }, lang.name)
       );

@@ -160,22 +160,24 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
     onClick: () => inputRef?.current?.focus(),
     style: {
       ...getGridCellStyle(col, row, spanCols, 1),
-      backgroundColor: 'rgba(0, 0, 0, 0.9)',
-      border: '2px solid #00ff00',
-      borderRadius: '8px',
-      padding: '10px',
+      backgroundColor: 'transparent',
+      border: '1px solid #00ff88',
+      borderRadius: '6px',
+      padding: '12px',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
-      zIndex: 10,
+      gap: '12px',
+      zIndex: 30,
       cursor: 'text',
-      pointerEvents: 'auto'
+      pointerEvents: 'auto',
+      boxShadow: '0 0 10px rgba(0, 255, 136, 0.3)',
+      backdropFilter: 'blur(2px)'
     }
   }, [
     React.createElement('form', {
       key: 'form',
       onSubmit: onSubmit,
-      style: { display: 'flex', width: '100%', gap: '10px', pointerEvents: 'auto' }
+      style: { display: 'flex', width: '100%', gap: '12px', pointerEvents: 'auto' }
     }, [
       React.createElement('input', {
         key: 'input',
@@ -187,16 +189,17 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
         style: {
           flex: 1,
           backgroundColor: 'transparent',
-          border: '1px solid #00ff00',
-          borderRadius: '4px',
-          padding: '8px 12px',
-          color: '#00ff00',
+          border: 'none',
+          borderRadius: '0',
+          padding: '8px 0',
+          color: '#00ff88',
           fontFamily: 'monospace',
           fontSize: '14px',
           outline: 'none',
           pointerEvents: 'auto',
           cursor: 'text',
-          opacity: disabled ? 0.6 : 1
+          opacity: disabled ? 0.6 : 1,
+          textShadow: '0 0 5px #00ff88'
         },
         disabled: disabled,
         autoFocus: true
@@ -206,16 +209,28 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
         type: 'submit',
         disabled: disabled || !value.trim(),
         style: {
-          backgroundColor: '#00ff00',
-          color: '#000',
-          border: 'none',
+          backgroundColor: 'transparent',
+          color: '#00ff88',
+          border: '1px solid #00ff88',
           borderRadius: '4px',
           padding: '8px 16px',
           fontFamily: 'monospace',
           fontSize: '14px',
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: (disabled || !value.trim()) ? 0.5 : 1,
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          textShadow: '0 0 5px #00ff88',
+          transition: 'all 0.3s ease'
+        },
+        onMouseEnter: (e) => {
+          if (!disabled && value.trim()) {
+            e.target.style.textShadow = '0 0 10px #00ff88, 0 0 15px #00ff88';
+            e.target.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.5)';
+          }
+        },
+        onMouseLeave: (e) => {
+          e.target.style.textShadow = '0 0 5px #00ff88';
+          e.target.style.boxShadow = 'none';
         }
       }, 'Send')
     ])
