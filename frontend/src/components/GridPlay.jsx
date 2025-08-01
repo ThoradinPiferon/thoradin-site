@@ -76,18 +76,20 @@ const GridPlay = ({
     let buttonText = gridId;
     
     if (showInvisibleButtons) {
-      // Invisible buttons for Matrix animation
+      // Completely invisible buttons for Matrix animation
       buttonStyle = `
         w-full h-full 
         bg-transparent border-transparent
         hover:bg-transparent hover:border-transparent
         text-transparent hover:text-transparent
-        transition-all duration-200 ease-in-out
+        transition-none
         flex items-center justify-center
         text-xs font-mono
         focus:outline-none focus:ring-0
         active:scale-100
         cursor-pointer
+        opacity-0
+        pointer-events-auto
       `;
       buttonText = ''; // No text visible
     } else {
@@ -113,6 +115,13 @@ const GridPlay = ({
         onClick={() => handleTileClick(row, col)}
         className={buttonStyle}
         title={hasAction ? `Click to interact with ${gridId}` : `Click to view scene ${gridId}`}
+        style={showInvisibleButtons ? { 
+          backgroundColor: 'transparent',
+          border: 'none',
+          color: 'transparent',
+          outline: 'none',
+          boxShadow: 'none'
+        } : {}}
       >
         {buttonText}
       </button>
