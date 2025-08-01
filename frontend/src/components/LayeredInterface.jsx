@@ -167,8 +167,13 @@ const LayeredInterface = () => {
           
           // Trigger zoom animation and wait for completion
           if (matrixRef.current) {
+            console.log(`🎬 Starting zoom animation to grid ${gridId} (${zoomCol}, ${zoomRow})`);
             await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
-            console.log(`🎬 Zoom animation completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
+            console.log(`🎬 Zoom animation completed for grid ${gridId}`);
+            
+            // Add a brief pause to let the zoom effect sink in
+            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log(`🎬 Pause completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
           }
           
           // Reset zoom state

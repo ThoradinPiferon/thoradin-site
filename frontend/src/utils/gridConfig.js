@@ -240,10 +240,12 @@ export function getTileStyles(config, showInvisibleButtons, isZooming, gridId, h
         color: 'rgba(0, 255, 0, 0.8)',
         fontSize: '10px'
       }),
-      // Zoom state
+      // Zoom state - completely hide grid during zoom
       ...(isZooming && {
         pointerEvents: 'none',
-        opacity: 0.3
+        opacity: 0,
+        visibility: 'hidden',
+        transition: 'opacity 0.3s ease-out, visibility 0.3s ease-out'
       })
     };
   }

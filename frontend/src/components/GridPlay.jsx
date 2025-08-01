@@ -58,15 +58,18 @@ const GridPlay = ({
   const handleTileClick = async (row, col) => {
     // Disable clicks during zooming
     if (isZooming) {
-      console.log('Click disabled during zoom animation');
+      console.log('🚫 Click disabled during zoom animation - grid is hidden');
       return;
     }
     
     const gridIndex = row * config.cols + col;
+    const gridId = getGridId(col, row);
+    
+    console.log(`🎮 Tile clicked: ${gridId} in ${sceneName}, isZooming: ${isZooming}`);
     
     // Check if there's a custom action for this tile
     if (gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function') {
-      console.log(`🎯 Executing custom action for tile ${getGridId(col, row)}`);
+      console.log(`🎯 Executing custom action for tile ${gridId}`);
       gridActions[gridIndex](row, col, gridIndex);
       return;
     }
@@ -77,7 +80,6 @@ const GridPlay = ({
       setError(null);
       setSelectedScene(null);
       try {
-        const gridId = getGridId(col, row);
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/scene/${gridId}`);
         if (!response.ok) {
           throw new Error(`Scene ${gridId} not found`);
@@ -135,11 +137,13 @@ const GridPlay = ({
         onClick={handleClick}
         style={{
           ...tileStyles,
-          // Add visual feedback during zoom
+          // Add visual feedback during zoom - completely hide grid
           ...(isZooming && {
-            opacity: 0.5,
+            opacity: 0,
+            visibility: 'hidden',
             pointerEvents: 'none',
-            cursor: 'not-allowed'
+            cursor: 'not-allowed',
+            transition: 'opacity 0.3s ease-out, visibility 0.3s ease-out'
           })
         }}
         disabled={isDisabled}
