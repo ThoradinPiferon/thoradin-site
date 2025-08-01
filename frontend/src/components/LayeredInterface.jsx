@@ -66,7 +66,7 @@ const LayeredInterface = () => {
     console.log(`Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/grid/action`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/grid/action`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
