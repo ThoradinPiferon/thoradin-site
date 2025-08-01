@@ -18,7 +18,7 @@ class SceneEngine {
    * @param {Object} params - Scene transition parameters
    * @param {number} params.currentSceneId - Current scene ID
    * @param {number} params.subsceneId - Current subscene ID
-   * @param {string} params.gridId - Grid coordinate clicked (e.g., "G11.7")
+   * @param {string} params.gridId - Grid coordinate clicked (e.g., "A1", "K7")
    * @param {string} params.action - Action type (e.g., "grid_click")
    * @returns {Object} Scene transition result
    */
@@ -60,13 +60,16 @@ class SceneEngine {
 
     // Get scene seed definition
     const sceneSeed = this.sceneSeed.findSceneSeed(sceneId, subsceneId);
+    console.log(`🎭 Scene seed found:`, !!sceneSeed, sceneSeed ? `with ${sceneSeed.choices?.length || 0} choices` : 'no choices');
     
     if (sceneSeed && sceneSeed.choices) {
       // Use scene seed choices for evaluation
+      console.log(`🎭 Using scene seed choices for evaluation`);
       return this.evaluateSceneChoices(sceneSeed, gridId, action);
     }
 
     // Use background type-based fallback logic
+    console.log(`🎭 Using background type fallback logic`);
     return this.evaluateBackgroundTypeLogic(backgroundType, sceneId, subsceneId, gridId, action);
   }
 
@@ -113,7 +116,7 @@ class SceneEngine {
 
   /**
    * Evaluate condition string (simple implementation)
-   * @param {string} condition - Condition string (e.g., "gridId === 'G11.7'")
+   * @param {string} condition - Condition string (e.g., "gridId === 'K7'")
    * @param {string} gridId - Grid coordinate
    * @returns {boolean} Condition result
    */
@@ -188,7 +191,7 @@ class SceneEngine {
       echo: 'grid_focus'
     };
 
-    if (gridId === 'G11.7') {
+    if (gridId === 'K7') {
       zoomAction.nextAction = {
         sceneId: 2,
         subsceneId: 1,
@@ -221,7 +224,7 @@ class SceneEngine {
    * Vault transition logic
    */
   getVaultTransition(sceneId, subsceneId, gridId, action) {
-    if (gridId === 'G11.7') {
+    if (gridId === 'K7') {
       return {
         zoomTo: gridId,
         nextAction: {

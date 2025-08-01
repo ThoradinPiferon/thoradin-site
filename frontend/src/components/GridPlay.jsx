@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import SceneViewer from './SceneViewer';
+import { getGridId } from '../utils/gridHelpers';
 
 const GridPlay = ({ 
   backgroundComponent = null,
-  gridRows = 11,
-  gridCols = 7,
+  gridRows = 7,
+  gridCols = 11,
   gridActions = [],
   uiElements = [],
   showSceneViewer = false,
@@ -41,11 +42,11 @@ const GridPlay = ({
       return;
     }
     
-    const gridIndex = (row - 1) * gridCols + (col - 1);
+    const gridIndex = row * gridCols + col;
     
     // Check if there's a custom action for this tile
     if (gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function') {
-      console.log(`🎯 Executing custom action for tile G${row}.${col}`);
+      console.log(`🎯 Executing custom action for tile ${getGridId(col, row)}`);
       gridActions[gridIndex](row, col, gridIndex);
       return;
     }
@@ -56,9 +57,10 @@ const GridPlay = ({
       setError(null);
       setSelectedScene(null);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/scene/G${row}.${col}`);
+        const gridId = getGridId(col, row);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/scene/${gridId}`);
         if (!response.ok) {
-          throw new Error(`Scene G${row}.${col} not found`);
+          throw new Error(`Scene ${gridId} not found`);
         }
         const data = await response.json();
         setSelectedScene(data);
@@ -76,12 +78,12 @@ const GridPlay = ({
   };
 
   const renderTile = (row, col) => {
-    const gridId = `G${row}.${col}`;
-    const gridIndex = (row - 1) * gridCols + (col - 1);
+    const gridId = getGridId(col, row);
+    const gridIndex = row * gridCols + col;
     const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
     
     // Debug logging for first few tiles
-    if (row <= 2 && col <= 2) {
+    if (row <= 1 && col <= 1) {
       console.log(`Rendering tile ${gridId}, showInvisibleButtons: ${showInvisibleButtons}, currentScene: ${currentScene}.${currentSubscene}, isZooming: ${isZooming}`);
     }
     
@@ -171,7 +173,7 @@ const GridPlay = ({
       }}>
         {Array.from({ length: gridRows }, (_, row) =>
           Array.from({ length: gridCols }, (_, col) => {
-            const gridId = `G${row + 1}.${col + 1}`;
+            const gridId = getGridId(col, row);
             const gridIndex = row * gridCols + col;
             const hasAction = gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function';
             
@@ -182,7 +184,7 @@ const GridPlay = ({
             
             // Always render clickable buttons, just make them invisible when needed
             console.log(`🎭 Rendering ${showInvisibleButtons ? 'invisible' : 'visible'} button for ${gridId}`);
-            return renderTile(row + 1, col + 1);
+            return renderTile(row, col);
           })
         )}
       </div>

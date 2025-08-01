@@ -94,37 +94,37 @@ async function testSceneEngine() {
     const scene1_1 = await sceneEngine.evaluateSceneTransition({
       currentSceneId: 1,
       subsceneId: 1,
-      gridId: 'G1.1',
+      gridId: 'A1',
       action: 'grid_click'
     });
     console.log('Scene 1.1 Response:', scene1_1);
 
     // Test Scene 1.2 logic
-    console.log('\n🎭 Testing Scene 1.2 (Matrix Static - G11.7):');
+    console.log('\n🎭 Testing Scene 1.2 (Matrix Static - K7):');
     const scene1_2_vault = await sceneEngine.evaluateSceneTransition({
       currentSceneId: 1,
       subsceneId: 2,
-      gridId: 'G11.7',
+      gridId: 'K7',
       action: 'grid_click'
     });
-    console.log('Scene 1.2 (G11.7) Response:', scene1_2_vault);
+    console.log('Scene 1.2 (K7) Response:', scene1_2_vault);
 
     // Test Scene 1.2 logic (other grid)
-    console.log('\n🎭 Testing Scene 1.2 (Matrix Static - G1.1):');
+    console.log('\n🎭 Testing Scene 1.2 (Matrix Static - A1):');
     const scene1_2_restart = await sceneEngine.evaluateSceneTransition({
       currentSceneId: 1,
       subsceneId: 2,
-      gridId: 'G1.1',
+      gridId: 'A1',
       action: 'grid_click'
     });
-    console.log('Scene 1.2 (G1.1) Response:', scene1_2_restart);
+    console.log('Scene 1.2 (A1) Response:', scene1_2_restart);
 
     // Test Scene 2.1 logic
-    console.log('\n🎭 Testing Scene 2.1 (Vault - G11.7):');
+    console.log('\n🎭 Testing Scene 2.1 (Vault - K7):');
     const scene2_1 = await sceneEngine.evaluateSceneTransition({
       currentSceneId: 2,
       subsceneId: 1,
-      gridId: 'G11.7',
+      gridId: 'K7',
       action: 'grid_click'
     });
     console.log('Scene 2.1 Response:', scene2_1);

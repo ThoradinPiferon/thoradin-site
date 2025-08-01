@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
+import { getGridId, parseGridId } from '../utils/gridHelpers';
 
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
@@ -11,16 +12,17 @@ const LayeredInterface = () => {
   const [isZooming, setIsZooming] = useState(false);
   const matrixRef = useRef(null);
   
-  // Grid configuration - 11 rows x 7 columns to match G{row}.{col} format
-  const gridRows = 11;
-  const gridCols = 7;
+  // Grid configuration - 11 columns x 7 rows for Excel-style coordinates
+  const gridCols = 11;
+  const gridRows = 7;
   
   // Grid actions - array of functions for each grid cell
   const gridActions = new Array(gridRows * gridCols).fill(null);
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
-    console.log(`Grid click: G${row}.${col} in Scene ${currentScene}.${currentSubscene}`);
+    const gridId = getGridId(col, row); // Convert to Excel format
+    console.log(`Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
@@ -29,7 +31,7 @@ const LayeredInterface = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          gridId: `G${row}.${col}`,
+          gridId: gridId,
           currentScene: currentScene,
           currentSubscene: currentSubscene,
           action: 'grid_click'
@@ -45,21 +47,19 @@ const LayeredInterface = () => {
           console.log(`Zooming to ${data.zoomTo}...`);
           setIsZooming(true);
           
-          // Extract grid coordinates from zoomTo (e.g., "G11.7" -> row=11, col=7)
-          const match = data.zoomTo.match(/G(\d+)\.(\d+)/);
-          if (match) {
-            const zoomRow = parseInt(match[1]);
-            const zoomCol = parseInt(match[2]);
-            
-            // Trigger zoom animation
-            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
-            
-            // Wait for zoom to complete, then handle next action
-            setTimeout(() => {
-              setIsZooming(false);
-              handleNextAction(data.nextAction);
-            }, 1000); // Adjust timing as needed
-          }
+          // Extract grid coordinates from zoomTo (e.g., "K7" -> col=10, row=6)
+          const zoomCoords = parseGridId(data.zoomTo);
+          const zoomCol = zoomCoords.colIndex;
+          const zoomRow = zoomCoords.rowIndex;
+          
+          // Trigger zoom animation
+          await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+          
+          // Wait for zoom to complete, then handle next action
+          setTimeout(() => {
+            setIsZooming(false);
+            handleNextAction(data.nextAction);
+          }, 1000); // Adjust timing as needed
         } else {
           // No zoom needed, handle action directly
           handleNextAction(data);
@@ -96,8 +96,8 @@ const LayeredInterface = () => {
   
   // Set up grid actions to call backend
   for (let i = 0; i < gridActions.length; i++) {
-    const row = Math.floor(i / gridCols) + 1;
-    const col = (i % gridCols) + 1;
+    const row = Math.floor(i / gridCols);
+    const col = i % gridCols;
     gridActions[i] = () => handleGridClick(row, col, i);
   }
   

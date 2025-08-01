@@ -50,7 +50,7 @@
  * @property {boolean} [requiresUnlock] - Whether scene requires unlock condition
  */
 
-// Enhanced scene seeds for the current system
+// Enhanced scene seeds for the current system with Excel-style coordinates
 const defaultSceneSeeds = [
   {
     sceneId: 1,
@@ -81,7 +81,7 @@ const defaultSceneSeeds = [
     sceneId: 1,
     subsceneId: 2,
     title: "Matrix Spiral Static",
-    description: "The Matrix spiral has completed its animation and is now in a static state. Grid buttons are visible and G11.7 leads to Vault.",
+    description: "The Matrix spiral has completed its animation and is now in a static state. Grid buttons are visible and K7 leads to Vault.",
     backgroundType: "static_spiral",
     animationUrl: null,
     logic: {
@@ -93,7 +93,7 @@ const defaultSceneSeeds = [
       {
         label: "Navigate to Vault",
         next: [2, 1],
-        condition: "gridId === 'G11.7'",
+        condition: "gridId === 'K7'",
         effects: {
           animationTrigger: "scene_transition",
           transitionType: "vault_entrance"
@@ -103,7 +103,7 @@ const defaultSceneSeeds = [
       {
         label: "Restart Matrix",
         next: [1, 1],
-        condition: "gridId !== 'G11.7'",
+        condition: "gridId !== 'K7'",
         effects: {
           animationTrigger: "matrix_restart",
           transitionType: "spiral_reset"
@@ -140,7 +140,7 @@ const defaultSceneSeeds = [
       {
         label: "Return to Homepage",
         next: [1, 1],
-        condition: "gridId === 'G11.7'",
+        condition: "gridId === 'K7'",
         effects: {
           animationTrigger: "vault_exit",
           transitionType: "return_to_matrix"
@@ -150,7 +150,7 @@ const defaultSceneSeeds = [
       {
         label: "Vault Interaction",
         next: [2, 1],
-        condition: "gridId !== 'G11.7'",
+        condition: "gridId !== 'K7'",
         effects: {
           animationTrigger: "vault_interaction",
           transitionType: "none"
