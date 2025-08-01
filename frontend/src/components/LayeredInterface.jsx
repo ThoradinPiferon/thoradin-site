@@ -158,6 +158,7 @@ const LayeredInterface = () => {
         // Special handling for Scene 1.2: Always trigger zoom before scene transition
         if (currentScene === 1 && currentSubscene === 2) {
           console.log(`🎬 Scene 1.2: Triggering zoom animation to ${gridId} before scene transition`);
+          console.log('✅ Grid Zoom Started');
           setIsZooming(true);
           
           // Extract grid coordinates from gridId
@@ -171,15 +172,17 @@ const LayeredInterface = () => {
             await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
             console.log(`🎬 Zoom animation completed for grid ${gridId}`);
             
-            // Add a brief pause to let the zoom effect sink in
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Add a longer pause to let the zoom effect sink in
+            await new Promise(resolve => setTimeout(resolve, 1000));
             console.log(`🎬 Pause completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
           }
           
           // Reset zoom state
           setIsZooming(false);
+          console.log('✅ Grid Zoom Completed');
           
           // Now handle the scene transition
+          console.log('✅ Scene Changed to 1.1');
           handleNextAction(data);
         } else {
           // Handle zoom functionality for other scenes
@@ -259,19 +262,30 @@ const LayeredInterface = () => {
   
   // Handle the next action after zoom (or immediately if no zoom)
   const handleNextAction = (data) => {
+    console.log('🎭 handleNextAction called with data:', data);
+    
     // Backend controls the scene transitions
     if (data.sceneId) {
+      console.log(`✅ Setting scene to ${data.sceneId}`);
       setCurrentScene(data.sceneId);
     }
     if (data.subsceneId) {
+      console.log(`✅ Setting subscene to ${data.subsceneId}`);
       setCurrentSubscene(data.subsceneId);
     }
     
     // Backend controls Matrix animation
     if (data.matrixAction === 'fastForward' && matrixRef.current) {
+      console.log('✅ Matrix fastForward triggered');
       matrixRef.current.fastForwardToEnd();
     } else if (data.matrixAction === 'restart' && matrixRef.current) {
+      console.log('✅ Matrix restart triggered');
       matrixRef.current.restartAnimation();
+    }
+    
+    // Check if we're transitioning to Scene 1.1 (Matrix animation)
+    if (data.sceneId === 1 && data.subsceneId === 1) {
+      console.log('✅ Matrix animation playing');
     }
     
     // Backend controls navigation/scenarios

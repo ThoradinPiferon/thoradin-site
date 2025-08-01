@@ -120,6 +120,11 @@ const GridPlay = ({
     const isScene11 = currentScene === 1 && currentSubscene === 1;
     const isDisabled = isScene11 || isZooming;
     
+    // Add zoom state logging
+    if (isZooming) {
+      console.log(`🚫 Tile ${gridId} disabled during zoom animation`);
+    }
+    
     const handleClick = isDisabled ? 
       () => { 
         if (isScene11) {
@@ -181,7 +186,14 @@ const GridPlay = ({
         width: '100%',
         height: '100%',
         position: 'relative',
-        zIndex: 5
+        zIndex: 5,
+        // Completely hide grid during zoom
+        ...(isZooming && {
+          opacity: 0,
+          visibility: 'hidden',
+          pointerEvents: 'none',
+          transition: 'opacity 0.3s ease-out, visibility 0.3s ease-out'
+        })
       }}
     >
       {tiles.map(({ row, col }) => renderTile(row, col))}
