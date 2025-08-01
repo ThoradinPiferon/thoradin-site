@@ -11,16 +11,16 @@ const LayeredInterface = () => {
   const [isZooming, setIsZooming] = useState(false);
   const matrixRef = useRef(null);
   
-  // Grid configuration
-  const gridCols = 11;
-  const gridRows = 7;
+  // Grid configuration - 11 rows x 7 columns to match G{row}.{col} format
+  const gridRows = 11;
+  const gridCols = 7;
   
   // Grid actions - array of functions for each grid cell
-  const gridActions = new Array(gridCols * gridRows).fill(null);
+  const gridActions = new Array(gridRows * gridCols).fill(null);
   
   // Handle grid clicks - all actions go through backend
-  const handleGridClick = async (col, row, gridIndex) => {
-    console.log(`Grid click: G${col}.${row} in Scene ${currentScene}.${currentSubscene}`);
+  const handleGridClick = async (row, col, gridIndex) => {
+    console.log(`Grid click: G${row}.${col} in Scene ${currentScene}.${currentSubscene}`);
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
@@ -29,7 +29,7 @@ const LayeredInterface = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          gridId: `G${col}.${row}`,
+          gridId: `G${row}.${col}`,
           currentScene: currentScene,
           currentSubscene: currentSubscene,
           action: 'grid_click'
@@ -45,11 +45,11 @@ const LayeredInterface = () => {
           console.log(`Zooming to ${data.zoomTo}...`);
           setIsZooming(true);
           
-          // Extract grid coordinates from zoomTo (e.g., "G3.4" -> col=3, row=4)
+          // Extract grid coordinates from zoomTo (e.g., "G11.7" -> row=11, col=7)
           const match = data.zoomTo.match(/G(\d+)\.(\d+)/);
           if (match) {
-            const zoomCol = parseInt(match[1]);
-            const zoomRow = parseInt(match[2]);
+            const zoomRow = parseInt(match[1]);
+            const zoomCol = parseInt(match[2]);
             
             // Trigger zoom animation
             await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
@@ -73,11 +73,11 @@ const LayeredInterface = () => {
   // Handle the next action after zoom (or immediately if no zoom)
   const handleNextAction = (data) => {
     // Backend controls the scene transitions
-    if (data.newScene) {
-      setCurrentScene(data.newScene);
+    if (data.sceneId) {
+      setCurrentScene(data.sceneId);
     }
-    if (data.newSubscene) {
-      setCurrentSubscene(data.newSubscene);
+    if (data.subsceneId) {
+      setCurrentSubscene(data.subsceneId);
     }
     
     // Backend controls Matrix animation
@@ -98,7 +98,7 @@ const LayeredInterface = () => {
   for (let i = 0; i < gridActions.length; i++) {
     const row = Math.floor(i / gridCols) + 1;
     const col = (i % gridCols) + 1;
-    gridActions[i] = () => handleGridClick(col, row, i);
+    gridActions[i] = () => handleGridClick(row, col, i);
   }
   
   // Create MatrixSpiralCanvas as background component
@@ -120,8 +120,8 @@ const LayeredInterface = () => {
   return (
     <GridPlay
       backgroundComponent={backgroundComponent}
-      gridCols={gridCols}
       gridRows={gridRows}
+      gridCols={gridCols}
       gridActions={gridActions}
       showInvisibleButtons={shouldShowInvisibleButtons} // Invisible during Matrix animation
       currentScene={currentScene}

@@ -3,8 +3,8 @@ import SceneViewer from './SceneViewer';
 
 const GridPlay = ({ 
   backgroundComponent = null,
-  gridCols = 7,
   gridRows = 11,
+  gridCols = 7,
   gridActions = [],
   uiElements = [],
   showSceneViewer = false,
@@ -15,8 +15,8 @@ const GridPlay = ({
 }) => {
   console.log('GridPlay rendering with props:', { 
     backgroundComponent: !!backgroundComponent, 
-    gridCols, 
     gridRows, 
+    gridCols, 
     gridActionsLength: gridActions.length,
     uiElementsLength: uiElements.length,
     showSceneViewer,
@@ -45,7 +45,8 @@ const GridPlay = ({
     
     // Check if there's a custom action for this tile
     if (gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function') {
-      gridActions[gridIndex](col, row, gridIndex);
+      console.log(`🎯 Executing custom action for tile G${row}.${col}`);
+      gridActions[gridIndex](row, col, gridIndex);
       return;
     }
 
@@ -90,13 +91,12 @@ const GridPlay = ({
     let inlineStyles = {};
     
     if (showInvisibleButtons) {
-      // Completely invisible buttons for Matrix animation
+      // Completely invisible buttons for Matrix animation - but still clickable!
       buttonStyle = `
         w-full h-full 
         flex items-center justify-center
         text-xs font-mono
         focus:outline-none focus:ring-0
-        pointer-events-auto
         cursor-pointer
       `;
       buttonText = ''; // No text at all
@@ -105,7 +105,10 @@ const GridPlay = ({
         border: 'none',
         color: 'transparent',
         opacity: 0,
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        cursor: 'pointer',
+        position: 'relative',
+        zIndex: 5
       };
     } else {
       // Normal visible buttons for other scenes
@@ -164,8 +167,7 @@ const GridPlay = ({
         gridTemplateRows: `repeat(${gridRows}, 1fr)`,
         gap: '2px',
         padding: '20px',
-        opacity: showInvisibleButtons ? 0 : 1,
-        pointerEvents: showInvisibleButtons ? 'auto' : 'auto'
+        pointerEvents: 'auto'
       }}>
         {Array.from({ length: gridRows }, (_, row) =>
           Array.from({ length: gridCols }, (_, col) => {
@@ -178,34 +180,8 @@ const GridPlay = ({
               console.log(`Grid tile ${gridId}: showInvisibleButtons=${showInvisibleButtons}, currentScene=${currentScene}.${currentSubscene}`);
             }
             
-            // If buttons should be invisible, render transparent divs instead
-            if (showInvisibleButtons) {
-              console.log(`🎭 Rendering invisible div for ${gridId}`);
-              return (
-                <div
-                  key={gridId}
-                  className="w-full h-full"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    boxShadow: 'none',
-                    textShadow: 'none',
-                    opacity: 0,
-                    pointerEvents: 'auto',
-                    cursor: 'pointer',
-                    color: 'transparent',
-                    fontSize: '0px',
-                    lineHeight: '0px',
-                    visibility: 'hidden'
-                  }}
-                  onClick={() => handleTileClick(row + 1, col + 1)}
-                />
-              );
-            }
-            
-            // Otherwise render normal buttons
-            console.log(`🎭 Rendering visible button for ${gridId}`);
+            // Always render clickable buttons, just make them invisible when needed
+            console.log(`🎭 Rendering ${showInvisibleButtons ? 'invisible' : 'visible'} button for ${gridId}`);
             return renderTile(row + 1, col + 1);
           })
         )}
