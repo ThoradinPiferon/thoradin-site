@@ -16,6 +16,7 @@ router.post('/action', async (req, res) => {
     const { gridId, currentScene, currentSubscene, action } = req.body;
 
     console.log(`🎮 Grid action received: ${gridId} in Scene ${currentScene}.${currentSubscene}, action: ${action}`);
+    console.log(`🔍 Backend received: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
 
     // Validate required parameters
     if (!gridId || !currentScene || !currentSubscene || !action) {

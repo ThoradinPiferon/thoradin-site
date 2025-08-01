@@ -15,6 +15,7 @@ const LayeredInterface = () => {
   const [isZooming, setIsZooming] = useState(false);
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const matrixRef = useRef(null);
+  const currentSceneRef = useRef({ scene: 1, subscene: 1 });
   
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
@@ -149,8 +150,14 @@ const LayeredInterface = () => {
         console.log('✅ Backend auto-advance response:', data);
         
         // Update scene state based on backend response
-        if (data.sceneId) setCurrentScene(data.sceneId);
-        if (data.subsceneId) setCurrentSubscene(data.subsceneId);
+        if (data.sceneId) {
+          setCurrentScene(data.sceneId);
+          currentSceneRef.current.scene = data.sceneId;
+        }
+        if (data.subsceneId) {
+          setCurrentSubscene(data.subsceneId);
+          currentSceneRef.current.subscene = data.subsceneId;
+        }
         
         // Handle Matrix animation
         if (data.matrixAction === 'fastForward' && matrixRef.current) {
@@ -161,12 +168,16 @@ const LayeredInterface = () => {
         // Local fallback
         setCurrentScene(1);
         setCurrentSubscene(2);
+        currentSceneRef.current.scene = 1;
+        currentSceneRef.current.subscene = 2;
       }
     } catch (error) {
       console.log('⚠️ Auto-advance error, using local fallback:', error);
       // Local fallback
       setCurrentScene(1);
       setCurrentSubscene(2);
+      currentSceneRef.current.scene = 1;
+      currentSceneRef.current.subscene = 2;
     }
     
     setAutoAdvanceTimer(null);
@@ -174,14 +185,17 @@ const LayeredInterface = () => {
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
+    // Use ref to get current scene state (avoids stale closure issues)
+    const currentSceneState = currentSceneRef.current;
+    
     // Disable clicks for Scene 1.1 (Matrix Awakening)
-    if (currentScene === 1 && currentSubscene === 1) {
+    if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
       console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening)');
       return;
     }
     
     // Clear auto-advance timer if user clicks during Scene 1.1
-    if (currentScene === 1 && currentSubscene === 1) {
+    if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
       if (autoAdvanceTimer) {
         clearTimeout(autoAdvanceTimer);
         setAutoAdvanceTimer(null);
@@ -190,7 +204,8 @@ const LayeredInterface = () => {
     }
 
     const gridId = getGridId(col, row);
-    console.log(`🎮 Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
+    console.log(`🎮 Grid click: ${gridId} in Scene ${currentSceneState.scene}.${currentSceneState.subscene}`);
+    console.log(`🔍 Current state at click time: currentScene=${currentSceneState.scene}, currentSubscene=${currentSceneState.subscene}`);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/grid/action`, {
@@ -200,8 +215,8 @@ const LayeredInterface = () => {
         },
         body: JSON.stringify({
           gridId: gridId,
-          currentScene: currentScene,
-          currentSubscene: currentSubscene,
+          currentScene: currentSceneState.scene,
+          currentSubscene: currentSceneState.subscene,
           action: 'grid_click'
         })
       });
@@ -211,7 +226,7 @@ const LayeredInterface = () => {
         console.log('✅ Backend response:', data);
         
         // Special handling for Scene 1.2: Handle backend zoom response structure
-        if (currentScene === 1 && currentSubscene === 2) {
+        if (currentSceneState.scene === 1 && currentSceneState.subscene === 2) {
           console.log(`🎬 Scene 1.2: Processing backend response:`, data);
           
           // Check if backend returned a zoom action structure
@@ -319,10 +334,12 @@ const LayeredInterface = () => {
     if (data.sceneId) {
       console.log(`✅ Setting scene to ${data.sceneId}`);
       setCurrentScene(data.sceneId);
+      currentSceneRef.current.scene = data.sceneId;
     }
     if (data.subsceneId) {
       console.log(`✅ Setting subscene to ${data.subsceneId}`);
       setCurrentSubscene(data.subsceneId);
+      currentSceneRef.current.subscene = data.subsceneId;
     }
     
     // Backend controls Matrix animation
