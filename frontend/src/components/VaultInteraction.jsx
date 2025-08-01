@@ -12,10 +12,7 @@ import {
 
 // Word Balloon Component
 const WordBalloon = ({ message, isVisible, onClose, showLanguageChoice, onLanguageChoice, onLanguageSelect }) => {
-  console.log('WordBalloon props:', { message, isVisible, onClose, showLanguageChoice });
-
   if (!isVisible) {
-    console.log('WordBalloon not visible');
     return null;
   }
 
@@ -443,8 +440,6 @@ const VaultInteraction = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  console.log('VaultInteraction rendering, showWelcome:', showWelcome);
-
   // Get user's location and time info
   const getUserInfo = () => {
     const now = new Date();
@@ -532,7 +527,6 @@ The Vault holds ancient wisdom, forgotten dreams, and echoes of consciousness th
 
 Would you like me to speak to you in ${language}?`;
 
-    console.log('Welcome message generated:', { city, time, language, message });
     return message;
   };
 
@@ -570,17 +564,14 @@ Would you like me to speak to you in ${language}?`;
   // Get API base URL with fallback
   const getApiBaseUrl = () => {
     const envUrl = import.meta.env.VITE_API_BASE_URL;
-    console.log('Environment variable VITE_API_BASE_URL:', envUrl);
     
     if (envUrl && envUrl !== 'undefined' && envUrl.trim() !== '') {
-      console.log('Using API URL:', envUrl);
       return envUrl;
     }
     
     // Development fallback only
     if (import.meta.env.MODE === 'development') {
       const fallbackUrl = 'http://localhost:3001';
-      console.log('Using development fallback URL:', fallbackUrl);
       return fallbackUrl;
     }
     
@@ -857,7 +848,6 @@ Would you like me to speak to you in ${language}?`;
             message={getWelcomeMessage()}
             isVisible={true}
             onClose={() => {
-              console.log('Closing word balloon');
               handleLanguageChoice('yes'); // Automatically select 'yes' if user clicks 'Enter the Vault'
             }}
             showLanguageChoice={showLanguageChoice}
