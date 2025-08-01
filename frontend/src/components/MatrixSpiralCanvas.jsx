@@ -66,176 +66,160 @@ const MatrixSpiralCanvas = forwardRef(({
     }
   }, [onGridZoom, onIntroComplete]);
 
-  // Zoom transition function
+  // Zoom transition function - now returns a Promise
   const handleGridZoom = (gridCol, gridRow) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const { width, height } = canvas;
-    const cellWidth = width / 11; // 11 columns
-    const cellHeight = height / 7; // 7 rows
-    
-    // Calculate target position (center of the clicked grid)
-    const targetX = (gridCol - 0.5) * cellWidth;
-    const targetY = (gridRow - 0.5) * cellHeight;
-    
-    // Start zoom animation
-    zoomState.current = {
-      active: true,
-      targetX,
-      targetY,
-      progress: 0,
-      gridCol,
-      gridRow
-    };
-    
-    // Restart animation loop for zoom effect
-    if (animationComplete.current) {
-      // Animation was stopped, restart it for zoom
-      const zoomDraw = () => {
-        const ctx = canvas.getContext('2d');
-        const { width, height } = canvas;
-        
-        // Clear canvas
-        ctx.clearRect(0, 0, width, height);
-        
-        // Draw static background (final state of intro animation)
-        const centerX = width / 2;
-        const centerY = height / 2;
-        const maxRadius = Math.max(width, height) * 0.5;
-        const totalDuration = 480; // 8 seconds
-        
-        // Generate final spiral state
-        const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
-        
-        // Draw static spiral background
-        spiral.forEach(({ x, y, index, radius }) => {
-          const charIndex = index % characterStream.current.length;
-          const char = characterStream.current[charIndex];
-          
-          const distanceFromCenter = radius / maxRadius;
-          const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-          const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
-          
-          ctx.font = `${fontSize}px monospace`;
-          
-          // Calculate if this should be part of the phrase
-          const totalSpiralChars = spiral.length;
-          const phraseStartIndex = totalSpiralChars - phrase.length;
-          const isPhraseChar = index >= phraseStartIndex;
-          const phraseCharIndex = index - phraseStartIndex;
-          
-          if (isPhraseChar && phraseCharIndex < phrase.length) {
-            // Phrase characters - bright green
-            const phraseChar = phrase[phraseCharIndex];
-            ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
-            ctx.shadowColor = '#00ffcc';
-            ctx.shadowBlur = 5;
-            ctx.fillText(phraseChar, x, y);
-          } else {
-            // Background spiral - faded
-            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
-            ctx.shadowBlur = 0;
-            ctx.fillText(char, x, y);
-          }
-        });
-        
-        // Draw static horizontal sentence
-        const sentenceWidth = phrase.length * 20;
-        const startX = centerX - sentenceWidth / 2;
-        const sentenceY = centerY;
-        
-        ctx.font = '20px monospace';
-        ctx.fillStyle = 'rgba(0,255,180,0.9)';
-        ctx.shadowColor = '#00ffcc';
-        ctx.shadowBlur = 8;
-        
-        for (let i = 0; i < phrase.length; i++) {
-          ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
-        }
-        
-        // Apply zoom effect with slow approach then fast acceleration
-        if (zoomState.current.active) {
-          zoomState.current.progress += 0.02; // Much faster transition
-          
-          if (zoomState.current.progress >= 1) {
-            zoomState.current.progress = 1;
-          }
-          
-          const zoomProgress = zoomState.current.progress;
-          
-          // Three-phase zoom: very slow initial (0-0.3), slow approach (0.3-0.8), then super fast (0.8-1.0)
-          let zoomEase;
-          if (zoomProgress <= 0.3) {
-            // Phase 1: Very slow initial approach (30% of time) - shows whole website contrast
-            const phase1Progress = zoomProgress / 0.3;
-            zoomEase = 1 - Math.pow(1 - phase1Progress, 4); // Extremely gentle ease-out
-          } else if (zoomProgress <= 0.8) {
-            // Phase 2: Slow approach (50% of time) - gradual movement toward target
-            const phase2Progress = (zoomProgress - 0.3) / 0.5;
-            zoomEase = 0.3 + (phase2Progress * 0.5 * (1 - Math.pow(1 - phase2Progress, 2))); // Gentle approach
-          } else {
-            // Phase 3: Super fast acceleration (20% of time) - dramatic zoom
-            const phase3Progress = (zoomProgress - 0.8) / 0.2;
-            zoomEase = 0.8 + (phase3Progress * 0.2 * Math.pow(phase3Progress, 1.5)); // Super fast acceleration
-          }
-          
-          // Calculate zoom scale and opacity with dramatic contrast
-          let zoomScale;
-          if (zoomProgress <= 0.3) {
-            // Phase 1: Very slow zoom to 25% of full screen (shows whole website)
-            zoomScale = 1 + (zoomEase * 0.25); // Max 25% zoom in first phase
-          } else if (zoomProgress <= 0.8) {
-            // Phase 2: Gradual zoom from 25% to 80%
-            const phase2Ease = (zoomEase - 0.3) / 0.5;
-            zoomScale = 1.25 + (phase2Ease * 0.55); // 25% to 80% zoom
-          } else {
-            // Phase 3: Super fast zoom from 80% to full zoom
-            const phase3Ease = (zoomEase - 0.8) / 0.2;
-            zoomScale = 1.8 + (phase3Ease * 20); // 80% to 21x zoom
-          }
-          
-          const opacity = 1 - zoomEase * 0.95; // Dramatic fade to black
-          
-          ctx.save();
-          ctx.translate(zoomState.current.targetX, zoomState.current.targetY);
-          ctx.scale(zoomScale, zoomScale);
-          ctx.translate(-zoomState.current.targetX, -zoomState.current.targetY);
-          ctx.globalAlpha = opacity;
-          
-          // Continue zoom animation
-          if (zoomState.current.progress < 1) {
-            requestAnimationFrame(zoomDraw);
-          } else {
-            // Zoom complete - fade to black
-            ctx.restore();
-            
-            // Draw solid black background for transition
-            ctx.fillStyle = 'rgb(0, 0, 0)';
-            ctx.fillRect(0, 0, width, height);
-            
-            // Add a brief pause in black before page transition
-            setTimeout(() => {
-              // Ensure black background stays
-              ctx.fillStyle = 'rgb(0, 0, 0)';
-              ctx.fillRect(0, 0, width, height);
-            }, 100);
-          }
-        }
-      };
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        resolve();
+        return;
+      }
+      
+      const { width, height } = canvas;
+      const cellWidth = width / 11; // 11 columns
+      const cellHeight = height / 7; // 7 rows
+      
+      // Calculate target position (center of the clicked grid)
+      const targetX = (gridCol - 0.5) * cellWidth;
+      const targetY = (gridRow - 0.5) * cellHeight;
+      
+      console.log(`🎬 Starting zoom animation to grid ${getGridId(gridCol, gridRow)} (${gridCol}, ${gridRow})`);
       
       // Start zoom animation
-      requestAnimationFrame(zoomDraw);
-    }
-    
-    // After zoom animation completes, navigate to new page
-    setTimeout(() => {
-      // You can replace this with your actual navigation logic
-      const pageUrl = `/grid-${gridCol}-${gridRow}`;
+      zoomState.current = {
+        active: true,
+        targetX,
+        targetY,
+        progress: 0,
+        gridCol,
+        gridRow
+      };
       
-      // Reset zoom state
-      zoomState.current = { active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 };
-    }, 2000); // 2 second zoom animation (much faster)
+      // Restart animation loop for zoom effect
+      if (animationComplete.current) {
+        // Animation was stopped, restart it for zoom
+        const zoomDraw = () => {
+          const ctx = canvas.getContext('2d');
+          const { width, height } = canvas;
+          
+          // Clear canvas
+          ctx.clearRect(0, 0, width, height);
+          
+          // Draw static background (final state of intro animation)
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const maxRadius = Math.max(width, height) * 0.5;
+          const totalDuration = 480; // 8 seconds
+          
+          // Generate final spiral state
+          const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
+          
+          // Draw static spiral background
+          spiral.forEach(({ x, y, index, radius }) => {
+            const charIndex = index % characterStream.current.length;
+            const char = characterStream.current[charIndex];
+            
+            const distanceFromCenter = radius / maxRadius;
+            const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
+            const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
+            
+            ctx.font = `${fontSize}px monospace`;
+            
+            // Calculate if this should be part of the phrase
+            const totalSpiralChars = spiral.length;
+            const phraseStartIndex = totalSpiralChars - phrase.length;
+            const isPhraseChar = index >= phraseStartIndex;
+            const phraseCharIndex = index - phraseStartIndex;
+            
+            if (isPhraseChar && phraseCharIndex < phrase.length) {
+              // Phrase characters - bright green
+              const phraseChar = phrase[phraseCharIndex];
+              ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
+              ctx.shadowColor = '#00ffcc';
+              ctx.shadowBlur = 5;
+              ctx.fillText(phraseChar, x, y);
+            } else {
+              // Background spiral - faded
+              ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
+              ctx.shadowBlur = 0;
+              ctx.fillText(char, x, y);
+            }
+          });
+          
+          // Draw static horizontal sentence
+          const sentenceWidth = phrase.length * 20;
+          const startX = centerX - sentenceWidth / 2;
+          const sentenceY = centerY;
+          
+          ctx.font = '20px monospace';
+          ctx.fillStyle = 'rgba(0,255,180,0.9)';
+          ctx.shadowColor = '#00ffcc';
+          ctx.shadowBlur = 8;
+          
+          for (let i = 0; i < phrase.length; i++) {
+            ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+          }
+          
+          // Apply zoom effect with slow approach then fast acceleration
+          if (zoomState.current.active) {
+            zoomState.current.progress += 0.02; // Much faster transition
+            
+            if (zoomState.current.progress >= 1) {
+              zoomState.current.progress = 1;
+            }
+            
+            const zoomProgress = zoomState.current.progress;
+            
+            // Three-phase zoom: very slow initial (0-0.3), slow approach (0.3-0.8), then super fast (0.8-1.0)
+            let zoomEase;
+            if (zoomProgress < 0.3) {
+              zoomEase = zoomProgress / 0.3 * 0.1; // Very slow initial
+            } else if (zoomProgress < 0.8) {
+              zoomEase = 0.1 + (zoomProgress - 0.3) / 0.5 * 0.3; // Slow approach
+            } else {
+              zoomEase = 0.4 + (zoomProgress - 0.8) / 0.2 * 0.6; // Super fast final
+            }
+            
+            const zoomScale = 1 + zoomEase * 2; // Scale up to 3x
+            const opacity = 1 - zoomEase * 0.5; // Fade out slightly
+            
+            ctx.save();
+            ctx.translate(zoomState.current.targetX, zoomState.current.targetY);
+            ctx.scale(zoomScale, zoomScale);
+            ctx.translate(-zoomState.current.targetX, -zoomState.current.targetY);
+            ctx.globalAlpha = opacity;
+            
+            // Continue zoom animation
+            if (zoomState.current.progress < 1) {
+              requestAnimationFrame(zoomDraw);
+            } else {
+              // Zoom complete - fade to black
+              ctx.restore();
+              
+              // Draw solid black background for transition
+              ctx.fillStyle = 'rgb(0, 0, 0)';
+              ctx.fillRect(0, 0, width, height);
+              
+              console.log(`🎬 Zoom animation completed for grid ${getGridId(gridCol, gridRow)}`);
+              
+              // Reset zoom state
+              zoomState.current = { active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 };
+              
+              // Resolve the Promise after a brief pause
+              setTimeout(() => {
+                resolve();
+              }, 200);
+            }
+          }
+        };
+        
+        // Start zoom animation
+        requestAnimationFrame(zoomDraw);
+      } else {
+        // Animation not complete, resolve immediately
+        resolve();
+      }
+    });
   };
 
   useEffect(() => {

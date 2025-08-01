@@ -105,19 +105,27 @@ const GridPlay = ({
     const gridIndex = row * config.cols + col;
     
     // Debug logging for scene state
-    console.log(`🎯 Rendering tile ${gridId} in ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, scene: ${currentScene}.${currentSubscene}`);
+    console.log(`🎯 Rendering tile ${gridId} in ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, scene: ${currentScene}.${currentSubscene}, isZooming: ${isZooming}`);
     
     // Get tile styles and classes based on configuration
-    const tileStyles = getTileStyles(config, showInvisibleButtons, false, gridId, true);
-    const tileClasses = getTileClasses(config, showInvisibleButtons, false, true);
+    const tileStyles = getTileStyles(config, showInvisibleButtons, isZooming, gridId, true);
+    const tileClasses = getTileClasses(config, showInvisibleButtons, isZooming, true);
     
     // Determine button text based on configuration
     let buttonText = showInvisibleButtons ? '' : gridId;
     
-    // Only disable clicks for Scene 1.1 (Matrix Awakening)
+    // Disable clicks for Scene 1.1 (Matrix Awakening) or during zoom
     const isScene11 = currentScene === 1 && currentSubscene === 1;
-    const handleClick = isScene11 ? 
-      () => { console.log('🚫 Click disabled for Scene 1.1'); } : 
+    const isDisabled = isScene11 || isZooming;
+    
+    const handleClick = isDisabled ? 
+      () => { 
+        if (isScene11) {
+          console.log('🚫 Click disabled for Scene 1.1'); 
+        } else if (isZooming) {
+          console.log('🚫 Click disabled during zoom animation'); 
+        }
+      } : 
       () => onTileClick(row, col, gridIndex);
     
     return (
@@ -125,8 +133,16 @@ const GridPlay = ({
         key={gridId}
         className={tileClasses}
         onClick={handleClick}
-        style={tileStyles}
-        disabled={isScene11} // Only disable for Scene 1.1
+        style={{
+          ...tileStyles,
+          // Add visual feedback during zoom
+          ...(isZooming && {
+            opacity: 0.5,
+            pointerEvents: 'none',
+            cursor: 'not-allowed'
+          })
+        }}
+        disabled={isDisabled}
       >
         {buttonText}
         {config.debug && (

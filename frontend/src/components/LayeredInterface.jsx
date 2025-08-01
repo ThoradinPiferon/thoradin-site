@@ -135,7 +135,7 @@ const LayeredInterface = () => {
     }
 
     const gridId = getGridId(col, row);
-    console.log(`Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
+    console.log(`🎮 Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/grid/action`, {
@@ -153,37 +153,64 @@ const LayeredInterface = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log('Backend response:', data);
+        console.log('✅ Backend response:', data);
         
-        // Handle zoom functionality first
-        if (data.zoomTo && matrixRef.current) {
-          console.log(`Zooming to ${data.zoomTo}...`);
+        // Special handling for Scene 1.2: Always trigger zoom before scene transition
+        if (currentScene === 1 && currentSubscene === 2) {
+          console.log(`🎬 Scene 1.2: Triggering zoom animation to ${gridId} before scene transition`);
           setIsZooming(true);
           
-          // Extract grid coordinates from zoomTo (e.g., "K7" -> col=10, row=6)
-          const zoomCoords = parseGridId(data.zoomTo);
+          // Extract grid coordinates from gridId
+          const zoomCoords = parseGridId(gridId);
           const zoomCol = zoomCoords.colIndex;
           const zoomRow = zoomCoords.rowIndex;
           
-          // Trigger zoom animation
-          await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+          // Trigger zoom animation and wait for completion
+          if (matrixRef.current) {
+            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+            console.log(`🎬 Zoom animation completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
+          }
           
-          // Wait for zoom to complete, then handle next action
-          setTimeout(() => {
-            setIsZooming(false);
-            handleNextAction(data.nextAction);
-          }, 1000); // Adjust timing as needed
-        } else {
-          // No zoom needed, handle action directly
+          // Reset zoom state
+          setIsZooming(false);
+          
+          // Now handle the scene transition
           handleNextAction(data);
+        } else {
+          // Handle zoom functionality for other scenes
+          if (data.zoomTo && matrixRef.current) {
+            console.log(`🎬 Zooming to ${data.zoomTo}...`);
+            setIsZooming(true);
+            
+            // Extract grid coordinates from zoomTo (e.g., "K7" -> col=10, row=6)
+            const zoomCoords = parseGridId(data.zoomTo);
+            const zoomCol = zoomCoords.colIndex;
+            const zoomRow = zoomCoords.rowIndex;
+            
+            // Trigger zoom animation
+            await matrixRef.current.handleGridZoom(zoomCol, zoomRow);
+            
+            // Reset zoom state
+            setIsZooming(false);
+            
+            // Handle next action after zoom
+            if (data.nextAction) {
+              handleNextAction(data.nextAction);
+            } else {
+              handleNextAction(data);
+            }
+          } else {
+            // No zoom needed, handle action directly
+            handleNextAction(data);
+          }
         }
       } else {
-        console.error('Backend returned error:', response.status, response.statusText);
+        console.error('❌ Backend returned error:', response.status, response.statusText);
         // Fallback to local logic when backend fails
         handleLocalFallback(gridId);
       }
     } catch (error) {
-      console.error('Error calling backend grid action:', error);
+      console.error('❌ Error calling backend grid action:', error);
       // Fallback to local logic when backend fails
       handleLocalFallback(gridId);
     }
@@ -298,6 +325,7 @@ const LayeredInterface = () => {
           showInvisibleButtons={shouldShowInvisibleButtons}
           currentScene={currentScene}
           currentSubscene={currentSubscene}
+          isZooming={isZooming}
         />
       </div>
     </div>
