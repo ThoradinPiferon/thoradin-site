@@ -38,7 +38,14 @@ function countAlphanumeric(str) {
 }
 
 // Light Matrix Spiral Canvas with Natural Word Reveal
-const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", onGridZoom, onIntroComplete }, ref) => {
+const MatrixSpiralCanvas = forwardRef(({ 
+  phrase = "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", 
+  onGridZoom, 
+  onIntroComplete,
+  isRunning = true,
+  isStatic = false,
+  onAnimationComplete
+}, ref) => {
   const canvasRef = useRef(null);
   const frameRef = useRef(0);
   const characterStream = useRef([]);
@@ -47,6 +54,10 @@ const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO T
   const sentenceRevealStart = useRef(0);
   const sentenceRevealActive = useRef(false);
   const zoomState = useRef({ active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 });
+  const animationIdRef = useRef(null);
+
+  // Debug logging for animation state
+  console.log(`🎬 MatrixSpiralCanvas: isRunning=${isRunning}, isStatic=${isStatic}, currentScene=${isRunning ? '1.1' : isStatic ? '1.2' : 'other'}`);
 
   // Expose zoom function through ref
   useEffect(() => {
@@ -262,6 +273,72 @@ const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO T
       const totalDuration = 480; // 8 seconds total (5s build-up + 3s reveal)
       const sentenceRevealDuration = 300; // 5 seconds - when sentence starts revealing
 
+      // Handle different animation states based on props
+      if (isStatic) {
+        // Scene 1.2: Draw static final state
+        console.log('🎬 Drawing static Matrix background for Scene 1.2');
+        const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
+        
+        // Draw static spiral background with fully revealed phrase
+        spiral.forEach(({ x, y, index, radius }) => {
+          const charIndex = index % characterStream.current.length;
+          const char = characterStream.current[charIndex];
+          
+          const distanceFromCenter = radius / maxRadius;
+          const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
+          const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
+          
+          ctx.font = `${fontSize}px monospace`;
+          
+          // Calculate if this should be part of the phrase
+          const totalSpiralChars = spiral.length;
+          const phraseStartIndex = totalSpiralChars - phrase.length;
+          const isPhraseChar = index >= phraseStartIndex;
+          const phraseCharIndex = index - phraseStartIndex;
+          
+          if (isPhraseChar && phraseCharIndex < phrase.length) {
+            // Phrase characters - fully revealed and bright green
+            const phraseChar = phrase[phraseCharIndex];
+            ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
+            ctx.shadowColor = '#00ffcc';
+            ctx.shadowBlur = 5;
+            ctx.fillText(phraseChar, x, y);
+          } else {
+            // Background spiral - faded to background
+            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
+            ctx.shadowBlur = 0;
+            ctx.fillText(char, x, y);
+          }
+        });
+        
+        // Draw fully spelled horizontal sentence
+        const sentenceWidth = phrase.length * 20;
+        const startX = centerX - sentenceWidth / 2;
+        const sentenceY = centerY;
+        
+        ctx.font = '20px monospace';
+        ctx.fillStyle = 'rgba(0,255,180,0.9)';
+        ctx.shadowColor = '#00ffcc';
+        ctx.shadowBlur = 8;
+        
+        // Draw ALL letters of the phrase (fully spelled out)
+        for (let i = 0; i < phrase.length; i++) {
+          ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+        }
+        
+        // No animation loop for static state
+        return;
+      }
+
+      // Scene 1.1: Animated Matrix background
+      if (!isRunning) {
+        // Not running - don't animate
+        console.log('🎬 Matrix animation paused');
+        return;
+      }
+
+      console.log('🎬 Drawing animated Matrix background for Scene 1.1');
+
       // Check if sentence reveal should start
       if (frameRef.current >= sentenceRevealDuration && !sentenceRevealActive.current) {
         sentenceRevealStart.current = frameRef.current;
@@ -272,8 +349,8 @@ const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO T
       if (frameRef.current >= totalDuration && !animationComplete.current) {
         animationComplete.current = true;
         // Notify parent that intro is complete
-        if (onIntroComplete) {
-          onIntroComplete();
+        if (onAnimationComplete) {
+          onAnimationComplete();
         }
       }
 
@@ -370,22 +447,31 @@ const MatrixSpiralCanvas = forwardRef(({ phrase = "ENTER THE VAULT: WELCOME TO T
         }
       }
 
-      // Stop animation after 8 seconds - keep static background
-      if (!animationComplete.current) {
+      // Continue animation loop only if running and not complete
+      if (isRunning && !animationComplete.current) {
         frameRef.current++;
-        requestAnimationFrame(draw);
+        animationIdRef.current = requestAnimationFrame(draw);
       } else {
-        // Animation is complete - static background, no more animation frames
+        // Animation is complete or paused - static background, no more animation frames
         // Zoom animations are handled separately for optimal performance
       }
     };
 
-    draw();
+    // Start animation if running
+    if (isRunning) {
+      draw();
+    } else if (isStatic) {
+      // Draw static state immediately
+      draw();
+    }
 
     return () => {
       window.removeEventListener('resize', resize);
+      if (animationIdRef.current) {
+        cancelAnimationFrame(animationIdRef.current);
+      }
     };
-  }, [phrase]);
+  }, [phrase, isRunning, isStatic, onAnimationComplete]);
 
   // Log character count and string length
   useEffect(() => {
