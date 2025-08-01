@@ -163,7 +163,9 @@ const GridPlay = ({
         gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
         gridTemplateRows: `repeat(${gridRows}, 1fr)`,
         gap: '2px',
-        padding: '20px'
+        padding: '20px',
+        opacity: showInvisibleButtons ? 0 : 1,
+        pointerEvents: showInvisibleButtons ? 'auto' : 'auto'
       }}>
         {Array.from({ length: gridRows }, (_, row) =>
           Array.from({ length: gridCols }, (_, col) => {
@@ -191,7 +193,11 @@ const GridPlay = ({
                     textShadow: 'none',
                     opacity: 0,
                     pointerEvents: 'auto',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    color: 'transparent',
+                    fontSize: '0px',
+                    lineHeight: '0px',
+                    visibility: 'hidden'
                   }}
                   onClick={() => handleTileClick(row + 1, col + 1)}
                 />
