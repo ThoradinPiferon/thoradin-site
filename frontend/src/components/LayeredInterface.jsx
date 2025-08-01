@@ -61,12 +61,12 @@ const LayeredInterface = () => {
         console.log('⏰ Auto-advance cancelled by user click');
       }
     }
-    
-    const gridId = getGridId(col, row); // Convert to Excel format
+
+    const gridId = getGridId(col, row);
     console.log(`Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
-    
+
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001/api'}/grid/action`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,9 +105,51 @@ const LayeredInterface = () => {
           // No zoom needed, handle action directly
           handleNextAction(data);
         }
+      } else {
+        console.error('Backend returned error:', response.status, response.statusText);
+        // Fallback to local logic when backend fails
+        handleLocalFallback(gridId);
       }
     } catch (error) {
       console.error('Error calling backend grid action:', error);
+      // Fallback to local logic when backend fails
+      handleLocalFallback(gridId);
+    }
+  };
+
+  // Local fallback logic when backend is unavailable
+  const handleLocalFallback = (gridId) => {
+    console.log('🔄 Using local fallback logic for grid click:', gridId);
+    
+    if (currentScene === 1 && currentSubscene === 1) {
+      // Scene 1.1: Fast-forward to Scene 1.2
+      setCurrentScene(1);
+      setCurrentSubscene(2);
+      if (matrixRef.current) {
+        matrixRef.current.fastForwardToEnd();
+      }
+    } else if (currentScene === 1 && currentSubscene === 2) {
+      // Scene 1.2: Check if it's K7 (vault entrance)
+      if (gridId === 'K7') {
+        setCurrentScene(2);
+        setCurrentSubscene(1);
+      } else {
+        // Restart matrix
+        setCurrentScene(1);
+        setCurrentSubscene(1);
+        if (matrixRef.current) {
+          matrixRef.current.restartAnimation();
+        }
+      }
+    } else if (currentScene === 2 && currentSubscene === 1) {
+      // Scene 2.1: Check if it's K7 (return to homepage)
+      if (gridId === 'K7') {
+        setCurrentScene(1);
+        setCurrentSubscene(1);
+        if (matrixRef.current) {
+          matrixRef.current.restartAnimation();
+        }
+      }
     }
   };
   
