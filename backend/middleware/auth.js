@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const prisma = require('../config/database');
+import jwt from 'jsonwebtoken';
+import prisma from '../config/database.js';
 
 // Verify JWT token middleware
 const authenticateToken = async (req, res, next) => {
@@ -72,7 +72,4 @@ const optionalAuth = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  authenticateToken,
-  optionalAuth
-}; 
+export { authenticateToken, optionalAuth }; 
