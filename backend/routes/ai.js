@@ -1,4 +1,4 @@
-import express from 'express');
+const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { authenticateToken } = require('../middleware/auth');
 const { generateGridResponse, generateChatResponse } = require('../config/openai');
