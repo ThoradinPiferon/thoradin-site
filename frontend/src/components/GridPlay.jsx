@@ -16,7 +16,10 @@ const GridPlay = ({
   onTileClick, 
   showInvisibleButtons, 
   currentScene, 
-  currentSubscene 
+  currentSubscene,
+  gridActions = [],
+  showSceneViewer = false,
+  isZooming = false
 }) => {
   console.log(`🎮 GridPlay rendering: ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, config:`, gridConfig);
   
@@ -34,16 +37,11 @@ const GridPlay = ({
   const config = gridConfig || getGridConfig(sceneName);
   
   console.log('GridPlay rendering with props:', { 
-    backgroundComponent: !!backgroundComponent, 
     sceneName,
     config,
-    gridActionsLength: gridActions.length,
-    uiElementsLength: uiElements.length,
-    showSceneViewer,
     showInvisibleButtons,
     currentScene,
-    currentSubscene,
-    isZooming
+    currentSubscene
   });
 
   // Debug the invisible button logic
@@ -57,9 +55,6 @@ const GridPlay = ({
   // Generate tile IDs for this configuration
   const tileIds = generateTileIds(config);
   
-  // Generate grid actions if not provided
-  const finalGridActions = gridActions.length > 0 ? gridActions : generateGridActions(config, handleTileClick);
-
   const handleTileClick = async (row, col) => {
     // Disable clicks during zooming
     if (isZooming) {
@@ -70,9 +65,9 @@ const GridPlay = ({
     const gridIndex = row * config.cols + col;
     
     // Check if there's a custom action for this tile
-    if (finalGridActions[gridIndex] && typeof finalGridActions[gridIndex] === 'function') {
+    if (gridActions[gridIndex] && typeof gridActions[gridIndex] === 'function') {
       console.log(`🎯 Executing custom action for tile ${getGridId(col, row)}`);
-      finalGridActions[gridIndex](row, col, gridIndex);
+      gridActions[gridIndex](row, col, gridIndex);
       return;
     }
 
@@ -96,6 +91,9 @@ const GridPlay = ({
       }
     }
   };
+  
+  // Generate grid actions if not provided
+  const finalGridActions = gridActions.length > 0 ? gridActions : generateGridActions(config, handleTileClick);
 
   const handleCloseScene = () => {
     setSelectedScene(null);
