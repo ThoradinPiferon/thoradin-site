@@ -2,14 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
 import SceneViewer from './SceneViewer';
 import { 
-  createButton,
   createTitle,
   createWindow,
   createInputBox,
-  createSpinner,
   gridConfigs,
-  getGridCellStyle,
-  createBackButton
+  getGridCellStyle
 } from '../utils/gridElements';
 
 // Starry Background Component
