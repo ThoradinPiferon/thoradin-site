@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
 import { 
   createBackButton, 
@@ -10,11 +10,25 @@ import {
   gridConfigs
 } from '../utils/gridElements';
 
-// Word Balloon Component
-const WordBalloon = ({ message, isVisible, onClose, showLanguageChoice, onLanguageChoice, onLanguageSelect }) => {
-  if (!isVisible) {
-    return null;
-  }
+// Chat Word Balloon Component
+const ChatWordBalloon = ({ 
+  messages, 
+  inputValue, 
+  onInputChange, 
+  onSubmit, 
+  isLoading, 
+  onBack,
+  welcomeMessage,
+  showLanguageChoice,
+  onLanguageChoice,
+  onLanguageSelect,
+  hasStartedChat
+}) => {
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const languages = [
     { code: 'en', name: 'English' },
@@ -28,205 +42,6 @@ const WordBalloon = ({ message, isVisible, onClose, showLanguageChoice, onLangua
     { code: 'ko', name: 'Korean' },
     { code: 'zh', name: 'Chinese' }
   ];
-
-  return (
-    <div style={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      zIndex: 30,
-      maxWidth: '400px',
-      width: '90%'
-    }}>
-      {/* Balloon */}
-      <div style={{
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        border: '2px solid #00ff88',
-        borderRadius: '20px',
-        padding: '20px',
-        color: '#ffffff',
-        fontSize: '16px',
-        lineHeight: '1.6',
-        textAlign: 'center',
-        boxShadow: '0 0 20px rgba(0, 255, 136, 0.3)',
-        position: 'relative'
-      }}>
-        {/* Balloon tail */}
-        <div style={{
-          position: 'absolute',
-          bottom: '-10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '0',
-          height: '0',
-          borderLeft: '10px solid transparent',
-          borderRight: '10px solid transparent',
-          borderTop: '10px solid rgba(0, 0, 0, 0.9)'
-        }} />
-        
-        <div style={{
-          position: 'absolute',
-          bottom: '-8px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '0',
-          height: '0',
-          borderLeft: '8px solid transparent',
-          borderRight: '8px solid transparent',
-          borderTop: '8px solid #00ff88'
-        }} />
-
-        <div style={{ marginBottom: '15px', whiteSpace: 'pre-line' }}>
-          {message}
-        </div>
-
-        {!showLanguageChoice ? (
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <button
-              onClick={() => onLanguageChoice('yes')}
-              style={{
-                backgroundColor: 'transparent',
-                border: '1px solid #00ff88',
-                color: '#00ff88',
-                padding: '8px 16px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              Yes
-            </button>
-            <button
-              onClick={() => onLanguageChoice('no')}
-              style={{
-                backgroundColor: 'transparent',
-                border: '1px solid #ffaa00',
-                color: '#ffaa00',
-                padding: '8px 16px',
-                borderRadius: '5px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255, 170, 0, 0.1)'}
-              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-            >
-              No, choose language
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div style={{ marginBottom: '10px', fontSize: '14px', color: '#cccccc' }}>
-              Choose your language:
-            </div>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(2, 1fr)', 
-              gap: '8px',
-              maxHeight: '200px',
-              overflowY: 'auto'
-            }}>
-              {languages.map(lang => (
-                <button
-                  key={lang.code}
-                  onClick={() => onLanguageSelect(lang.code)}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid #00ff88',
-                    color: '#00ff88',
-                    padding: '6px 12px',
-                    borderRadius: '3px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  {lang.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// Starry Background Component
-const StarryBackground = () => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    const stars = [];
-    const numStars = 200;
-
-    // Initialize stars
-    for (let i = 0; i < numStars; i++) {
-      stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        size: Math.random() * 2,
-        speed: Math.random() * 0.5 + 0.1,
-        brightness: Math.random()
-      });
-    }
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw stars
-      stars.forEach(star => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Move stars
-        star.y += star.speed;
-        if (star.y > canvas.height) {
-          star.y = 0;
-          star.x = Math.random() * canvas.width;
-        }
-      });
-      
-      requestAnimationFrame(animate);
-    };
-
-    animate();
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#000011',
-        zIndex: 1
-      }}
-      width={window.innerWidth}
-      height={window.innerHeight}
-    />
-  );
-};
-
-// Chat Word Balloon Component
-const ChatWordBalloon = ({ messages, inputValue, onInputChange, onSubmit, isLoading, onBack }) => {
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
 
   return (
     <div style={{
@@ -274,6 +89,95 @@ const ChatWordBalloon = ({ messages, inputValue, onInputChange, onSubmit, isLoad
         flexDirection: 'column',
         gap: '20px'
       }}>
+        {/* Welcome Message */}
+        {!hasStartedChat && (
+          <div style={{
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            border: '1px solid #00ff88',
+            borderRadius: '15px',
+            padding: '20px',
+            color: '#ffffff',
+            fontSize: '14px',
+            lineHeight: '1.6',
+            textAlign: 'center',
+            marginBottom: '20px'
+          }}>
+            <div style={{ whiteSpace: 'pre-line', marginBottom: '20px' }}>
+              {welcomeMessage}
+            </div>
+            
+            {!showLanguageChoice ? (
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => onLanguageChoice('yes')}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #00ff88',
+                    color: '#00ff88',
+                    padding: '8px 16px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => onLanguageChoice('no')}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #ffaa00',
+                    color: '#ffaa00',
+                    padding: '8px 16px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255, 170, 0, 0.1)'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  No, choose language
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div style={{ marginBottom: '10px', fontSize: '14px', color: '#cccccc' }}>
+                  Choose your language:
+                </div>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(2, 1fr)', 
+                  gap: '8px',
+                  maxHeight: '200px',
+                  overflowY: 'auto'
+                }}>
+                  {languages.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => onLanguageSelect(lang.code)}
+                      style={{
+                        backgroundColor: 'transparent',
+                        border: '1px solid #00ff88',
+                        color: '#00ff88',
+                        padding: '6px 12px',
+                        borderRadius: '3px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                      onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+                      onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                    >
+                      {lang.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Messages */}
         <div style={{
           flex: 1,
@@ -284,9 +188,10 @@ const ChatWordBalloon = ({ messages, inputValue, onInputChange, onSubmit, isLoad
           padding: '20px',
           backgroundColor: 'rgba(0, 0, 0, 0.3)',
           borderRadius: '15px',
-          border: '1px solid rgba(0, 255, 136, 0.3)'
+          border: '1px solid rgba(0, 255, 136, 0.3)',
+          minHeight: '300px'
         }}>
-          {messages.length === 0 ? (
+          {messages.length === 0 && hasStartedChat ? (
             <div style={{ 
               color: '#666', 
               fontStyle: 'italic',
@@ -377,55 +282,122 @@ const ChatWordBalloon = ({ messages, inputValue, onInputChange, onSubmit, isLoad
         </div>
 
         {/* Input */}
-        <form onSubmit={onSubmit} style={{
-          display: 'flex',
-          gap: '10px',
-          alignItems: 'flex-end'
-        }}>
-          <input
-            type="text"
-            value={inputValue}
-            onChange={onInputChange}
-            placeholder="Ask the Vault anything..."
-            disabled={isLoading}
-            style={{
-              flex: 1,
-              backgroundColor: 'rgba(0, 0, 0, 0.8)',
-              border: '1px solid #00ff88',
-              borderRadius: '25px',
-              padding: '12px 20px',
-              color: '#ffffff',
-              fontSize: '14px',
-              outline: 'none'
-            }}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || !inputValue.trim()}
-            style={{
-              backgroundColor: 'transparent',
-              border: '1px solid #00ff88',
-              color: '#00ff88',
-              padding: '12px 20px',
-              borderRadius: '25px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              opacity: isLoading || !inputValue.trim() ? 0.5 : 1
-            }}
-            onMouseOver={(e) => {
-              if (!isLoading && inputValue.trim()) {
-                e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
-              }
-            }}
-            onMouseOut={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-            }}
-          >
-            Send
-          </button>
-        </form>
+        {hasStartedChat && (
+          <form onSubmit={onSubmit} style={{
+            display: 'flex',
+            gap: '10px',
+            alignItems: 'flex-end'
+          }}>
+            <input
+              type="text"
+              value={inputValue}
+              onChange={onInputChange}
+              placeholder="Ask the Vault anything..."
+              disabled={isLoading}
+              style={{
+                flex: 1,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                border: '1px solid #00ff88',
+                borderRadius: '25px',
+                padding: '12px 20px',
+                color: '#ffffff',
+                fontSize: '14px',
+                outline: 'none'
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !inputValue.trim()}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #00ff88',
+                color: '#00ff88',
+                padding: '12px 20px',
+                borderRadius: '25px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                opacity: isLoading || !inputValue.trim() ? 0.5 : 1
+              }}
+              onMouseOver={(e) => {
+                if (!isLoading && inputValue.trim()) {
+                  e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
+                }
+              }}
+              onMouseOut={(e) => {
+                e.target.style.backgroundColor = 'transparent';
+              }}
+            >
+              Send
+            </button>
+          </form>
+        )}
       </div>
     </div>
+  );
+};
+
+// Starry Background Component
+const StarryBackground = () => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const stars = [];
+    const numStars = 200;
+
+    // Initialize stars
+    for (let i = 0; i < numStars; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5 + 0.1,
+        brightness: Math.random()
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw stars
+      stars.forEach(star => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Move stars
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+      
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#000011',
+        zIndex: 1
+      }}
+      width={window.innerWidth}
+      height={window.innerHeight}
+    />
   );
 };
 
@@ -434,9 +406,9 @@ const VaultInteraction = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connected');
-  const [showWelcome, setShowWelcome] = useState(true);
   const [selectedLanguage, setSelectedLanguage] = useState('en');
   const [showLanguageChoice, setShowLanguageChoice] = useState(false);
+  const [hasStartedChat, setHasStartedChat] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -552,7 +524,7 @@ Would you like me to speak to you in ${language}?`;
       // Show language selection
       setShowLanguageChoice(true);
     }
-    setShowWelcome(false);
+    setHasStartedChat(true);
   };
 
   // Handle language selection from dropdown
@@ -829,46 +801,19 @@ Would you like me to speak to you in ${language}?`;
   const gridActions = [];
 
   return (
-    <>
-      {/* Welcome Word Balloon */}
-      {showWelcome && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: '#000011',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
-          <WordBalloon
-            message={getWelcomeMessage()}
-            isVisible={true}
-            onClose={() => {
-              handleLanguageChoice('yes'); // Automatically select 'yes' if user clicks 'Enter the Vault'
-            }}
-            showLanguageChoice={showLanguageChoice}
-            onLanguageChoice={handleLanguageChoice}
-            onLanguageSelect={handleLanguageSelect}
-          />
-        </div>
-      )}
-      
-      {/* Chat Interface */}
-      {!showWelcome && !showLanguageChoice && (
-        <ChatWordBalloon
-          messages={messages}
-          inputValue={inputValue}
-          onInputChange={(e) => setInputValue(e.target.value)}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          onBack={() => window.location.href = '/'}
-        />
-      )}
-    </>
+    <ChatWordBalloon
+      messages={messages}
+      inputValue={inputValue}
+      onInputChange={(e) => setInputValue(e.target.value)}
+      onSubmit={handleSubmit}
+      isLoading={isLoading}
+      onBack={() => window.location.href = '/'}
+      welcomeMessage={getWelcomeMessage()}
+      showLanguageChoice={showLanguageChoice}
+      onLanguageChoice={handleLanguageChoice}
+      onLanguageSelect={handleLanguageSelect}
+      hasStartedChat={hasStartedChat}
+    />
   );
 };
 
