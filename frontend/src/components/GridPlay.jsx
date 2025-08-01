@@ -114,8 +114,9 @@ const GridPlay = ({
     // Determine button text based on configuration
     let buttonText = showInvisibleButtons ? '' : gridId;
     
-    // Disable click handler for Scene 1.1
-    const handleClick = (currentScene === 1 && currentSubscene === 1) ? 
+    // Only disable clicks for Scene 1.1 (Matrix Awakening)
+    const isScene11 = currentScene === 1 && currentSubscene === 1;
+    const handleClick = isScene11 ? 
       () => { console.log('🚫 Click disabled for Scene 1.1'); } : 
       () => onTileClick(row, col, gridIndex);
     
@@ -125,9 +126,22 @@ const GridPlay = ({
         className={tileClasses}
         onClick={handleClick}
         style={tileStyles}
-        disabled={currentScene === 1 && currentSubscene === 1}
+        disabled={isScene11} // Only disable for Scene 1.1
       >
         {buttonText}
+        {config.debug && (
+          <span style={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)', 
+            zIndex: 10,
+            fontSize: '8px',
+            color: 'red'
+          }}>
+            {gridId}
+          </span>
+        )}
       </button>
     );
   };

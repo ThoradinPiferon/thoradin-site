@@ -100,9 +100,19 @@ export function getGridConfig(sceneName = 'homepage', customConfig = {}) {
  * @returns {Object} Grid configuration object
  */
 export function getSceneGridConfig(sceneId, subsceneId, customConfig = {}) {
-  // Special case for Scene 1.1 (Matrix Awakening)
+  // Special case for Scene 1.1 (Matrix Awakening) - 1x1 invisible grid
   if (sceneId === 1 && subsceneId === 1) {
     return getGridConfig('matrix_awakening', customConfig);
+  }
+  
+  // Scene 1.2 (Matrix Static) - full homepage grid
+  if (sceneId === 1 && subsceneId === 2) {
+    return getGridConfig('homepage', customConfig);
+  }
+  
+  // Scene 2.1 (Vault) - vault grid
+  if (sceneId === 2 && subsceneId === 1) {
+    return getGridConfig('vault', customConfig);
   }
   
   // Default scene mapping

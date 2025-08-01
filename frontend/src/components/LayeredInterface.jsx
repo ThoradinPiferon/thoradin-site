@@ -71,10 +71,49 @@ const LayeredInterface = () => {
   }, [currentScene, currentSubscene]);
   
   // Handle auto-advance transition
-  const handleAutoAdvance = () => {
+  const handleAutoAdvance = async () => {
     console.log('🎭 Auto-advancing from Scene 1.1 to Scene 1.2');
-    setCurrentScene(1);
-    setCurrentSubscene(2);
+    
+    // Call backend to get proper scene transition
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/grid/action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gridId: 'A1',
+          currentScene: 1,
+          currentSubscene: 1,
+          action: 'grid_click'
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Backend auto-advance response:', data);
+        
+        // Update scene state based on backend response
+        if (data.sceneId) setCurrentScene(data.sceneId);
+        if (data.subsceneId) setCurrentSubscene(data.subsceneId);
+        
+        // Handle Matrix animation
+        if (data.matrixAction === 'fastForward' && matrixRef.current) {
+          matrixRef.current.fastForwardToEnd();
+        }
+      } else {
+        console.log('⚠️ Backend auto-advance failed, using local fallback');
+        // Local fallback
+        setCurrentScene(1);
+        setCurrentSubscene(2);
+      }
+    } catch (error) {
+      console.log('⚠️ Auto-advance error, using local fallback:', error);
+      // Local fallback
+      setCurrentScene(1);
+      setCurrentSubscene(2);
+    }
+    
     setAutoAdvanceTimer(null);
   };
   
@@ -213,13 +252,13 @@ const LayeredInterface = () => {
   // Generate grid actions using the configuration
   const gridActions = generateGridActions(gridConfig, handleGridClick);
   
-  // Debug the invisible button logic
+  // Debug the invisible button logic - only show invisible buttons for Scene 1.1
   const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
   console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
   console.log(`🎭 Grid Config: Scene ${currentScene}.${currentSubscene} - ${gridConfig.rows}x${gridConfig.cols} (${gridConfig.rows * gridConfig.cols} tiles)`);
   console.log(`🎭 Grid Config Details:`, gridConfig);
   console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
-  console.log(`🎭 Should be invisible: ${currentScene === 1 && currentSubscene === 1}`);
+  console.log(`🎭 Should be invisible: ${shouldShowInvisibleButtons}`);
   
   return (
     <div className="layered-interface" style={{ position: 'relative', width: '100vw', height: '100vh' }}>
