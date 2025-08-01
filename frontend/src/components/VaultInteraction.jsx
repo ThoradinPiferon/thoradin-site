@@ -208,12 +208,30 @@ const VaultInteraction = () => {
       'America/Chicago': 'Chicago',
       'America/Denver': 'Denver',
       'America/Los_Angeles': 'Los Angeles',
+      'America/Toronto': 'Toronto',
+      'America/Vancouver': 'Vancouver',
+      'America/Mexico_City': 'Mexico City',
+      'America/Sao_Paulo': 'São Paulo',
       'Europe/London': 'London',
       'Europe/Paris': 'Paris',
       'Europe/Berlin': 'Berlin',
+      'Europe/Rome': 'Rome',
+      'Europe/Madrid': 'Madrid',
+      'Europe/Amsterdam': 'Amsterdam',
+      'Europe/Stockholm': 'Stockholm',
+      'Europe/Moscow': 'Moscow',
       'Asia/Tokyo': 'Tokyo',
       'Asia/Shanghai': 'Shanghai',
-      'Australia/Sydney': 'Sydney'
+      'Asia/Seoul': 'Seoul',
+      'Asia/Singapore': 'Singapore',
+      'Asia/Bangkok': 'Bangkok',
+      'Asia/Dubai': 'Dubai',
+      'Asia/Kolkata': 'Mumbai',
+      'Australia/Sydney': 'Sydney',
+      'Australia/Melbourne': 'Melbourne',
+      'Pacific/Auckland': 'Auckland',
+      'Africa/Cairo': 'Cairo',
+      'Africa/Johannesburg': 'Johannesburg'
     };
     
     cityName = timezoneCities[timezone] || timezone.split('/').pop() || 'Unknown City';
