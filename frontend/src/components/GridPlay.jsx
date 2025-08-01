@@ -178,6 +178,7 @@ const GridPlay = ({
             
             // If buttons should be invisible, render transparent divs instead
             if (showInvisibleButtons) {
+              console.log(`🎭 Rendering invisible div for ${gridId}`);
               return (
                 <div
                   key={gridId}
@@ -198,6 +199,7 @@ const GridPlay = ({
             }
             
             // Otherwise render normal buttons
+            console.log(`🎭 Rendering visible button for ${gridId}`);
             return renderTile(row + 1, col + 1);
           })
         )}

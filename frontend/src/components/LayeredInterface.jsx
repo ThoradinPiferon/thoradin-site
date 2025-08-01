@@ -113,13 +113,17 @@ const LayeredInterface = () => {
     />
   );
   
+  // Debug the invisible button logic
+  const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
+  console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
+  
   return (
     <GridPlay
       backgroundComponent={backgroundComponent}
       gridCols={gridCols}
       gridRows={gridRows}
       gridActions={gridActions}
-      showInvisibleButtons={currentScene === 1 && currentSubscene === 1} // Invisible during Matrix animation
+      showInvisibleButtons={shouldShowInvisibleButtons} // Invisible during Matrix animation
       currentScene={currentScene}
       currentSubscene={currentSubscene}
       isZooming={isZooming}
