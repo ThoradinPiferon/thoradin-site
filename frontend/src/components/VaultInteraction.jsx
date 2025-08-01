@@ -16,8 +16,11 @@ const WordBalloon = ({ message, isVisible, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
 
+  console.log('WordBalloon props:', { message, isVisible, onClose });
+
   useEffect(() => {
     if (isVisible && message) {
+      console.log('Starting typing animation for message:', message);
       setIsTyping(true);
       setCurrentIndex(0);
       setCurrentText('');
@@ -28,6 +31,7 @@ const WordBalloon = ({ message, isVisible, onClose }) => {
           setCurrentIndex(prev => prev + 1);
         } else {
           setIsTyping(false);
+          console.log('Typing animation completed');
         }
       };
 
@@ -36,7 +40,10 @@ const WordBalloon = ({ message, isVisible, onClose }) => {
     }
   }, [isVisible, message, currentIndex]);
 
-  if (!isVisible) return null;
+  if (!isVisible) {
+    console.log('WordBalloon not visible');
+    return null;
+  }
 
   return (
     <div style={{
@@ -264,7 +271,7 @@ const VaultInteraction = () => {
   const getWelcomeMessage = () => {
     const { city, time, language } = getUserInfo();
     
-    return `Hello, brave little being.
+    const message = `Hello, brave little being.
 
 Not everyone dares to enter the Vault.
 
@@ -273,6 +280,9 @@ The fact that you arrived from somewhere near ${city}…
 means you're open to travel far beyond the ordinary.
 
 Would you like me to speak to you in ${language}?`;
+
+    console.log('Welcome message generated:', { city, time, language, message });
+    return message;
   };
 
   // Get API base URL with fallback
@@ -548,11 +558,26 @@ Would you like me to speak to you in ${language}?`;
   return (
     <>
       {/* Word Balloon Welcome */}
-      <WordBalloon
-        message={getWelcomeMessage()}
-        isVisible={showWelcome}
-        onClose={() => setShowWelcome(false)}
-      />
+      {showWelcome && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: '#000011',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <WordBalloon
+            message={getWelcomeMessage()}
+            isVisible={true}
+            onClose={() => setShowWelcome(false)}
+          />
+        </div>
+      )}
       
       {/* Main Vault Interface */}
       {!showWelcome && (
