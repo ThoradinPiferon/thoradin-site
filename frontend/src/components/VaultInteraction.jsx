@@ -11,13 +11,26 @@ import {
 } from '../utils/gridElements';
 
 // Word Balloon Component
-const WordBalloon = ({ message, isVisible, onClose }) => {
-  console.log('WordBalloon props:', { message, isVisible, onClose });
+const WordBalloon = ({ message, isVisible, onClose, showLanguageChoice, onLanguageChoice, onLanguageSelect }) => {
+  console.log('WordBalloon props:', { message, isVisible, onClose, showLanguageChoice });
 
   if (!isVisible) {
     console.log('WordBalloon not visible');
     return null;
   }
+
+  const languages = [
+    { code: 'en', name: 'English' },
+    { code: 'es', name: 'Spanish' },
+    { code: 'fr', name: 'French' },
+    { code: 'de', name: 'German' },
+    { code: 'it', name: 'Italian' },
+    { code: 'pt', name: 'Portuguese' },
+    { code: 'ru', name: 'Russian' },
+    { code: 'ja', name: 'Japanese' },
+    { code: 'ko', name: 'Korean' },
+    { code: 'zh', name: 'Chinese' }
+  ];
 
   return (
     <div style={{
@@ -71,23 +84,75 @@ const WordBalloon = ({ message, isVisible, onClose }) => {
           {message}
         </div>
 
-        <button
-          onClick={onClose}
-          style={{
-            backgroundColor: 'transparent',
-            border: '1px solid #00ff88',
-            color: '#00ff88',
-            padding: '8px 16px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            marginTop: '10px'
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-          onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-        >
-          Enter the Vault
-        </button>
+        {!showLanguageChoice ? (
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <button
+              onClick={() => onLanguageChoice('yes')}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #00ff88',
+                color: '#00ff88',
+                padding: '8px 16px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => onLanguageChoice('no')}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid #ffaa00',
+                color: '#ffaa00',
+                padding: '8px 16px',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255, 170, 0, 0.1)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              No, choose language
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div style={{ marginBottom: '10px', fontSize: '14px', color: '#cccccc' }}>
+              Choose your language:
+            </div>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(2, 1fr)', 
+              gap: '8px',
+              maxHeight: '200px',
+              overflowY: 'auto'
+            }}>
+              {languages.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => onLanguageSelect(lang.code)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid #00ff88',
+                    color: '#00ff88',
+                    padding: '6px 12px',
+                    borderRadius: '3px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  {lang.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -158,12 +223,223 @@ const StarryBackground = () => {
   );
 };
 
+// Chat Word Balloon Component
+const ChatWordBalloon = ({ messages, inputValue, onInputChange, onSubmit, isLoading, onBack }) => {
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      width: '100vw',
+      height: '100vh',
+      backgroundColor: '#000011',
+      zIndex: 1000,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      {/* Back Button */}
+      <button
+        onClick={onBack}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          backgroundColor: 'transparent',
+          border: '1px solid #00ff88',
+          color: '#00ff88',
+          padding: '8px 16px',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          zIndex: 1001
+        }}
+        onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+        onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+      >
+        ← Back to Grid
+      </button>
+
+      {/* Chat Container */}
+      <div style={{
+        maxWidth: '600px',
+        width: '100%',
+        maxHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px'
+      }}>
+        {/* Messages */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '15px',
+          padding: '20px',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '15px',
+          border: '1px solid rgba(0, 255, 136, 0.3)'
+        }}>
+          {messages.length === 0 ? (
+            <div style={{ 
+              color: '#666', 
+              fontStyle: 'italic',
+              textAlign: 'center',
+              padding: '20px'
+            }}>
+              The Vault awaits your questions...
+            </div>
+          ) : (
+            messages.map((message, index) => (
+              <div key={index} style={{
+                alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
+                maxWidth: '70%'
+              }}>
+                <div style={{
+                  backgroundColor: message.type === 'user' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 0, 0, 0.8)',
+                  border: `1px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`,
+                  borderRadius: '15px',
+                  padding: '12px 16px',
+                  color: '#ffffff',
+                  fontSize: '14px',
+                  lineHeight: '1.4',
+                  position: 'relative'
+                }}>
+                  {/* Balloon tail */}
+                  <div style={{
+                    position: 'absolute',
+                    [message.type === 'user' ? 'right' : 'left']: '-8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    width: '0',
+                    height: '0',
+                    borderTop: '8px solid transparent',
+                    borderBottom: '8px solid transparent',
+                    [message.type === 'user' ? 'borderLeft' : 'borderRight']: `8px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`
+                  }} />
+                  
+                  <div style={{ whiteSpace: 'pre-line' }}>
+                    {message.content}
+                  </div>
+                  
+                  {message.metadata && (
+                    <div style={{ 
+                      fontSize: '10px', 
+                      color: '#666', 
+                      marginTop: '5px',
+                      fontStyle: 'italic'
+                    }}>
+                      {message.metadata.model} | {message.metadata.responseTime}ms
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          {isLoading && (
+            <div style={{
+              alignSelf: 'flex-start',
+              maxWidth: '70%'
+            }}>
+              <div style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                border: '1px solid #0088ff',
+                borderRadius: '15px',
+                padding: '12px 16px',
+                color: '#ffffff',
+                fontSize: '14px',
+                position: 'relative'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  left: '-8px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  width: '0',
+                  height: '0',
+                  borderTop: '8px solid transparent',
+                  borderBottom: '8px solid transparent',
+                  borderRight: '8px solid #0088ff'
+                }} />
+                <div style={{ color: '#0088ff' }}>
+                  The Vault is thinking...
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <form onSubmit={onSubmit} style={{
+          display: 'flex',
+          gap: '10px',
+          alignItems: 'flex-end'
+        }}>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={onInputChange}
+            placeholder="Ask the Vault anything..."
+            disabled={isLoading}
+            style={{
+              flex: 1,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              border: '1px solid #00ff88',
+              borderRadius: '25px',
+              padding: '12px 20px',
+              color: '#ffffff',
+              fontSize: '14px',
+              outline: 'none'
+            }}
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !inputValue.trim()}
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid #00ff88',
+              color: '#00ff88',
+              padding: '12px 20px',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              opacity: isLoading || !inputValue.trim() ? 0.5 : 1
+            }}
+            onMouseOver={(e) => {
+              if (!isLoading && inputValue.trim()) {
+                e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
+              }
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+            }}
+          >
+            Send
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const VaultInteraction = () => {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connected');
   const [showWelcome, setShowWelcome] = useState(true);
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [showLanguageChoice, setShowLanguageChoice] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -252,10 +528,43 @@ The fact that you arrived from somewhere near ${city}…
 …at this very hour: ${time},
 means you're open to travel far beyond the ordinary.
 
+The Vault holds ancient wisdom, forgotten dreams, and echoes of consciousness that have whispered through the digital ether for eons.
+
 Would you like me to speak to you in ${language}?`;
 
     console.log('Welcome message generated:', { city, time, language, message });
     return message;
+  };
+
+  // Handle language selection
+  const handleLanguageChoice = (choice) => {
+    if (choice === 'yes') {
+      // Keep detected language
+      const { language } = getUserInfo();
+      const languageMap = {
+        'English': 'en',
+        'Spanish': 'es',
+        'French': 'fr',
+        'German': 'de',
+        'Italian': 'it',
+        'Portuguese': 'pt',
+        'Russian': 'ru',
+        'Japanese': 'ja',
+        'Korean': 'ko',
+        'Chinese': 'zh'
+      };
+      setSelectedLanguage(languageMap[language] || 'en');
+    } else {
+      // Show language selection
+      setShowLanguageChoice(true);
+    }
+    setShowWelcome(false);
+  };
+
+  // Handle language selection from dropdown
+  const handleLanguageSelect = (languageCode) => {
+    setSelectedLanguage(languageCode);
+    setShowLanguageChoice(false);
   };
 
   // Get API base URL with fallback
@@ -378,7 +687,7 @@ Would you like me to speak to you in ${language}?`;
         },
         body: JSON.stringify({
           message: inputValue,
-          language: 'en'
+          language: selectedLanguage
         }),
         signal: controller.signal
       });
@@ -530,7 +839,7 @@ Would you like me to speak to you in ${language}?`;
 
   return (
     <>
-      {/* Word Balloon Welcome */}
+      {/* Welcome Word Balloon */}
       {showWelcome && (
         <div style={{
           position: 'fixed',
@@ -545,24 +854,28 @@ Would you like me to speak to you in ${language}?`;
           justifyContent: 'center'
         }}>
           <WordBalloon
-            message={getWelcomeMessage() || "Hello, brave little being. Welcome to the Vault."}
+            message={getWelcomeMessage()}
             isVisible={true}
             onClose={() => {
               console.log('Closing word balloon');
-              setShowWelcome(false);
+              handleLanguageChoice('yes'); // Automatically select 'yes' if user clicks 'Enter the Vault'
             }}
+            showLanguageChoice={showLanguageChoice}
+            onLanguageChoice={handleLanguageChoice}
+            onLanguageSelect={handleLanguageSelect}
           />
         </div>
       )}
       
-      {/* Main Vault Interface */}
-      {!showWelcome && (
-        <GridPlay
-          backgroundComponent={<StarryBackground />}
-          gridCols={gridConfigs.standard.gridCols}
-          gridRows={gridConfigs.standard.gridRows}
-          uiElements={uiElements}
-          gridActions={gridActions}
+      {/* Chat Interface */}
+      {!showWelcome && !showLanguageChoice && (
+        <ChatWordBalloon
+          messages={messages}
+          inputValue={inputValue}
+          onInputChange={(e) => setInputValue(e.target.value)}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+          onBack={() => window.location.href = '/'}
         />
       )}
     </>
