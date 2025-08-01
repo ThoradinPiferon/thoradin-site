@@ -198,6 +198,46 @@ const VaultInteraction = () => {
 
   console.log('VaultInteraction rendering, showWelcome:', showWelcome);
 
+  // Simple test - just show a basic message first
+  if (showWelcome) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#000011',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '24px',
+        textAlign: 'center',
+        zIndex: 1000
+      }}>
+        <div>
+          <h1>Welcome to the Vault</h1>
+          <p>Hello, brave little being.</p>
+          <button 
+            onClick={() => setShowWelcome(false)}
+            style={{
+              backgroundColor: 'transparent',
+              border: '2px solid #00ff88',
+              color: '#00ff88',
+              padding: '10px 20px',
+              fontSize: '16px',
+              cursor: 'pointer',
+              marginTop: '20px'
+            }}
+          >
+            Enter the Vault
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Get user's location and time info
   const getUserInfo = () => {
     const now = new Date();
