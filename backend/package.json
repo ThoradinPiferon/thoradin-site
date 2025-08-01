@@ -1,7 +1,8 @@
 {
   "name": "gridplay-backend",
   "version": "1.0.0",
-  "description": "Express backend for GridPlay application",
+  "type": "module",
+  "description": "GridPlay Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
