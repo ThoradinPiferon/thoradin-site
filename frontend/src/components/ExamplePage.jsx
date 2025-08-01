@@ -47,7 +47,7 @@ const ExamplePage = () => {
       <h3>Welcome to the Example Page!</h3>
       <p>This demonstrates how easy it is to create new grid pages.</p>
       <ul>
-        <li>Click G5.5 to see a grid action</li>
+        <li>Click E5 to see a grid action</li>
         <li>Use the input box below</li>
         <li>All styling is handled by the template</li>
         <li>Grid actions are centralized and modular</li>

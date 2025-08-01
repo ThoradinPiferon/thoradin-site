@@ -1,17 +1,19 @@
-import React from 'react';
+import { getGridId, parseGridId } from './gridHelpers.js';
 
 /**
- * Centralized Grid Action System
- * Takes coordinates and page context to determine grid actions
+ * Grid Action System
+ * 
+ * This module provides a centralized system for managing grid actions
+ * across different pages and scenarios. It uses Excel-style coordinates (A1-K7).
  */
 
-// Grid action types
+// Action types
 export const ACTION_TYPES = {
   NAVIGATE: 'navigate',
   TRIGGER: 'trigger',
   TOGGLE: 'toggle',
-  ANIMATE: 'animate',
-  CUSTOM: 'custom'
+  CUSTOM: 'custom',
+  SCENE_TRANSITION: 'scene_transition'
 };
 
 // Page identifiers
@@ -23,124 +25,109 @@ export const PAGES = {
   PROFILE: 'profile'
 };
 
-// Global action registry for easy modification
-const actionRegistry = {
-  [PAGES.HOME]: {},
-  [PAGES.VAULT]: {},
-  [PAGES.EXAMPLE]: {},
-  [PAGES.SETTINGS]: {},
-  [PAGES.PROFILE]: {}
-};
+// Global action registry
+const gridActions = new Map();
 
 /**
- * Add a new grid action to a page
+ * Add a grid action for a specific page and grid position
  * @param {string} page - Page identifier
- * @param {string} gridKey - Grid key (e.g., "G5.7")
+ * @param {string} gridKey - Grid key (e.g., "K7")
  * @param {Object} action - Action object
  */
 export const addGridAction = (page, gridKey, action) => {
-  if (!actionRegistry[page]) {
-    actionRegistry[page] = {};
-  }
-  
-  actionRegistry[page][gridKey] = {
-    ...action,
-    addedAt: new Date().toISOString()
-  };
-  
-  console.log(`Added grid action for ${page}: ${gridKey}`, action);
+  const key = `${page}:${gridKey}`;
+  gridActions.set(key, action);
+  console.log(`✅ Added grid action for ${page}:${gridKey}`);
 };
 
 /**
- * Remove a grid action from a page
+ * Remove a grid action
  * @param {string} page - Page identifier
- * @param {string} gridKey - Grid key (e.g., "G5.7")
+ * @param {string} gridKey - Grid key (e.g., "K7")
  */
 export const removeGridAction = (page, gridKey) => {
-  if (actionRegistry[page] && actionRegistry[page][gridKey]) {
-    delete actionRegistry[page][gridKey];
-    console.log(`Removed grid action for ${page}: ${gridKey}`);
+  const key = `${page}:${gridKey}`;
+  const removed = gridActions.delete(key);
+  if (removed) {
+    console.log(`🗑️ Removed grid action for ${page}:${gridKey}`);
   }
+  return removed;
 };
 
 /**
- * Get all actions for a page (including dynamically added ones)
+ * Get all actions for a specific page
  * @param {string} page - Page identifier
- * @param {Object} context - Additional context
- * @returns {Object} - Map of grid keys to actions
+ * @param {Object} context - Context object
+ * @returns {Object} Actions object
  */
 export const getPageActions = (page, context = {}) => {
-  // Get base actions
-  let baseActions = {};
-  switch (page) {
-    case PAGES.HOME:
-      baseActions = getHomeActions(context);
-      break;
-    case PAGES.VAULT:
-      baseActions = getVaultActions(context);
-      break;
-    case PAGES.EXAMPLE:
-      baseActions = getExampleActions(context);
-      break;
-    case PAGES.SETTINGS:
-      baseActions = getSettingsActions(context);
-      break;
-    case PAGES.PROFILE:
-      baseActions = getProfileActions(context);
-      break;
-    default:
-      baseActions = {};
+  const actions = {};
+  
+  // Get registered actions
+  for (const [key, action] of gridActions.entries()) {
+    if (key.startsWith(`${page}:`)) {
+      const gridKey = key.split(':')[1];
+      actions[gridKey] = action;
+    }
   }
   
-  // Merge with dynamically added actions
-  const dynamicActions = actionRegistry[page] || {};
-  
-  return {
-    ...baseActions,
-    ...dynamicActions
-  };
+  // Get default actions based on page
+  const defaultActions = getDefaultActions(page, context);
+  return { ...defaultActions, ...actions };
 };
 
 /**
- * Central grid action resolver
- * @param {number} col - Grid column (1-11)
- * @param {number} row - Grid row (1-7)
- * @param {string} page - Current page identifier
- * @param {Object} context - Additional context (user, state, etc.)
- * @returns {Object|null} - Action object or null if no action
+ * Get default actions for each page
+ * @param {string} page - Page identifier
+ * @param {Object} context - Context object
+ * @returns {Object} Default actions
+ */
+const getDefaultActions = (page, context) => {
+  switch (page) {
+    case PAGES.HOME:
+      return getHomeActions(context);
+    case PAGES.VAULT:
+      return getVaultActions(context);
+    case PAGES.EXAMPLE:
+      return getExampleActions(context);
+    case PAGES.SETTINGS:
+      return getSettingsActions(context);
+    case PAGES.PROFILE:
+      return getProfileActions(context);
+    default:
+      return {};
+  }
+};
+
+/**
+ * Resolve grid action for a specific position
+ * @param {number} col - Column index (0-10)
+ * @param {number} row - Row index (0-6)
+ * @param {string} page - Page identifier
+ * @param {Object} context - Context object
+ * @returns {Object|null} Action object or null
  */
 export const resolveGridAction = (col, row, page, context = {}) => {
-  const gridKey = `G${col}.${row}`;
-  
-  // Get page-specific action map
+  const gridKey = getGridId(col, row);
   const pageActions = getPageActions(page, context);
   
-  // Check if this grid cell has an action
-  const action = pageActions[gridKey];
+  console.log(`🎯 Resolving action for ${gridKey} on ${page}`);
+  console.log(`Available actions:`, Object.keys(pageActions));
   
-  if (!action) {
-    return null; // No action for this grid cell
-  }
-  
-  return {
-    ...action,
-    gridKey,
-    coordinates: { col, row },
-    page
-  };
+  return pageActions[gridKey] || null;
 };
 
 /**
  * Home page actions
  */
 const getHomeActions = (context) => ({
-  'G11.7': {
+  'K7': {
     type: ACTION_TYPES.NAVIGATE,
     target: '/vault',
     description: 'Navigate to Vault',
     execute: () => window.location.href = '/vault'
   },
-  'G1.1': {
+  'A1': {
     type: ACTION_TYPES.TRIGGER,
     description: 'Fast forward animation',
     execute: (context) => {
@@ -149,7 +136,7 @@ const getHomeActions = (context) => ({
       }
     }
   },
-  'G2.1': {
+  'B1': {
     type: ACTION_TYPES.TOGGLE,
     description: 'Toggle zoom',
     execute: (context) => {
@@ -158,7 +145,7 @@ const getHomeActions = (context) => ({
       }
     }
   },
-  'G3.3': {
+  'C3': {
     type: ACTION_TYPES.CUSTOM,
     description: 'Special home action',
     execute: () => console.log('Special home action triggered')
@@ -171,7 +158,7 @@ const getHomeActions = (context) => ({
 const getVaultActions = (context) => ({
   // Vault page is mostly non-interactive
   // Only specific areas might have actions
-  'G1.1': {
+  'A1': {
     type: ACTION_TYPES.NAVIGATE,
     target: '/',
     description: 'Back to home',
@@ -183,21 +170,21 @@ const getVaultActions = (context) => ({
  * Example page actions
  */
 const getExampleActions = (context) => ({
-  'G5.5': {
+  'E5': {
     type: ACTION_TYPES.TRIGGER,
     description: 'Example grid action',
     execute: (context) => {
-      alert(`You clicked grid G5.5! Context: ${JSON.stringify(context)}`);
+      alert(`You clicked grid E5! Context: ${JSON.stringify(context)}`);
     }
   },
-  'G3.3': {
+  'C3': {
     type: ACTION_TYPES.CUSTOM,
     description: 'Custom example action',
     execute: () => {
       console.log('Custom example action executed');
     }
   },
-  'G1.1': {
+  'A1': {
     type: ACTION_TYPES.NAVIGATE,
     target: '/',
     description: 'Back to home',
@@ -209,13 +196,13 @@ const getExampleActions = (context) => ({
  * Settings page actions
  */
 const getSettingsActions = (context) => ({
-  'G1.1': {
+  'A1': {
     type: ACTION_TYPES.NAVIGATE,
     target: '/',
     description: 'Back to home',
     execute: () => window.location.href = '/'
   },
-  'G5.3': {
+  'E3': {
     type: ACTION_TYPES.TOGGLE,
     description: 'Toggle sound',
     execute: (context) => {
@@ -224,7 +211,7 @@ const getSettingsActions = (context) => ({
       }
     }
   },
-  'G7.3': {
+  'G3': {
     type: ACTION_TYPES.TOGGLE,
     description: 'Toggle theme',
     execute: (context) => {
@@ -239,13 +226,13 @@ const getSettingsActions = (context) => ({
  * Profile page actions
  */
 const getProfileActions = (context) => ({
-  'G1.1': {
+  'A1': {
     type: ACTION_TYPES.NAVIGATE,
     target: '/',
     description: 'Back to home',
     execute: () => window.location.href = '/'
   },
-  'G5.5': {
+  'E5': {
     type: ACTION_TYPES.CUSTOM,
     description: 'Edit profile',
     execute: (context) => {
@@ -258,90 +245,80 @@ const getProfileActions = (context) => ({
 
 /**
  * Execute a grid action
- * @param {Object} action - Action object from resolveGridAction
- * @param {Object} context - Additional context
+ * @param {Object} action - Action object
+ * @param {Object} context - Context object
+ * @returns {any} Action result
  */
 export const executeGridAction = (action, context = {}) => {
   if (!action) {
-    console.log('No action for this grid cell');
-    return;
+    console.log('❌ No action to execute');
+    return null;
   }
-
-  console.log(`Executing ${action.type} action: ${action.description}`);
+  
+  console.log(`🎬 Executing action: ${action.type} - ${action.description}`);
   
   try {
-    if (action.execute) {
-      action.execute(context);
-    } else {
-      console.warn('Action has no execute function:', action);
-    }
+    const result = action.execute(context);
+    console.log(`✅ Action executed successfully`);
+    return result;
   } catch (error) {
-    console.error('Error executing grid action:', error);
+    console.error(`💥 Action execution failed:`, error);
+    return null;
   }
 };
 
 /**
- * Create a grid action handler for use with GridPlay
- * @param {string} page - Current page
- * @param {Object} context - Additional context
- * @returns {Function} - Grid action handler function
+ * Create a grid action handler for a specific page
+ * @param {string} page - Page identifier
+ * @param {Object} context - Context object
+ * @returns {Function} Handler function
  */
 export const createGridActionHandler = (page, context = {}) => {
-  return (col, row, index) => {
+  return (col, row) => {
     const action = resolveGridAction(col, row, page, context);
-    executeGridAction(action, context);
+    return executeGridAction(action, context);
   };
 };
 
 /**
- * Get all grid actions for a page (for GridPlay compatibility)
- * @param {string} page - Current page
- * @param {Object} context - Additional context
- * @returns {Array} - Array of grid actions for GridPlay
+ * Get all grid actions as an array
+ * @param {string} page - Page identifier
+ * @param {Object} context - Context object
+ * @returns {Array} Array of action objects
  */
 export const getGridActionsArray = (page, context = {}) => {
-  const pageActions = getPageActions(page, context);
-  const gridActions = new Array(11 * 7).fill(null);
-  
-  // Convert page actions to grid actions array
-  Object.entries(pageActions).forEach(([gridKey, action]) => {
-    const [col, row] = gridKey.replace('G', '').split('.').map(Number);
-    const index = (row - 1) * 11 + (col - 1);
-    
-    gridActions[index] = (col, row, gridIndex) => {
-      executeGridAction(action, context);
-    };
-  });
-  
-  return gridActions;
+  const actions = getPageActions(page, context);
+  return Object.entries(actions).map(([gridKey, action]) => ({
+    gridKey,
+    ...action
+  }));
 };
 
 /**
  * Validate grid coordinates
- * @param {number} col - Grid column
- * @param {number} row - Grid row
- * @returns {boolean} - Whether coordinates are valid
+ * @param {number} col - Column index (0-10)
+ * @param {number} row - Row index (0-6)
+ * @returns {boolean} True if valid
  */
 export const isValidGridCoordinates = (col, row) => {
-  return col >= 1 && col <= 11 && row >= 1 && row <= 7;
+  return col >= 0 && col <= 10 && row >= 0 && row <= 6;
 };
 
 /**
  * Get grid key from coordinates
- * @param {number} col - Grid column
- * @param {number} row - Grid row
- * @returns {string} - Grid key (e.g., "G5.7")
+ * @param {number} col - Column index (0-10)
+ * @param {number} row - Row index (0-6)
+ * @returns {string} - Grid key (e.g., "K7")
  */
 export const getGridKey = (col, row) => {
-  return `G${col}.${row}`;
+  return getGridId(col, row);
 };
 
 /**
  * Get coordinates from grid key
- * @param {string} gridKey - Grid key (e.g., "G5.7")
- * @returns {Object} - Coordinates {col, row}
+ * @param {string} gridKey - Grid key (e.g., "K7")
+ * @returns {Object} - { col: number, row: number }
  */
 export const getCoordinatesFromKey = (gridKey) => {
-  const [col, row] = gridKey.replace('G', '').split('.').map(Number);
-  return { col, row };
+  return parseGridId(gridKey);
 }; 

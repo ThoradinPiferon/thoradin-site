@@ -11,30 +11,23 @@ const GridActionDemo = () => {
   // Example: Add a new action to the home page
   const addHomeAction = () => {
     const newAction = {
-      type: ACTION_TYPES.CUSTOM,
-      description: 'Dynamic action added at runtime',
-      execute: () => {
-        alert('This action was added dynamically!');
-      }
+      type: 'custom',
+      description: 'Demo home action',
+      execute: () => alert('Home action executed!')
     };
-
-    addGridAction(PAGES.HOME, 'G4.4', newAction);
-    setActions(prev => [...prev, { page: PAGES.HOME, grid: 'G4.4', action: newAction }]);
+    addGridAction(PAGES.HOME, 'D4', newAction);
+    setActions(prev => [...prev, { page: PAGES.HOME, grid: 'D4', action: newAction }]);
   };
 
   // Example: Add a new action to the vault page
   const addVaultAction = () => {
     const newAction = {
-      type: ACTION_TYPES.TRIGGER,
-      description: 'Dynamic vault action',
-      execute: () => {
-        console.log('Dynamic vault action triggered!');
-        alert('Dynamic vault action executed!');
-      }
+      type: 'custom',
+      description: 'Demo vault action',
+      execute: () => alert('Vault action executed!')
     };
-
-    addGridAction(PAGES.VAULT, 'G6.6', newAction);
-    setActions(prev => [...prev, { page: PAGES.VAULT, grid: 'G6.6', action: newAction }]);
+    addGridAction(PAGES.VAULT, 'F6', newAction);
+    setActions(prev => [...prev, { page: PAGES.VAULT, grid: 'F6', action: newAction }]);
   };
 
   // Example: Remove an action
@@ -63,36 +56,12 @@ const GridActionDemo = () => {
       </h3>
       
       <div style={{ marginBottom: '15px' }}>
-        <button
-          onClick={addHomeAction}
-          style={{
-            backgroundColor: '#00ff00',
-            color: '#000',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 12px',
-            margin: '5px',
-            cursor: 'pointer',
-            fontSize: '11px'
-          }}
-        >
-          Add Home Action (G4.4)
+        <button onClick={addHomeAction} className="btn btn-primary">
+          Add Home Action (D4)
         </button>
         
-        <button
-          onClick={addVaultAction}
-          style={{
-            backgroundColor: '#0088ff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 12px',
-            margin: '5px',
-            cursor: 'pointer',
-            fontSize: '11px'
-          }}
-        >
-          Add Vault Action (G6.6)
+        <button onClick={addVaultAction} className="btn btn-secondary">
+          Add Vault Action (F6)
         </button>
       </div>
 
