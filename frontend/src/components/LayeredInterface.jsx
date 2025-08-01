@@ -7,7 +7,7 @@ import { handleGridZoom, isZooming as getZoomState } from '../utils/zoomUtils';
 import ZoomTestComponent from './ZoomTestComponent';
 
 const LayeredInterface = () => {
-  console.log('LayeredInterface rendering...');
+  console.log('🔧 LayeredInterface rendering... - checking for getSceneGridConfig issues');
   
   const [currentScene, setCurrentScene] = useState(1); // Main scene ID
   const [currentSubscene, setCurrentSubscene] = useState(1); // Subscene ID
@@ -16,8 +16,61 @@ const LayeredInterface = () => {
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const matrixRef = useRef(null);
   
-  // Get grid configuration based on current scene state
-  const gridConfig = getSceneGridConfig(currentScene, currentSubscene);
+  // Get grid configuration based on current scene state with fallback
+  const getSceneGridConfigFallback = (sceneId, subsceneId) => {
+    // Special case for Scene 1.1 (Matrix Awakening) - 1x1 invisible grid
+    if (sceneId === 1 && subsceneId === 1) {
+      return {
+        rows: 1,
+        cols: 1,
+        gap: '0px',
+        padding: '0px',
+        debug: false,
+        invisibleMode: true
+      };
+    }
+    
+    // Scene 1.2 (Matrix Static) - full homepage grid
+    if (sceneId === 1 && subsceneId === 2) {
+      return {
+        rows: 7,
+        cols: 11,
+        gap: '2px',
+        padding: '20px',
+        debug: false
+      };
+    }
+    
+    // Scene 2.1 (Vault) - vault grid
+    if (sceneId === 2 && subsceneId === 1) {
+      return {
+        rows: 7,
+        cols: 11,
+        gap: '2px',
+        padding: '20px',
+        debug: false
+      };
+    }
+    
+    // Default homepage grid
+    return {
+      rows: 7,
+      cols: 11,
+      gap: '2px',
+      padding: '20px',
+      debug: false
+    };
+  };
+
+  let gridConfig;
+  try {
+    gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
+    console.log('🔧 Fallback grid config created:', gridConfig);
+  } catch (error) {
+    console.error('❌ Error creating grid config:', error);
+    // Emergency fallback
+    gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
+  }
   
   // Handle animation completion
   const handleAnimationComplete = () => {

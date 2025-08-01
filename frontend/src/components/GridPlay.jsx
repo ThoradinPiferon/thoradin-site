@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import SceneViewer from './SceneViewer';
 import { getGridId } from '../utils/gridHelpers';
 import { 
-  getGridConfig, 
   generateTileIds, 
   generateGridActions, 
   getGridStyles, 
@@ -34,7 +33,17 @@ const GridPlay = ({
   }
 
   // Get grid configuration based on scene name or use provided config
-  const config = gridConfig || getGridConfig(sceneName);
+  const config = gridConfig || (() => {
+    // Fallback config if getGridConfig is not available
+    console.log('⚠️ Using fallback config for GridPlay');
+    return {
+      rows: 7,
+      cols: 11,
+      gap: '2px',
+      padding: '20px',
+      debug: false
+    };
+  })();
   
   console.log('GridPlay rendering with props:', { 
     sceneName,
