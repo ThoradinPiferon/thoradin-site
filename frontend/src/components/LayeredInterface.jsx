@@ -210,33 +210,35 @@ const LayeredInterface = () => {
         const data = await response.json();
         console.log('✅ Backend response:', data);
         
-        // Special handling for Scene 1.2: Always trigger zoom before scene transition
+        // Special handling for Scene 1.2: Handle backend zoom response structure
         if (currentScene === 1 && currentSubscene === 2) {
-          console.log(`🎬 Scene 1.2: Triggering zoom animation to ${gridId} before scene transition`);
-          console.log('✅ Grid Zoom Started');
-          setIsZooming(true);
+          console.log(`🎬 Scene 1.2: Processing backend response:`, data);
           
-          // Use global zoom utility
-          console.log(`🎬 Starting zoom animation to grid ${gridId}`);
-          await handleGridZoom(gridId);
-          console.log(`🎬 Zoom animation completed for grid ${gridId}`);
-          
-          // Add a longer pause to let the zoom effect sink in
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          console.log(`🎬 Pause completed, now transitioning to Scene ${data.sceneId}.${data.subsceneId}`);
-          
-          // Reset zoom state
-          setIsZooming(false);
-          console.log('✅ Grid Zoom Completed');
-          
-          // Force transition to Scene 1.1 (Matrix Awakening)
-          console.log('✅ Forcing transition to Scene 1.1');
-          setCurrentScene(1);
-          setCurrentSubscene(1);
-          
-          // Restart Matrix animation
-          if (matrixRef.current) {
-            matrixRef.current.restartAnimation();
+          // Check if backend returned a zoom action structure
+          if (data.zoomTo && data.nextAction) {
+            console.log(`🎬 Scene 1.2: Backend requested zoom to ${data.zoomTo} then transition`);
+            console.log('✅ Grid Zoom Started');
+            setIsZooming(true);
+            
+            // Use global zoom utility
+            console.log(`🎬 Starting zoom animation to grid ${data.zoomTo}`);
+            await handleGridZoom(data.zoomTo);
+            console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
+            
+            // Add a pause to let the zoom effect sink in
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Reset zoom state
+            setIsZooming(false);
+            console.log('✅ Grid Zoom Completed');
+            
+            // Handle the next action from backend
+            console.log('✅ Processing next action from backend:', data.nextAction);
+            handleNextAction(data.nextAction);
+          } else {
+            // Fallback: direct scene transition
+            console.log('⚠️ Backend didn\'t return zoom structure, using direct transition');
+            handleNextAction(data);
           }
         } else {
           // Handle zoom functionality for other scenes
