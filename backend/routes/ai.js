@@ -1,8 +1,8 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const { authenticateToken } = require('../middleware/auth');
-const { generateGridResponse, generateChatResponse } = require('../config/openai');
-const languageService = require('../services/languageService');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import { authenticateToken } from '../middleware/auth.js';
+import { generateGridResponse, generateChatResponse } from '../config/openai.js';
+import languageService from '../services/languageService.js';
 const router = express.Router();
 
 // Validation middleware
