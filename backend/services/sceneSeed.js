@@ -1,93 +1,50 @@
-/**
- * Scene Seed Structure - Enhanced JSON schema for scene definitions
- * 
- * This module defines the structure for scene seeds that can be used to
- * easily manage scene design outside the database.
- */
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 /**
- * Scene Seed Schema
- * @typedef {Object} SceneSeed
- * @property {number} sceneId - Main scene identifier
- * @property {number} subsceneId - Subscene within main scene
- * @property {string} title - Scene title
- * @property {string} description - Scene description
- * @property {string} backgroundType - Background type (matrix_spiral, static_spiral, vault, etc.)
- * @property {string|null} animationUrl - Optional animation URL
- * @property {Array<Choice>} [choices] - Optional choices array
- * @property {Object} [logic] - Optional logic flags and triggers
- * @property {Array<Effect>} [effects] - Optional effects array
- * @property {Object} [nextScene] - Default next scene if no choices match
- * @property {Array<string>} [echoTriggers] - Actions that trigger echo effects
+ * Scene Seed Data
+ * Defines the structure and default data for scenes and subscenes
  */
-
-/**
- * Choice Schema
- * @typedef {Object} Choice
- * @property {string} label - Choice label
- * @property {Array<number>} next - [sceneId, subsceneId] for next scene
- * @property {string} [condition] - Optional condition for choice availability
- * @property {Object} [effects] - Optional effects when choice is selected
- * @property {string} [echo] - Optional echo effect for this choice
- */
-
-/**
- * Effect Schema
- * @typedef {Object} Effect
- * @property {string} type - Effect type (animation, sound, visual, etc.)
- * @property {string} trigger - When effect triggers
- * @property {Object} data - Effect-specific data
- */
-
-/**
- * Logic Flags Schema
- * @typedef {Object} LogicFlags
- * @property {boolean} [requiresEcho] - Whether scene requires echo effect
- * @property {Array<string>} [locks] - Array of locked features
- * @property {Array<string>} [echoTriggers] - Array of echo trigger conditions
- * @property {boolean} [requiresZoom] - Whether scene requires zoom animation
- * @property {boolean} [requiresTransition] - Whether scene requires transition effect
- * @property {boolean} [requiresUnlock] - Whether scene requires unlock condition
- */
-
-// Enhanced scene seeds for the current system with Excel-style coordinates
-const defaultSceneSeeds = [
+export const sceneSeedData = [
+  // Scene 1.1 - Matrix Awakening (Single Tile)
   {
     sceneId: 1,
     subsceneId: 1,
-    title: "Matrix Spiral Running",
-    description: "The Matrix spiral animation is actively running, creating the initial immersive experience. Any grid click will fast-forward to the end.",
+    title: "Matrix Awakening",
+    description: "The spiral begins to spin...",
     backgroundType: "matrix_spiral",
-    animationUrl: null,
-    logic: {
-      requiresEcho: true,
-      echoTriggers: ["grid_click"],
-      requiresTransition: true
+    gridConfig: { rows: 1, cols: 1 },
+    tiles: ["A1"],
+    invisibleMode: true,
+    effects: {
+      autoAdvanceAfter: 6000, // 6 seconds
+      nextScene: { sceneId: 1, subsceneId: 2 }
     },
-    effects: [
-      {
-        type: "animation",
-        trigger: "grid_click",
-        data: {
-          action: "fastForward",
-          targetScene: [1, 2]
-        }
-      }
-    ],
-    nextScene: [1, 2],
-    echoTriggers: ["grid_click"]
+    choices: [], // No choices - auto-advance only
+    nextScene: null, // Auto-advance handles transition
+    echoTriggers: ["matrix_awakening"]
   },
+  
+  // Scene 1.2 - Matrix Static (Full Grid)
   {
     sceneId: 1,
     subsceneId: 2,
     title: "Matrix Spiral Static",
-    description: "The Matrix spiral has completed its animation and is now in a static state. Grid buttons are visible and K7 leads to Vault.",
-    backgroundType: "static_spiral",
-    animationUrl: null,
-    logic: {
-      requiresZoom: true,
-      requiresTransition: true,
-      echoTriggers: ["grid_click", "zoom_complete"]
+    description: "The spiral has reached its final form",
+    backgroundType: "matrix_spiral_static",
+    gridConfig: { rows: 7, cols: 11 },
+    tiles: ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1",
+            "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2", "K2",
+            "A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", "I3", "J3", "K3",
+            "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4", "J4", "K4",
+            "A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", "J5", "K5",
+            "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6", "J6", "K6",
+            "A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7", "I7", "J7", "K7"],
+    invisibleMode: false,
+    effects: {
+      zoomRequired: true,
+      transitionType: "zoom_then_transition"
     },
     choices: [
       {
@@ -111,30 +68,29 @@ const defaultSceneSeeds = [
         echo: "matrix_rebirth"
       }
     ],
-    effects: [
-      {
-        type: "animation",
-        trigger: "grid_click",
-        data: {
-          action: "zoom",
-          targetGrid: "clicked"
-        }
-      }
-    ],
-    nextScene: [1, 1],
-    echoTriggers: ["grid_click", "zoom_complete"]
+    nextScene: null,
+    echoTriggers: ["matrix_static"]
   },
+  
+  // Scene 2.1 - Vault Interface
   {
     sceneId: 2,
     subsceneId: 1,
     title: "Vault Interface",
-    description: "The mystical Vault interface with AI chat capabilities and Dune aesthetic.",
-    backgroundType: "vault",
-    animationUrl: null,
-    logic: {
-      requiresZoom: true,
-      requiresTransition: true,
-      echoTriggers: ["grid_click", "vault_interaction"]
+    description: "The AI awaits your questions",
+    backgroundType: "vault_background",
+    gridConfig: { rows: 7, cols: 11 },
+    tiles: ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1",
+            "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2", "K2",
+            "A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", "I3", "J3", "K3",
+            "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4", "J4", "K4",
+            "A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", "J5", "K5",
+            "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6", "J6", "K6",
+            "A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7", "I7", "J7", "K7"],
+    invisibleMode: false,
+    effects: {
+      zoomRequired: true,
+      transitionType: "zoom_then_transition"
     },
     choices: [
       {
@@ -158,198 +114,97 @@ const defaultSceneSeeds = [
         echo: "vault_exploration"
       }
     ],
-    effects: [
-      {
-        type: "animation",
-        trigger: "grid_click",
-        data: {
-          action: "vault_interaction",
-          targetGrid: "clicked"
-        }
-      }
-    ],
-    nextScene: [2, 1],
-    echoTriggers: ["grid_click", "vault_interaction"]
+    nextScene: null,
+    echoTriggers: ["vault_interface"]
   }
 ];
 
 /**
- * Validate a scene seed against the schema
- * @param {SceneSeed} seed - Scene seed to validate
- * @returns {Object} Validation result with isValid and errors
+ * Initialize scene data in the database
  */
-function validateSceneSeed(seed) {
-  const errors = [];
+export async function initializeSceneData() {
+  console.log('🌱 Initializing scene data...');
   
-  // Required fields
-  if (!seed.sceneId || typeof seed.sceneId !== 'number') {
-    errors.push('sceneId is required and must be a number');
-  }
-  
-  if (!seed.subsceneId || typeof seed.subsceneId !== 'number') {
-    errors.push('subsceneId is required and must be a number');
-  }
-  
-  if (!seed.title || typeof seed.title !== 'string') {
-    errors.push('title is required and must be a string');
-  }
-  
-  if (!seed.description || typeof seed.description !== 'string') {
-    errors.push('description is required and must be a string');
-  }
-  
-  if (!seed.backgroundType || typeof seed.backgroundType !== 'string') {
-    errors.push('backgroundType is required and must be a string');
-  }
-  
-  // Validate choices if present
-  if (seed.choices && Array.isArray(seed.choices)) {
-    seed.choices.forEach((choice, index) => {
-      if (!choice.label || typeof choice.label !== 'string') {
-        errors.push(`choice ${index}: label is required and must be a string`);
-      }
+  try {
+    for (const sceneData of sceneSeedData) {
+      const { sceneId, subsceneId, ...data } = sceneData;
       
-      if (!choice.next || !Array.isArray(choice.next) || choice.next.length !== 2) {
-        errors.push(`choice ${index}: next must be an array with [sceneId, subsceneId]`);
-      }
-    });
-  }
-  
-  // Validate logic if present
-  if (seed.logic && typeof seed.logic === 'object') {
-    if (seed.logic.requiresEcho !== undefined && typeof seed.logic.requiresEcho !== 'boolean') {
-      errors.push('logic.requiresEcho must be a boolean');
+      await prisma.sceneSubscene.upsert({
+        where: {
+          sceneId_subsceneId: {
+            sceneId: sceneId,
+            subsceneId: subsceneId
+          }
+        },
+        update: {
+          ...data,
+          gridConfig: JSON.stringify(data.gridConfig),
+          tiles: data.tiles,
+          effects: JSON.stringify(data.effects),
+          choices: JSON.stringify(data.choices),
+          echoTriggers: data.echoTriggers
+        },
+        create: {
+          sceneId: sceneId,
+          subsceneId: subsceneId,
+          ...data,
+          gridConfig: JSON.stringify(data.gridConfig),
+          tiles: data.tiles,
+          effects: JSON.stringify(data.effects),
+          choices: JSON.stringify(data.choices),
+          echoTriggers: data.echoTriggers
+        }
+      });
+      
+      console.log(`✅ Scene ${sceneId}.${subsceneId} initialized: ${data.title}`);
     }
     
-    if (seed.logic.locks && !Array.isArray(seed.logic.locks)) {
-      errors.push('logic.locks must be an array');
-    }
-    
-    if (seed.logic.echoTriggers && !Array.isArray(seed.logic.echoTriggers)) {
-      errors.push('logic.echoTriggers must be an array');
-    }
+    console.log('🎭 All scene data initialized successfully!');
+  } catch (error) {
+    console.error('❌ Error initializing scene data:', error);
+    throw error;
   }
-  
-  // Validate effects if present
-  if (seed.effects && Array.isArray(seed.effects)) {
-    seed.effects.forEach((effect, index) => {
-      if (!effect.type || typeof effect.type !== 'string') {
-        errors.push(`effect ${index}: type is required and must be a string`);
-      }
-      
-      if (!effect.trigger || typeof effect.trigger !== 'string') {
-        errors.push(`effect ${index}: trigger is required and must be a string`);
-      }
-    });
-  }
-  
-  // Validate nextScene if present
-  if (seed.nextScene && (!Array.isArray(seed.nextScene) || seed.nextScene.length !== 2)) {
-    errors.push('nextScene must be an array with [sceneId, subsceneId]');
-  }
-  
-  // Validate echoTriggers if present
-  if (seed.echoTriggers && !Array.isArray(seed.echoTriggers)) {
-    errors.push('echoTriggers must be an array');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
 }
 
 /**
- * Convert scene seed to database format
- * @param {SceneSeed} seed - Scene seed to convert
- * @returns {Object} Database-ready scene object
+ * Get scene data by ID
  */
-function seedToDatabase(seed) {
-  return {
-    sceneId: seed.sceneId,
-    subsceneId: seed.subsceneId,
-    title: seed.title,
-    description: seed.description,
-    backgroundType: seed.backgroundType,
-    animationUrl: seed.animationUrl,
-    isActive: true
-  };
+export function getSceneData(sceneId, subsceneId) {
+  return sceneSeedData.find(
+    scene => scene.sceneId === sceneId && scene.subsceneId === subsceneId
+  );
 }
 
 /**
- * Convert database scene to seed format
- * @param {Object} dbScene - Database scene object
- * @returns {SceneSeed} Scene seed object
+ * Get all scene data
  */
-function databaseToSeed(dbScene) {
-  return {
-    sceneId: dbScene.sceneId,
-    subsceneId: dbScene.subsceneId,
-    title: dbScene.title,
-    description: dbScene.description,
-    backgroundType: dbScene.backgroundType,
-    animationUrl: dbScene.animationUrl,
-    // Note: choices, logic, effects, nextScene, and echoTriggers would need to be stored separately
-    // or in a JSON field in the database
-  };
+export function getAllSceneData() {
+  return sceneSeedData;
 }
 
 /**
- * Get default scene seeds
- * @returns {Array<SceneSeed>} Array of default scene seeds
+ * Get scene configuration for a specific scene
  */
-function getDefaultSceneSeeds() {
-  return defaultSceneSeeds;
+export function getSceneConfig(sceneId, subsceneId) {
+  const scene = getSceneData(sceneId, subsceneId);
+  return scene ? scene.gridConfig : null;
 }
 
 /**
- * Find scene seed by scene and subscene IDs
- * @param {number} sceneId - Scene ID
- * @param {number} subsceneId - Subscene ID
- * @returns {SceneSeed|null} Scene seed or null if not found
+ * Check if scene has auto-advance functionality
  */
-function findSceneSeed(sceneId, subsceneId) {
-  return defaultSceneSeeds.find(
-    seed => seed.sceneId === sceneId && seed.subsceneId === subsceneId
-  ) || null;
+export function hasAutoAdvance(sceneId, subsceneId) {
+  const scene = getSceneData(sceneId, subsceneId);
+  return scene?.effects?.autoAdvanceAfter ? true : false;
 }
 
 /**
- * Get all scene seeds for a specific scene
- * @param {number} sceneId - Scene ID
- * @returns {Array<SceneSeed>} Array of scene seeds for the scene
+ * Get auto-advance configuration
  */
-function getSceneSeeds(sceneId) {
-  return defaultSceneSeeds.filter(seed => seed.sceneId === sceneId);
-}
-
-/**
- * Get all available background types
- * @returns {Array<string>} Array of background types
- */
-function getBackgroundTypes() {
-  const types = new Set();
-  defaultSceneSeeds.forEach(seed => types.add(seed.backgroundType));
-  return Array.from(types);
-}
-
-/**
- * Get scene seeds by background type
- * @param {string} backgroundType - Background type
- * @returns {Array<SceneSeed>} Array of scene seeds with the background type
- */
-function getSceneSeedsByBackgroundType(backgroundType) {
-  return defaultSceneSeeds.filter(seed => seed.backgroundType === backgroundType);
-}
-
-module.exports = {
-  validateSceneSeed,
-  seedToDatabase,
-  databaseToSeed,
-  getDefaultSceneSeeds,
-  findSceneSeed,
-  getSceneSeeds,
-  getBackgroundTypes,
-  getSceneSeedsByBackgroundType,
-  defaultSceneSeeds
-}; 
+export function getAutoAdvanceConfig(sceneId, subsceneId) {
+  const scene = getSceneData(sceneId, subsceneId);
+  return scene?.effects?.autoAdvanceAfter ? {
+    delay: scene.effects.autoAdvanceAfter,
+    nextScene: scene.effects.nextScene
+  } : null;
+} 

@@ -1,126 +1,142 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+import { PrismaClient } from '@prisma/client';
+import { 
+  getSceneData, 
+  hasAutoAdvance, 
+  getAutoAdvanceConfig,
+  getSceneConfig 
+} from './sceneSeed.js';
 
-/**
- * Scene Engine - Modular system for managing scene transitions and logic
- * 
- * This engine provides a generic interface for scene evaluation and transition
- * based on database-driven scene definitions and fallback logic.
- */
+const prisma = new PrismaClient();
 
 class SceneEngine {
   constructor() {
-    this.sceneSeed = require('./sceneSeed');
+    this.sceneCache = new Map();
   }
 
   /**
-   * Generic scene transition evaluator
-   * @param {Object} params - Scene transition parameters
-   * @param {number} params.currentSceneId - Current scene ID
-   * @param {number} params.subsceneId - Current subscene ID
-   * @param {string} params.gridId - Grid coordinate clicked (e.g., "A1", "K7")
-   * @param {string} params.action - Action type (e.g., "grid_click")
-   * @returns {Object} Scene transition result
+   * Get scene data from database or fallback to seed data
+   */
+  async getSceneData(sceneId, subsceneId) {
+    try {
+      const scene = await prisma.sceneSubscene.findUnique({
+        where: {
+          sceneId_subsceneId: {
+            sceneId: sceneId,
+            subsceneId: subsceneId
+          }
+        }
+      });
+      
+      if (scene) {
+        return {
+          ...scene,
+          gridConfig: JSON.parse(scene.gridConfig || '{}'),
+          effects: JSON.parse(scene.effects || '{}'),
+          choices: JSON.parse(scene.choices || '[]')
+        };
+      }
+    } catch (error) {
+      console.error('Database error getting scene data:', error);
+    }
+    
+    // Fallback to seed data
+    return getSceneData(sceneId, subsceneId);
+  }
+
+  /**
+   * Evaluate scene transition based on current scene and user action
    */
   async evaluateSceneTransition({ currentSceneId, subsceneId, gridId, action }) {
     console.log(`🎭 Scene Engine: Evaluating transition for Scene ${currentSceneId}.${subsceneId} on ${gridId}`);
-
+    
     try {
-      // Get current scene data from database
-      const currentSceneData = await this.getSceneData(currentSceneId, subsceneId);
+      const sceneData = await this.getSceneData(currentSceneId, subsceneId);
       
-      if (!currentSceneData) {
+      if (!sceneData) {
         console.log(`⚠️ Scene ${currentSceneId}.${subsceneId} not found in database, using fallback logic`);
-        return this.evaluateFallbackTransition(currentSceneId, subsceneId, gridId, action);
+        return this.getFallbackLogic(currentSceneId, subsceneId, gridId, action);
       }
-
-      // Evaluate scene using database-driven logic
-      const transition = await this.evaluateSceneLogic(currentSceneData, gridId, action);
       
-      console.log(`✅ Scene Engine: Transition result:`, transition);
-      return transition;
-
+      console.log(`🎭 Processing logic for Scene ${currentSceneId}.${subsceneId} (${sceneData.title})`);
+      
+      // Check for auto-advance functionality
+      if (hasAutoAdvance(currentSceneId, subsceneId)) {
+        const autoAdvanceConfig = getAutoAdvanceConfig(currentSceneId, subsceneId);
+        console.log(`⏰ Auto-advance detected: ${autoAdvanceConfig.delay}ms to Scene ${autoAdvanceConfig.nextScene.sceneId}.${autoAdvanceConfig.nextScene.subsceneId}`);
+        
+        return {
+          sceneId: autoAdvanceConfig.nextScene.sceneId,
+          subsceneId: autoAdvanceConfig.nextScene.subsceneId,
+          message: `Auto-advancing to Scene ${autoAdvanceConfig.nextScene.sceneId}.${autoAdvanceConfig.nextScene.subsceneId}`,
+          effects: {
+            animationTrigger: 'auto_advance',
+            transitionType: 'smooth',
+            delay: autoAdvanceConfig.delay
+          },
+          echo: 'auto_advance_triggered'
+        };
+      }
+      
+      // Check for choices-based logic
+      if (sceneData.choices && sceneData.choices.length > 0) {
+        console.log(`🎭 Evaluating choices for Scene ${currentSceneId}.${subsceneId}`);
+        return this.evaluateChoices(sceneData, gridId, action);
+      }
+      
+      // Fallback to background type logic
+      console.log(`🎭 Using background type fallback logic`);
+      return this.getBackgroundTypeLogic(sceneData, gridId, action);
+      
     } catch (error) {
-      console.error('❌ Scene Engine Error:', error);
-      return this.evaluateFallbackTransition(currentSceneId, subsceneId, gridId, action);
+      console.error('❌ Error in scene transition evaluation:', error);
+      return this.getFallbackLogic(currentSceneId, subsceneId, gridId, action);
     }
   }
 
   /**
-   * Evaluate scene logic based on scene data and user input
-   * @param {Object} sceneData - Scene data from database
-   * @param {string} gridId - Grid coordinate clicked
-   * @param {string} action - Action type
-   * @returns {Object} Scene transition result
+   * Evaluate choices for a scene
    */
-  async evaluateSceneLogic(sceneData, gridId, action) {
-    const { sceneId, subsceneId, backgroundType, title } = sceneData;
-    
-    console.log(`🎭 Evaluating logic for Scene ${sceneId}.${subsceneId} (${title})`);
-
-    // Get scene seed definition
-    const sceneSeed = this.sceneSeed.findSceneSeed(sceneId, subsceneId);
-    console.log(`🎭 Scene seed found:`, !!sceneSeed, sceneSeed ? `with ${sceneSeed.choices?.length || 0} choices` : 'no choices');
-    
-    if (sceneSeed && sceneSeed.choices) {
-      // Use scene seed choices for evaluation
-      console.log(`🎭 Using scene seed choices for evaluation`);
-      return this.evaluateSceneChoices(sceneSeed, gridId, action);
-    }
-
-    // Use background type-based fallback logic
-    console.log(`🎭 Using background type fallback logic`);
-    return this.evaluateBackgroundTypeLogic(backgroundType, sceneId, subsceneId, gridId, action);
-  }
-
-  /**
-   * Evaluate scene choices from scene seed
-   * @param {Object} sceneSeed - Scene seed definition
-   * @param {string} gridId - Grid coordinate clicked
-   * @param {string} action - Action type
-   * @returns {Object} Scene transition result
-   */
-  evaluateSceneChoices(sceneSeed, gridId, action) {
-    console.log(`🎭 Evaluating choices for Scene ${sceneSeed.sceneId}.${sceneSeed.subsceneId}`);
-
-    // Find matching choice based on gridId and conditions
-    const matchingChoice = sceneSeed.choices.find(choice => {
-      if (choice.condition) {
-        // Evaluate condition (simple string matching for now)
-        return this.evaluateCondition(choice.condition, gridId);
+  evaluateChoices(sceneData, gridId, action) {
+    for (const choice of sceneData.choices) {
+      if (this.evaluateCondition(choice.condition, gridId)) {
+        console.log(`✅ Scene Engine: Choice "${choice.label}" selected`);
+        return {
+          sceneId: choice.next[0],
+          subsceneId: choice.next[1],
+          message: choice.label,
+          effects: choice.effects || {},
+          echo: choice.echo || 'grid_click'
+        };
       }
-      return true; // Default choice
-    });
-
-    if (matchingChoice) {
-      const [nextSceneId, nextSubsceneId] = matchingChoice.next;
-      
+    }
+    
+    // No choice matched, use default next scene
+    if (sceneData.nextScene) {
       return {
-        sceneId: nextSceneId,
-        subsceneId: nextSubsceneId,
-        message: matchingChoice.label,
-        effects: matchingChoice.effects || {},
-        echo: sceneSeed.logic?.echoTriggers?.includes(action) ? action : null
+        sceneId: sceneData.nextScene.sceneId,
+        subsceneId: sceneData.nextScene.subsceneId,
+        message: 'Default transition',
+        effects: {},
+        echo: 'default_transition'
       };
     }
-
-    // No matching choice, use default logic
-    return this.evaluateBackgroundTypeLogic(
-      sceneSeed.backgroundType, 
-      sceneSeed.sceneId, 
-      sceneSeed.subsceneId, 
-      gridId, 
-      action
-    );
+    
+    // No transition defined
+    return {
+      sceneId: sceneData.sceneId,
+      subsceneId: sceneData.subsceneId,
+      message: 'No transition defined',
+      effects: {},
+      echo: 'no_transition'
+    };
   }
 
   /**
-   * Evaluate condition string (simple implementation)
-   * @param {string} condition - Condition string (e.g., "gridId === 'K7'")
-   * @param {string} gridId - Grid coordinate
-   * @returns {boolean} Condition result
+   * Evaluate condition string
    */
   evaluateCondition(condition, gridId) {
+    if (!condition) return true;
+    
     // Simple condition evaluation - can be expanded
     if (condition.includes('gridId ===')) {
       const expectedGridId = condition.match(/'([^']+)'/)?.[1];
@@ -134,63 +150,89 @@ class SceneEngine {
   }
 
   /**
-   * Evaluate scene logic based on background type
-   * @param {string} backgroundType - Background type
-   * @param {number} sceneId - Current scene ID
-   * @param {number} subsceneId - Current subscene ID
-   * @param {string} gridId - Grid coordinate clicked
-   * @param {string} action - Action type
-   * @returns {Object} Scene transition result
+   * Get background type logic
    */
-  evaluateBackgroundTypeLogic(backgroundType, sceneId, subsceneId, gridId, action) {
-    console.log(`🎭 Using background type logic: ${backgroundType}`);
-
+  getBackgroundTypeLogic(sceneData, gridId, action) {
+    const backgroundType = sceneData.backgroundType;
+    
     switch (backgroundType) {
       case 'matrix_spiral':
-        return this.getMatrixSpiralTransition(sceneId, subsceneId, gridId, action);
-      
-      case 'static_spiral':
-        return this.getStaticSpiralTransition(sceneId, subsceneId, gridId, action);
-      
-      case 'vault':
-        return this.getVaultTransition(sceneId, subsceneId, gridId, action);
-      
+        return this.getMatrixSpiralLogic(sceneData, gridId, action);
+      case 'matrix_spiral_static':
+        return this.getStaticSpiralLogic(sceneData, gridId, action);
+      case 'vault_background':
+        return this.getVaultLogic(sceneData, gridId, action);
       default:
-        return this.getDefaultTransition(sceneId, subsceneId, gridId, action);
+        return this.getFallbackLogic(sceneData.sceneId, sceneData.subsceneId, gridId, action);
     }
   }
 
   /**
-   * Matrix spiral running transition logic
+   * Matrix spiral running logic
    */
-  getMatrixSpiralTransition(sceneId, subsceneId, gridId, action) {
-    return {
-      sceneId: 1,
-      subsceneId: 2,
-      matrixAction: 'fastForward',
-      message: 'Fast-forwarding Matrix animation to Scene 1.2',
-      effects: {
-        animationTrigger: 'matrix_fast_forward',
-        transitionType: 'smooth'
-      },
-      echo: 'matrix_acceleration'
-    };
+  getMatrixSpiralLogic(sceneData, gridId, action) {
+    console.log(`🎭 Using background type logic: matrix_spiral`);
+    
+    // For Scene 1.1 (Matrix Awakening), auto-advance is handled separately
+    if (sceneData.sceneId === 1 && sceneData.subsceneId === 1) {
+      return {
+        sceneId: 1,
+        subsceneId: 2,
+        matrixAction: 'fastForward',
+        message: 'Fast-forwarding Matrix animation to Scene 1.2',
+        effects: { 
+          animationTrigger: 'matrix_fast_forward', 
+          transitionType: 'smooth' 
+        },
+        echo: 'matrix_acceleration'
+      };
+    }
+    
+    return this.getFallbackLogic(sceneData.sceneId, sceneData.subsceneId, gridId, action);
   }
 
   /**
-   * Static spiral transition logic
+   * Static spiral logic
+   */
+  getStaticSpiralLogic(sceneData, gridId, action) {
+    console.log(`🎭 Using background type logic: matrix_spiral_static`);
+    
+    // Check if zoom is required
+    if (sceneData.effects?.zoomRequired) {
+      return this.getStaticSpiralTransition(sceneData.sceneId, sceneData.subsceneId, gridId, action);
+    }
+    
+    return this.getFallbackLogic(sceneData.sceneId, sceneData.subsceneId, gridId, action);
+  }
+
+  /**
+   * Vault logic
+   */
+  getVaultLogic(sceneData, gridId, action) {
+    console.log(`🎭 Using background type logic: vault_background`);
+    
+    // Check if zoom is required
+    if (sceneData.effects?.zoomRequired) {
+      return this.getVaultTransition(sceneData.sceneId, sceneData.subsceneId, gridId, action);
+    }
+    
+    return this.getFallbackLogic(sceneData.sceneId, sceneData.subsceneId, gridId, action);
+  }
+
+  /**
+   * Get static spiral transition with zoom
    */
   getStaticSpiralTransition(sceneId, subsceneId, gridId, action) {
     const zoomAction = {
       zoomTo: gridId,
-      message: `Zooming to ${gridId} before transition`,
+      message: 'Zooming to grid before transition',
       effects: {
         animationTrigger: 'grid_zoom',
-        transitionType: 'zoom_then_transition'
-      },
-      echo: 'grid_focus'
+        transitionType: 'zoom_then_transition',
+        echo: 'grid_focus'
+      }
     };
-
+    
     if (gridId === 'K7') {
       zoomAction.nextAction = {
         sceneId: 2,
@@ -199,9 +241,9 @@ class SceneEngine {
         message: 'Navigating to Vault scenario (Scene 2.1)',
         effects: {
           animationTrigger: 'scene_transition',
-          transitionType: 'vault_entrance'
-        },
-        echo: 'vault_destination'
+          transitionType: 'vault_entrance',
+          echo: 'vault_destination'
+        }
       };
     } else {
       zoomAction.nextAction = {
@@ -211,118 +253,100 @@ class SceneEngine {
         message: 'Restarting Matrix animation (Scene 1.1)',
         effects: {
           animationTrigger: 'matrix_restart',
-          transitionType: 'spiral_reset'
-        },
-        echo: 'matrix_rebirth'
+          transitionType: 'spiral_reset',
+          echo: 'matrix_rebirth'
+        }
       };
     }
-
+    
     return zoomAction;
   }
 
   /**
-   * Vault transition logic
+   * Get vault transition with zoom
    */
   getVaultTransition(sceneId, subsceneId, gridId, action) {
+    const zoomAction = {
+      zoomTo: gridId,
+      message: 'Zooming to grid before transition',
+      effects: {
+        animationTrigger: 'grid_zoom',
+        transitionType: 'zoom_then_transition',
+        echo: 'grid_focus'
+      }
+    };
+    
     if (gridId === 'K7') {
-      return {
-        zoomTo: gridId,
-        nextAction: {
-          sceneId: 1,
-          subsceneId: 1,
-          matrixAction: 'restart',
-          message: 'Returning to homepage (Scene 1.1)',
-          effects: {
-            animationTrigger: 'vault_exit',
-            transitionType: 'return_to_matrix'
-          },
-          echo: 'home_return'
-        },
-        message: `Zooming to ${gridId} before returning to homepage`,
+      zoomAction.nextAction = {
+        sceneId: 1,
+        subsceneId: 1,
+        matrixAction: 'restart',
+        message: 'Returning to homepage (Scene 1.1)',
         effects: {
-          animationTrigger: 'grid_zoom',
-          transitionType: 'zoom_then_transition'
-        },
-        echo: 'exit_preparation'
+          animationTrigger: 'vault_exit',
+          transitionType: 'return_to_matrix',
+          echo: 'home_return'
+        }
       };
     } else {
-      return {
+      zoomAction.nextAction = {
         sceneId: 2,
         subsceneId: 1,
-        message: 'Vault grid interaction processed',
+        message: 'Vault interaction',
         effects: {
           animationTrigger: 'vault_interaction',
-          transitionType: 'none'
-        },
-        echo: 'vault_exploration'
+          transitionType: 'none',
+          echo: 'vault_exploration'
+        }
       };
     }
+    
+    return zoomAction;
   }
 
   /**
-   * Default transition logic
+   * Get fallback logic when scene data is not available
    */
-  getDefaultTransition(sceneId, subsceneId, gridId, action) {
+  getFallbackLogic(sceneId, subsceneId, gridId, action) {
+    console.log(`🔄 Using fallback logic for Scene ${sceneId}.${subsceneId}`);
+    
+    if (sceneId === 1 && subsceneId === 1) {
+      return {
+        sceneId: 1,
+        subsceneId: 2,
+        matrixAction: 'fastForward',
+        message: 'Fast-forwarding Matrix animation to Scene 1.2',
+        effects: { 
+          animationTrigger: 'matrix_fast_forward', 
+          transitionType: 'smooth' 
+        },
+        echo: 'matrix_acceleration'
+      };
+    }
+    
+    if (sceneId === 1 && subsceneId === 2) {
+      return this.getStaticSpiralTransition(sceneId, subsceneId, gridId, action);
+    }
+    
+    if (sceneId === 2 && subsceneId === 1) {
+      return this.getVaultTransition(sceneId, subsceneId, gridId, action);
+    }
+    
     return {
       sceneId: sceneId,
       subsceneId: subsceneId,
-      message: 'Scene action processed',
-      effects: {
-        animationTrigger: 'default',
-        transitionType: 'none'
-      }
+      message: 'No transition defined',
+      effects: {},
+      echo: 'no_transition'
     };
   }
 
   /**
-   * Fallback transition evaluation when database scene not found
-   */
-  evaluateFallbackTransition(sceneId, subsceneId, gridId, action) {
-    console.log(`🔄 Using fallback logic for Scene ${sceneId}.${subsceneId}`);
-    
-    // Basic fallback logic based on scene coordinates
-    if (sceneId === 1 && subsceneId === 1) {
-      return this.getMatrixSpiralTransition(sceneId, subsceneId, gridId, action);
-    } else if (sceneId === 1 && subsceneId === 2) {
-      return this.getStaticSpiralTransition(sceneId, subsceneId, gridId, action);
-    } else if (sceneId === 2 && subsceneId === 1) {
-      return this.getVaultTransition(sceneId, subsceneId, gridId, action);
-    }
-
-    return this.getDefaultTransition(sceneId, subsceneId, gridId, action);
-  }
-
-  /**
-   * Get scene data from database
-   * @param {number} sceneId - Scene ID
-   * @param {number} subsceneId - Subscene ID
-   * @returns {Object|null} Scene data or null if not found
-   */
-  async getSceneData(sceneId, subsceneId) {
-    try {
-      const sceneData = await prisma.sceneSubscene.findUnique({
-        where: {
-          sceneId_subsceneId: {
-            sceneId: sceneId,
-            subsceneId: subsceneId
-          }
-        }
-      });
-
-      return sceneData;
-    } catch (error) {
-      console.error('Database error getting scene data:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Get all available scenes for debugging/management
+   * Get all scenes from database
    */
   async getAllScenes() {
     try {
       return await prisma.sceneSubscene.findMany({
-        where: { isActive: true },
         orderBy: [
           { sceneId: 'asc' },
           { subsceneId: 'asc' }
@@ -335,32 +359,31 @@ class SceneEngine {
   }
 
   /**
-   * Create or update a scene
+   * Check if scene has auto-advance functionality
    */
-  async upsertScene(sceneData) {
-    try {
-      return await prisma.sceneSubscene.upsert({
-        where: {
-          sceneId_subsceneId: {
-            sceneId: sceneData.sceneId,
-            subsceneId: sceneData.subsceneId
-          }
-        },
-        update: sceneData,
-        create: sceneData
-      });
-    } catch (error) {
-      console.error('Error upserting scene:', error);
-      throw error;
-    }
+  async hasAutoAdvance(sceneId, subsceneId) {
+    const sceneData = await this.getSceneData(sceneId, subsceneId);
+    return hasAutoAdvance(sceneId, subsceneId) || (sceneData?.effects?.autoAdvanceAfter ? true : false);
   }
 
   /**
-   * Legacy method for backward compatibility
+   * Get auto-advance configuration
    */
-  async getNextScene(params) {
-    return this.evaluateSceneTransition(params);
+  async getAutoAdvanceConfig(sceneId, subsceneId) {
+    const sceneData = await this.getSceneData(sceneId, subsceneId);
+    const config = getAutoAdvanceConfig(sceneId, subsceneId);
+    
+    if (config) return config;
+    
+    if (sceneData?.effects?.autoAdvanceAfter) {
+      return {
+        delay: sceneData.effects.autoAdvanceAfter,
+        nextScene: sceneData.effects.nextScene
+      };
+    }
+    
+    return null;
   }
 }
 
-module.exports = new SceneEngine(); 
+export default SceneEngine; 

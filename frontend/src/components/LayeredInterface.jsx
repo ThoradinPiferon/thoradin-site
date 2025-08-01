@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
-import { getGridConfig, generateGridActions } from '../utils/gridConfig';
+import { getSceneGridConfig, generateGridActions } from '../utils/gridConfig';
 
 const LayeredInterface = () => {
   console.log('LayeredInterface rendering...');
@@ -11,19 +11,57 @@ const LayeredInterface = () => {
   const [currentSubscene, setCurrentSubscene] = useState(1); // Subscene ID
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
+  const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const matrixRef = useRef(null);
   
-  // Get grid configuration based on current scene
-  const getSceneName = () => {
-    if (currentScene === 1) return 'homepage';
-    if (currentScene === 2) return 'vault';
-    return 'homepage'; // Default fallback
-  };
+  // Get grid configuration based on current scene state
+  const gridConfig = getSceneGridConfig(currentScene, currentSubscene);
   
-  const gridConfig = getGridConfig(getSceneName());
+  // Handle auto-advance functionality
+  useEffect(() => {
+    // Clear any existing timer
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+    }
+    
+    // Check if current scene has auto-advance
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('⏰ Setting up auto-advance timer for Scene 1.1');
+      const timer = setTimeout(() => {
+        console.log('⏰ Auto-advance triggered for Scene 1.1');
+        handleAutoAdvance();
+      }, 6000); // 6 seconds
+      
+      setAutoAdvanceTimer(timer);
+    }
+    
+    // Cleanup function
+    return () => {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+      }
+    };
+  }, [currentScene, currentSubscene]);
+  
+  // Handle auto-advance transition
+  const handleAutoAdvance = () => {
+    console.log('🎭 Auto-advancing from Scene 1.1 to Scene 1.2');
+    setCurrentScene(1);
+    setCurrentSubscene(2);
+    setAutoAdvanceTimer(null);
+  };
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
+    // Clear auto-advance timer if user clicks during Scene 1.1
+    if (currentScene === 1 && currentSubscene === 1) {
+      if (autoAdvanceTimer) {
+        clearTimeout(autoAdvanceTimer);
+        setAutoAdvanceTimer(null);
+        console.log('⏰ Auto-advance cancelled by user click');
+      }
+    }
+    
     const gridId = getGridId(col, row); // Convert to Excel format
     console.log(`Grid click: ${gridId} in Scene ${currentScene}.${currentSubscene}`);
     
@@ -115,7 +153,7 @@ const LayeredInterface = () => {
   // Debug the invisible button logic
   const shouldShowInvisibleButtons = currentScene === 1 && currentSubscene === 1;
   console.log(`🎭 LayeredInterface Debug: Scene ${currentScene}.${currentSubscene}, shouldShowInvisibleButtons: ${shouldShowInvisibleButtons}`);
-  console.log(`🎭 Grid Config: ${getSceneName()} - ${gridConfig.rows}x${gridConfig.cols} (${gridConfig.rows * gridConfig.cols} tiles)`);
+  console.log(`🎭 Grid Config: Scene ${currentScene}.${currentSubscene} - ${gridConfig.rows}x${gridConfig.cols} (${gridConfig.rows * gridConfig.cols} tiles)`);
   
   return (
     <GridPlay
@@ -126,7 +164,7 @@ const LayeredInterface = () => {
       currentScene={currentScene}
       currentSubscene={currentSubscene}
       isZooming={isZooming}
-      sceneName={getSceneName()}
+      sceneName={`scene_${currentScene}_${currentSubscene}`}
     />
   );
 };

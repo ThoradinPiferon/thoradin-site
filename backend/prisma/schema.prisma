@@ -129,6 +129,13 @@ model SceneSubscene {
   description  String
   backgroundType String  // "matrix_spiral", "static_spiral", "vault", etc.
   animationUrl String?
+  gridConfig   String?  // JSON string for grid configuration
+  tiles        String[] // Array of tile IDs (e.g., ["A1", "B1", ...])
+  invisibleMode Boolean @default(false)
+  effects      String?  // JSON string for effects configuration
+  choices      String?  // JSON string for choices array
+  nextScene    String?  // JSON string for next scene configuration
+  echoTriggers String[] // Array of echo trigger strings
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

@@ -65,6 +65,15 @@ export const SCENE_GRID_CONFIGS = {
     gap: '3px',
     padding: '25px',
     debug: false
+  },
+  
+  // Single tile for Matrix Awakening (Scene 1.1)
+  'matrix_awakening': {
+    rows: 1,
+    cols: 1,
+    gap: '0px',
+    padding: '0px',
+    debug: false
   }
 };
 
@@ -80,6 +89,27 @@ export function getGridConfig(sceneName = 'homepage', customConfig = {}) {
     ...baseConfig,
     ...customConfig
   };
+}
+
+/**
+ * Generate grid configuration based on scene state
+ * @param {number} sceneId - Scene ID
+ * @param {number} subsceneId - Subscene ID
+ * @param {Object} customConfig - Optional custom configuration overrides
+ * @returns {Object} Grid configuration object
+ */
+export function getSceneGridConfig(sceneId, subsceneId, customConfig = {}) {
+  // Special case for Scene 1.1 (Matrix Awakening)
+  if (sceneId === 1 && subsceneId === 1) {
+    return getGridConfig('matrix_awakening', customConfig);
+  }
+  
+  // Default scene mapping
+  let sceneName = 'homepage';
+  if (sceneId === 1) sceneName = 'homepage';
+  if (sceneId === 2) sceneName = 'vault';
+  
+  return getGridConfig(sceneName, customConfig);
 }
 
 /**
