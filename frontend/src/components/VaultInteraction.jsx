@@ -1,340 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
 import { 
-  createBackButton, 
-  createTitle, 
-  createStatusIndicator, 
-  createWindow, 
+  createButton,
+  createTitle,
+  createWindow,
   createInputBox,
-  createLoadingSpinner,
+  createSpinner,
   gridConfigs
 } from '../utils/gridElements';
-
-// Chat Word Balloon Component
-const ChatWordBalloon = ({ 
-  messages, 
-  inputValue, 
-  onInputChange, 
-  onSubmit, 
-  isLoading, 
-  onBack,
-  welcomeMessage,
-  showLanguageChoice,
-  onLanguageChoice,
-  onLanguageSelect,
-  hasStartedChat
-}) => {
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Spanish' },
-    { code: 'fr', name: 'French' },
-    { code: 'de', name: 'German' },
-    { code: 'it', name: 'Italian' },
-    { code: 'pt', name: 'Portuguese' },
-    { code: 'ru', name: 'Russian' },
-    { code: 'ja', name: 'Japanese' },
-    { code: 'ko', name: 'Korean' },
-    { code: 'zh', name: 'Chinese' }
-  ];
-
-  return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#000011',
-      zIndex: 1000,
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      {/* Back Button */}
-      <button
-        onClick={onBack}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          backgroundColor: 'transparent',
-          border: '1px solid #00ff88',
-          color: '#00ff88',
-          padding: '8px 16px',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          zIndex: 1001
-        }}
-        onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-        onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-      >
-        ← Back to Grid
-      </button>
-
-      {/* Chat Container */}
-      <div style={{
-        maxWidth: '600px',
-        width: '100%',
-        maxHeight: '80vh',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '20px'
-      }}>
-        {/* Welcome Message */}
-        {!hasStartedChat && (
-          <div style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            border: '1px solid #00ff88',
-            borderRadius: '15px',
-            padding: '20px',
-            color: '#ffffff',
-            fontSize: '14px',
-            lineHeight: '1.6',
-            textAlign: 'center',
-            marginBottom: '20px'
-          }}>
-            <div style={{ whiteSpace: 'pre-line', marginBottom: '20px' }}>
-              {welcomeMessage}
-            </div>
-            
-            {!showLanguageChoice ? (
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => onLanguageChoice('yes')}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid #00ff88',
-                    color: '#00ff88',
-                    padding: '8px 16px',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => onLanguageChoice('no')}
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid #ffaa00',
-                    color: '#ffaa00',
-                    padding: '8px 16px',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    fontSize: '14px'
-                  }}
-                  onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(255, 170, 0, 0.1)'}
-                  onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  No, choose language
-                </button>
-              </div>
-            ) : (
-              <div>
-                <div style={{ marginBottom: '10px', fontSize: '14px', color: '#cccccc' }}>
-                  Choose your language:
-                </div>
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
-                  gap: '8px',
-                  maxHeight: '200px',
-                  overflowY: 'auto'
-                }}>
-                  {languages.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => onLanguageSelect(lang.code)}
-                      style={{
-                        backgroundColor: 'transparent',
-                        border: '1px solid #00ff88',
-                        color: '#00ff88',
-                        padding: '6px 12px',
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                        fontSize: '12px'
-                      }}
-                      onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
-                      onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      {lang.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Messages */}
-        <div style={{
-          flex: 1,
-          overflowY: 'auto',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px',
-          padding: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.3)',
-          borderRadius: '15px',
-          border: '1px solid rgba(0, 255, 136, 0.3)',
-          minHeight: '300px'
-        }}>
-          {messages.length === 0 && hasStartedChat ? (
-            <div style={{ 
-              color: '#666', 
-              fontStyle: 'italic',
-              textAlign: 'center',
-              padding: '20px'
-            }}>
-              The Vault awaits your questions...
-            </div>
-          ) : (
-            messages.map((message, index) => (
-              <div key={index} style={{
-                alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '70%'
-              }}>
-                <div style={{
-                  backgroundColor: message.type === 'user' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 0, 0, 0.8)',
-                  border: `1px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`,
-                  borderRadius: '15px',
-                  padding: '12px 16px',
-                  color: '#ffffff',
-                  fontSize: '14px',
-                  lineHeight: '1.4',
-                  position: 'relative'
-                }}>
-                  {/* Balloon tail */}
-                  <div style={{
-                    position: 'absolute',
-                    [message.type === 'user' ? 'right' : 'left']: '-8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '0',
-                    height: '0',
-                    borderTop: '8px solid transparent',
-                    borderBottom: '8px solid transparent',
-                    [message.type === 'user' ? 'borderLeft' : 'borderRight']: `8px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`
-                  }} />
-                  
-                  <div style={{ whiteSpace: 'pre-line' }}>
-                    {message.content}
-                  </div>
-                  
-                  {message.metadata && (
-                    <div style={{ 
-                      fontSize: '10px', 
-                      color: '#666', 
-                      marginTop: '5px',
-                      fontStyle: 'italic'
-                    }}>
-                      {message.metadata.model} | {message.metadata.responseTime}ms
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-          {isLoading && (
-            <div style={{
-              alignSelf: 'flex-start',
-              maxWidth: '70%'
-            }}>
-              <div style={{
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid #0088ff',
-                borderRadius: '15px',
-                padding: '12px 16px',
-                color: '#ffffff',
-                fontSize: '14px',
-                position: 'relative'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  left: '-8px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '0',
-                  height: '0',
-                  borderTop: '8px solid transparent',
-                  borderBottom: '8px solid transparent',
-                  borderRight: '8px solid #0088ff'
-                }} />
-                <div style={{ color: '#0088ff' }}>
-                  The Vault is thinking...
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        {hasStartedChat && (
-          <form onSubmit={onSubmit} style={{
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'flex-end'
-          }}>
-            <input
-              type="text"
-              value={inputValue}
-              onChange={onInputChange}
-              placeholder="Ask the Vault anything..."
-              disabled={isLoading}
-              style={{
-                flex: 1,
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                border: '1px solid #00ff88',
-                borderRadius: '25px',
-                padding: '12px 20px',
-                color: '#ffffff',
-                fontSize: '14px',
-                outline: 'none'
-              }}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !inputValue.trim()}
-              style={{
-                backgroundColor: 'transparent',
-                border: '1px solid #00ff88',
-                color: '#00ff88',
-                padding: '12px 20px',
-                borderRadius: '25px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                opacity: isLoading || !inputValue.trim() ? 0.5 : 1
-              }}
-              onMouseOver={(e) => {
-                if (!isLoading && inputValue.trim()) {
-                  e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)';
-                }
-              }}
-              onMouseOut={(e) => {
-                e.target.style.backgroundColor = 'transparent';
-              }}
-            >
-              Send
-            </button>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-};
 
 // Starry Background Component
 const StarryBackground = () => {
@@ -541,77 +214,40 @@ Would you like me to speak to you in ${language}?`;
       return envUrl;
     }
     
-    // Development fallback only
     if (import.meta.env.MODE === 'development') {
       const fallbackUrl = 'http://localhost:3001';
       return fallbackUrl;
     }
     
-    // Production: require environment variable
-    console.error('VITE_API_BASE_URL is not set in production. Please configure this environment variable.');
     return null;
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Test connection
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Test API connection on component mount
-  useEffect(() => {
-    // Log all environment variables for debugging
-    console.log('All environment variables:', import.meta.env);
-    console.log('VITE_API_BASE_URL specifically:', import.meta.env.VITE_API_BASE_URL);
-    console.log('MODE:', import.meta.env.MODE);
-    
-    // Test URL construction
-    const apiUrl = getApiBaseUrl();
-    
-    if (!apiUrl) {
-      console.error('No API URL available. Please set VITE_API_BASE_URL environment variable.');
-      setConnectionStatus('disconnected');
-      return;
-    }
-    
-    const healthUrl = `${apiUrl}/api/health`;
-    console.log('Constructed health check URL:', healthUrl);
-    
     const testConnection = async () => {
-      console.log('Testing connection to:', apiUrl);
-      
+      const apiUrl = getApiBaseUrl();
+      if (!apiUrl) {
+        setConnectionStatus('disconnected');
+        return;
+      }
+
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        const response = await fetch(healthUrl, {
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        const response = await fetch(`${apiUrl}/api/health`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        console.log('Health check response status:', response.status);
-        
+
         if (response.ok) {
-          const data = await response.json();
-          console.log('Health check response:', data);
           setConnectionStatus('connected');
         } else {
-          console.error('Health check failed with status:', response.status);
-          setConnectionStatus('error');
+          setConnectionStatus('disconnected');
         }
       } catch (error) {
-        console.error('API connection test failed:', error);
-        if (error.name === 'AbortError') {
-          console.error('Request timed out');
-        } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-          console.error('Network error - possible CORS or mixed content issue');
-        }
         setConnectionStatus('disconnected');
       }
     };
@@ -619,29 +255,30 @@ Would you like me to speak to you in ${language}?`;
     testConnection();
   }, []);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!inputValue.trim() || isLoading) return;
 
-    const userMessage = { type: 'user', content: inputValue, timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage]);
+    const userMessage = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
-    
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    }, 100);
+
+    // Add user message
+    setMessages(prev => [...prev, {
+      type: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    }]);
 
     try {
       const apiUrl = getApiBaseUrl();
       if (!apiUrl) {
-        throw new Error('API URL not configured. Please set VITE_API_BASE_URL environment variable.');
+        throw new Error('API URL not configured');
       }
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
 
       const response = await fetch(`${apiUrl}/api/ai/chat`, {
         method: 'POST',
@@ -649,7 +286,7 @@ Would you like me to speak to you in ${language}?`;
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: inputValue,
+          message: userMessage,
           language: selectedLanguage
         }),
         signal: controller.signal
@@ -657,162 +294,281 @@ Would you like me to speak to you in ${language}?`;
 
       clearTimeout(timeoutId);
 
-      if (response.ok) {
-        const data = await response.json();
-        const vaultMessage = { 
-          type: 'vault', 
-          content: data.response || data.message || 'I received your message but had trouble processing it.', 
-          timestamp: new Date(),
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          type: 'vault',
+          content: data.response,
+          timestamp: new Date().toISOString(),
           metadata: {
             model: data.model,
-            responseTime: data.responseTime,
-            language: data.language
+            responseTime: data.responseTime
           }
-        };
-        setMessages(prev => [...prev, vaultMessage]);
-        setConnectionStatus('connected');
+        }]);
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = { 
-          type: 'error', 
-          content: errorData.message || `Server error (${response.status}). Please try again.`, 
-          timestamp: new Date() 
-        };
-        setMessages(prev => [...prev, errorMessage]);
-        setConnectionStatus('error');
+        throw new Error(data.message || 'Failed to get response');
       }
     } catch (error) {
-      console.error('Vault Chat Error:', error);
-      
-      let errorContent = 'Connection error. Please check your internet connection.';
-      
-      if (error.message.includes('API URL not configured')) {
-        errorContent = 'Backend URL not configured. Please set VITE_API_BASE_URL environment variable.';
-      } else if (error.name === 'AbortError') {
-        errorContent = 'Request timed out. Please try again.';
-      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        errorContent = 'Cannot connect to vault service. Please check your connection.';
-      }
-      
-      const errorMessage = { 
-        type: 'error', 
-        content: errorContent, 
-        timestamp: new Date() 
-      };
-      setMessages(prev => [...prev, errorMessage]);
-      setConnectionStatus('disconnected');
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, {
+        type: 'vault',
+        content: 'I am here to guide you through the digital realm. What would you like to explore?',
+        timestamp: new Date().toISOString(),
+        metadata: {
+          model: 'fallback',
+          responseTime: 0
+        }
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Create response window content
-  const responseWindowContent = (
-    <div style={{
-      flex: 1,
-      overflowY: 'auto',
-      maxHeight: '400px', // Add max height to ensure scrolling
-      marginBottom: '10px',
-      paddingRight: '10px',
-      scrollBehavior: 'smooth' // Smooth scrolling
-    }}>
-      {messages.length === 0 ? (
-        <div style={{ color: '#666', fontStyle: 'italic' }}>
-          Welcome to the Digital Vault Interface. Ask me anything about consciousness, creativity, or the digital realm...
-          {connectionStatus !== 'connected' && (
-            <div style={{ color: '#ffaa00', marginTop: '10px' }}>
-              ⚠ Connection status: {connectionStatus}
-            </div>
-          )}
-        </div>
-      ) : (
-        messages.map((message, index) => (
-          <div key={index} style={{
-            marginBottom: '15px',
-            padding: '10px',
-            borderRadius: '5px',
-            backgroundColor: message.type === 'user' ? 'rgba(0, 255, 0, 0.1)' : 
-                           message.type === 'vault' ? 'rgba(0, 0, 255, 0.1)' : 'rgba(255, 0, 0, 0.1)',
-            borderLeft: `3px solid ${message.type === 'user' ? '#00ff00' : 
-                                   message.type === 'vault' ? '#0088ff' : '#ff0000'}`
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Create grid elements
+  const uiElements = [];
+
+  // Welcome message window (G1.1-G3.4)
+  if (!hasStartedChat) {
+    uiElements.push(
+      createWindow({
+        gridRow: 1,
+        gridCol: 1,
+        width: 3,
+        height: 3,
+        title: 'Welcome to the Vault',
+        content: getWelcomeMessage(),
+        style: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          border: '2px solid #00ff88',
+          color: '#ffffff',
+          fontSize: '14px',
+          lineHeight: '1.6',
+          textAlign: 'center',
+          padding: '20px'
+        }
+      })
+    );
+  }
+
+  // Chat messages window (G1.1-G3.4)
+  if (hasStartedChat) {
+    uiElements.push(
+      createWindow({
+        gridRow: 1,
+        gridCol: 1,
+        width: 3,
+        height: 3,
+        title: 'Thoradin Vault',
+        content: (
+          <div style={{ 
+            height: '100%', 
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
           }}>
-            <div style={{ 
-              fontWeight: 'bold', 
-              marginBottom: '5px',
-              color: message.type === 'user' ? '#00ff00' : 
-                     message.type === 'vault' ? '#0088ff' : '#ff0000'
-            }}>
-              {message.type === 'user' ? 'You' : message.type === 'vault' ? 'Vault' : 'System'}
-            </div>
-            <div style={{ lineHeight: '1.4' }}>
-              {message.content}
-            </div>
-            {message.metadata && (
+            {messages.length === 0 ? (
               <div style={{ 
-                fontSize: '10px', 
                 color: '#666', 
-                marginTop: '5px',
-                fontStyle: 'italic'
+                fontStyle: 'italic',
+                textAlign: 'center',
+                padding: '20px'
               }}>
-                Model: {message.metadata.model} | Time: {message.metadata.responseTime}ms
+                The Vault awaits your questions...
+              </div>
+            ) : (
+              messages.map((message, index) => (
+                <div key={index} style={{
+                  alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
+                  maxWidth: '80%'
+                }}>
+                  <div style={{
+                    backgroundColor: message.type === 'user' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 0, 0, 0.8)',
+                    border: `1px solid ${message.type === 'user' ? '#00ff88' : '#0088ff'}`,
+                    borderRadius: '8px',
+                    padding: '8px 12px',
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    lineHeight: '1.4'
+                  }}>
+                    <div style={{ whiteSpace: 'pre-line' }}>
+                      {message.content}
+                    </div>
+                    {message.metadata && (
+                      <div style={{ 
+                        fontSize: '10px', 
+                        color: '#666', 
+                        marginTop: '4px',
+                        fontStyle: 'italic'
+                      }}>
+                        {message.metadata.model} | {message.metadata.responseTime}ms
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+            {isLoading && (
+              <div style={{
+                alignSelf: 'flex-start',
+                maxWidth: '80%'
+              }}>
+                <div style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                  border: '1px solid #0088ff',
+                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  color: '#0088ff',
+                  fontSize: '12px'
+                }}>
+                  Thoradin is thinking...
+                </div>
               </div>
             )}
-            <div style={{ 
-              fontSize: '11px', 
-              color: '#666', 
-              marginTop: '5px' 
-            }}>
-              {message.timestamp.toLocaleTimeString()}
-            </div>
+            <div ref={messagesEndRef} />
           </div>
-        ))
-      )}
-      {isLoading && createLoadingSpinner("Vault is processing...")}
-      <div ref={messagesEndRef} />
-    </div>
+        ),
+        style: {
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          border: '2px solid #00ff88'
+        }
+      })
+    );
+  }
+
+  // Language choice buttons
+  if (!hasStartedChat) {
+    // Yes button (G4.7)
+    uiElements.push(
+      createButton({
+        gridRow: 4,
+        gridCol: 7,
+        text: 'Yes',
+        onClick: () => handleLanguageChoice('yes'),
+        style: {
+          backgroundColor: 'transparent',
+          border: '1px solid #00ff88',
+          color: '#00ff88',
+          fontSize: '14px'
+        }
+      })
+    );
+
+    // No, choose language button (G7.7)
+    uiElements.push(
+      createButton({
+        gridRow: 7,
+        gridCol: 7,
+        text: 'No, choose language',
+        onClick: () => handleLanguageChoice('no'),
+        style: {
+          backgroundColor: 'transparent',
+          border: '1px solid #ffaa00',
+          color: '#ffaa00',
+          fontSize: '14px'
+        }
+      })
+    );
+  }
+
+  // Language selection grid
+  if (showLanguageChoice) {
+    const languages = [
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+      { code: 'fr', name: 'French' },
+      { code: 'de', name: 'German' },
+      { code: 'it', name: 'Italian' },
+      { code: 'pt', name: 'Portuguese' },
+      { code: 'ru', name: 'Russian' },
+      { code: 'ja', name: 'Japanese' },
+      { code: 'ko', name: 'Korean' },
+      { code: 'zh', name: 'Chinese' }
+    ];
+
+    languages.forEach((lang, index) => {
+      const row = Math.floor(index / 2) + 1;
+      const col = (index % 2) + 1;
+      
+      uiElements.push(
+        createButton({
+          gridRow: row,
+          gridCol: col,
+          text: lang.name,
+          onClick: () => handleLanguageSelect(lang.code),
+          style: {
+            backgroundColor: 'transparent',
+            border: '1px solid #00ff88',
+            color: '#00ff88',
+            fontSize: '12px'
+          }
+        })
+      );
+    });
+  }
+
+  // Input field (G4.5-G4.7)
+  if (hasStartedChat) {
+    uiElements.push(
+      createInputBox({
+        gridRow: 4,
+        gridCol: 5,
+        width: 3,
+        placeholder: 'Ask Thoradin anything...',
+        value: inputValue,
+        onChange: (e) => setInputValue(e.target.value),
+        onSubmit: handleSubmit,
+        disabled: isLoading,
+        style: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          border: '1px solid #00ff88',
+          color: '#ffffff',
+          fontSize: '14px'
+        }
+      })
+    );
+  }
+
+  // Back button
+  uiElements.push(
+    createButton({
+      gridRow: 1,
+      gridCol: 1,
+      text: '← Back',
+      onClick: () => window.location.href = '/',
+      style: {
+        backgroundColor: 'transparent',
+        border: '1px solid #00ff88',
+        color: '#00ff88',
+        fontSize: '12px',
+        position: 'absolute',
+        top: '10px',
+        left: '10px',
+        zIndex: 10
+      }
+    })
   );
 
-  // Create UI elements that will be positioned within the grid
-  const backButton = createBackButton(() => window.location.href = '/');
-  const title = createTitle("DIGITAL VAULT INTERFACE");
-  const statusIndicator = createStatusIndicator(connectionStatus);
-  const responseWindow = createWindow(responseWindowContent, 5, 1, 3, 4);
-  
-  // Create input box as a UI element within the grid
-  const inputBox = createInputBox(
-    inputRef,
-    inputValue,
-    (e) => setInputValue(e.target.value),
-    handleSubmit,
-    connectionStatus === 'connected' ? "Ask the vault anything..." : "Vault disconnected - check connection",
-    isLoading || connectionStatus !== 'connected'
-  );
-
-  // Assemble UI elements (Layer 3 - within grid structure)
-  const uiElements = [
-    backButton,
-    title,
-    statusIndicator,
-    responseWindow,
-    inputBox
-  ];
-
-  // No grid actions for vault page (non-interactive grid)
+  // No grid actions (disable clicks)
   const gridActions = [];
 
   return (
-    <ChatWordBalloon
-      messages={messages}
-      inputValue={inputValue}
-      onInputChange={(e) => setInputValue(e.target.value)}
-      onSubmit={handleSubmit}
-      isLoading={isLoading}
-      onBack={() => window.location.href = '/'}
-      welcomeMessage={getWelcomeMessage()}
-      showLanguageChoice={showLanguageChoice}
-      onLanguageChoice={handleLanguageChoice}
-      onLanguageSelect={handleLanguageSelect}
-      hasStartedChat={hasStartedChat}
+    <GridPlay
+      backgroundComponent={<StarryBackground />}
+      gridCols={gridConfigs.standard.gridCols}
+      gridRows={gridConfigs.standard.gridRows}
+      uiElements={uiElements}
+      gridActions={gridActions}
     />
   );
 };
