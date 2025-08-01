@@ -160,24 +160,24 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
     onClick: () => inputRef?.current?.focus(),
     style: {
       ...getGridCellStyle(col, row, spanCols, 1),
-      backgroundColor: 'transparent',
-      border: '1px solid #00ff88',
-      borderRadius: '6px',
-      padding: '12px',
+      background: 'linear-gradient(135deg, rgba(210, 180, 140, 0.1), rgba(160, 82, 45, 0.05))',
+      border: '1px solid rgba(210, 180, 140, 0.4)',
+      borderRadius: '8px',
+      padding: '14px',
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
+      gap: '14px',
       zIndex: 30,
       cursor: 'text',
       pointerEvents: 'auto',
-      boxShadow: '0 0 10px rgba(0, 255, 136, 0.3)',
-      backdropFilter: 'blur(2px)'
+      boxShadow: '0 4px 16px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+      backdropFilter: 'blur(3px)'
     }
   }, [
     React.createElement('form', {
       key: 'form',
       onSubmit: onSubmit,
-      style: { display: 'flex', width: '100%', gap: '12px', pointerEvents: 'auto' }
+      style: { display: 'flex', width: '100%', gap: '14px', pointerEvents: 'auto' }
     }, [
       React.createElement('input', {
         key: 'input',
@@ -191,15 +191,15 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
           backgroundColor: 'transparent',
           border: 'none',
           borderRadius: '0',
-          padding: '8px 0',
-          color: '#00ff88',
-          fontFamily: 'monospace',
+          padding: '10px 0',
+          color: '#F5DEB3',
+          fontFamily: 'Georgia, serif',
           fontSize: '14px',
           outline: 'none',
           pointerEvents: 'auto',
           cursor: 'text',
           opacity: disabled ? 0.6 : 1,
-          textShadow: '0 0 5px #00ff88'
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
         },
         disabled: disabled,
         autoFocus: true
@@ -209,28 +209,31 @@ export const createInputBox = (inputRef, value, onChange, onSubmit, placeholder,
         type: 'submit',
         disabled: disabled || !value.trim(),
         style: {
-          backgroundColor: 'transparent',
-          color: '#00ff88',
-          border: '1px solid #00ff88',
-          borderRadius: '4px',
-          padding: '8px 16px',
-          fontFamily: 'monospace',
+          background: 'linear-gradient(135deg, rgba(210, 180, 140, 0.2), rgba(160, 82, 45, 0.15))',
+          color: '#D2B48C',
+          border: '1px solid rgba(210, 180, 140, 0.5)',
+          borderRadius: '6px',
+          padding: '10px 18px',
+          fontFamily: 'Georgia, serif',
           fontSize: '14px',
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: (disabled || !value.trim()) ? 0.5 : 1,
           pointerEvents: 'auto',
-          textShadow: '0 0 5px #00ff88',
-          transition: 'all 0.3s ease'
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 2px 8px rgba(139, 69, 19, 0.2)'
         },
         onMouseEnter: (e) => {
           if (!disabled && value.trim()) {
-            e.target.style.textShadow = '0 0 10px #00ff88, 0 0 15px #00ff88';
-            e.target.style.boxShadow = '0 0 10px rgba(0, 255, 136, 0.5)';
+            e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.3), rgba(160, 82, 45, 0.25))';
+            e.target.style.boxShadow = '0 4px 16px rgba(139, 69, 19, 0.4)';
+            e.target.style.transform = 'scale(1.05)';
           }
         },
         onMouseLeave: (e) => {
-          e.target.style.textShadow = '0 0 5px #00ff88';
-          e.target.style.boxShadow = 'none';
+          e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.2), rgba(160, 82, 45, 0.15))';
+          e.target.style.boxShadow = '0 2px 8px rgba(139, 69, 19, 0.2)';
+          e.target.style.transform = 'scale(1)';
         }
       }, 'Send')
     ])

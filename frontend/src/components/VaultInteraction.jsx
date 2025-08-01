@@ -162,15 +162,21 @@ const VaultInteraction = () => {
   const getWelcomeMessage = () => {
     const { city, time, language } = getUserInfo();
     
-    const message = `Hello, brave little being.
+    const message = `Welcome, seeker of wisdom.
 
-Not everyone dares to enter the Vault.
+You have crossed the digital desert to reach this sacred space.
 
-The fact that you arrived from somewhere near ${city}…
-…at this very hour: ${time},
-means you're open to travel far beyond the ordinary.
+From the sands of ${city}, at the hour of ${time}, 
+you have chosen to seek knowledge beyond the ordinary.
 
-The Vault holds ancient wisdom, forgotten dreams, and echoes of consciousness that have whispered through the digital ether for eons.
+Here, in this vault of consciousness, 
+we explore the depths of thought, 
+the mysteries of existence, 
+and the infinite possibilities of the mind.
+
+The spice of knowledge flows freely here.
+Ancient wisdom whispers through the digital winds.
+Every question opens a new path through the desert of understanding.
 
 Would you like me to speak to you in ${language}?`;
 
@@ -339,53 +345,58 @@ Would you like me to speak to you in ${language}?`;
   // Create grid elements
   const uiElements = [];
 
-  // Welcome message window (G1.1-G3.4) - Matrix style
+  // Welcome message window (G1.1-G3.4) - Dune style
   if (!hasStartedChat) {
     uiElements.push(
       React.createElement('div', {
         key: 'welcome-window',
         style: {
           ...getGridCellStyle(1, 1, 3, 3),
-          backgroundColor: 'transparent',
-          border: 'none',
-          padding: '20px',
+          background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.1), rgba(160, 82, 45, 0.05))',
+          border: '1px solid rgba(210, 180, 140, 0.3)',
+          borderRadius: '8px',
+          padding: '25px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           textAlign: 'center',
-          color: '#00ffcc',
-          fontFamily: 'monospace',
-          fontSize: '14px',
-          lineHeight: '1.6',
-          textShadow: '0 0 10px #00ffcc',
-          backdropFilter: 'blur(2px)',
+          color: '#D2B48C',
+          fontFamily: 'Georgia, serif',
+          fontSize: '15px',
+          lineHeight: '1.8',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 20px rgba(210, 180, 140, 0.4)',
+          backdropFilter: 'blur(3px)',
+          boxShadow: '0 8px 32px rgba(139, 69, 19, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
           zIndex: 20
         }
       }, getWelcomeMessage())
     );
   }
 
-  // Chat messages window (G1.1-G3.4) - Matrix style
+  // Chat messages window (G1.1-G3.4) - Dune style
   if (hasStartedChat) {
     uiElements.push(
       React.createElement('div', {
         key: 'chat-window',
         style: {
           ...getGridCellStyle(1, 1, 3, 3),
-          backgroundColor: 'transparent',
-          border: 'none',
+          background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.08), rgba(160, 82, 45, 0.03))',
+          border: '1px solid rgba(210, 180, 140, 0.2)',
+          borderRadius: '8px',
           padding: '20px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '15px',
+          gap: '18px',
           overflowY: 'auto',
           maxHeight: '100%',
-          color: '#00ffcc',
-          fontFamily: 'monospace',
-          fontSize: '13px',
-          lineHeight: '1.5',
-          textShadow: '0 0 5px #00ffcc',
+          color: '#D2B48C',
+          fontFamily: 'Georgia, serif',
+          fontSize: '14px',
+          lineHeight: '1.7',
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.9)',
+          backdropFilter: 'blur(2px)',
+          boxShadow: '0 4px 16px rgba(139, 69, 19, 0.2)',
           zIndex: 20
         }
       }, [
@@ -393,11 +404,12 @@ Would you like me to speak to you in ${language}?`;
           React.createElement('div', {
             key: 'empty-state',
             style: { 
-              color: '#00ff88', 
+              color: '#CD853F', 
               fontStyle: 'italic',
               textAlign: 'center',
-              padding: '20px',
-              textShadow: '0 0 8px #00ff88'
+              padding: '25px',
+              textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+              fontSize: '15px'
             }
           }, 'The Vault awaits your questions...')
         ) : (
@@ -406,31 +418,33 @@ Would you like me to speak to you in ${language}?`;
               key: index,
               style: {
                 alignSelf: message.type === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '85%',
-                marginBottom: '10px'
+                maxWidth: '88%',
+                marginBottom: '12px'
               }
             }, [
               React.createElement('div', {
                 key: 'message-content',
                 style: {
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  padding: '8px 0',
-                  color: message.type === 'user' ? '#00ff88' : '#00ffcc',
-                  fontSize: '12px',
-                  lineHeight: '1.4',
-                  textShadow: message.type === 'user' ? '0 0 6px #00ff88' : '0 0 6px #00ffcc',
-                  whiteSpace: 'pre-line'
+                  backgroundColor: message.type === 'user' ? 'rgba(210, 180, 140, 0.1)' : 'rgba(139, 69, 19, 0.05)',
+                  border: `1px solid ${message.type === 'user' ? 'rgba(210, 180, 140, 0.3)' : 'rgba(160, 82, 45, 0.2)'}`,
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  color: message.type === 'user' ? '#F5DEB3' : '#D2B48C',
+                  fontSize: '13px',
+                  lineHeight: '1.6',
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
+                  whiteSpace: 'pre-line',
+                  boxShadow: '0 2px 8px rgba(139, 69, 19, 0.15)'
                 }
               }, message.content),
               message.metadata && React.createElement('div', {
                 key: 'metadata',
                 style: { 
-                  fontSize: '10px', 
-                  color: '#00ff66', 
-                  marginTop: '4px',
+                  fontSize: '11px', 
+                  color: '#CD853F', 
+                  marginTop: '6px',
                   fontStyle: 'italic',
-                  textShadow: '0 0 4px #00ff66'
+                  textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
                 }
               }, `${message.metadata.model} | ${message.metadata.responseTime}ms`)
             ])
@@ -440,10 +454,10 @@ Would you like me to speak to you in ${language}?`;
           key: 'loading',
           style: {
             alignSelf: 'flex-start',
-            color: '#00ff88',
-            fontSize: '12px',
+            color: '#CD853F',
+            fontSize: '13px',
             fontStyle: 'italic',
-            textShadow: '0 0 6px #00ff88'
+            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
           }
         }, 'Thoradin is thinking...'),
         React.createElement('div', { key: 'scroll-ref', ref: messagesEndRef })
@@ -453,70 +467,78 @@ Would you like me to speak to you in ${language}?`;
 
   // Language choice buttons
   if (!hasStartedChat) {
-    // Yes button (G4.7) - Matrix style
+    // Yes button (G4.7) - Dune style
     uiElements.push(
       React.createElement('div', {
         key: 'yes-button',
         onClick: () => handleLanguageChoice('yes'),
         style: {
           ...getGridCellStyle(4, 7, 1, 1),
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: '#00ff88',
+          background: 'linear-gradient(135deg, rgba(210, 180, 140, 0.15), rgba(160, 82, 45, 0.1))',
+          border: '1px solid rgba(210, 180, 140, 0.4)',
+          borderRadius: '6px',
+          color: '#F5DEB3',
           fontSize: '14px',
-          fontFamily: 'monospace',
+          fontFamily: 'Georgia, serif',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          textShadow: '0 0 8px #00ff88',
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
           transition: 'all 0.3s ease',
+          boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
           zIndex: 25
         },
         onMouseEnter: (e) => {
-          e.target.style.textShadow = '0 0 15px #00ff88, 0 0 25px #00ff88';
+          e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.25), rgba(160, 82, 45, 0.2))';
+          e.target.style.boxShadow = '0 6px 20px rgba(139, 69, 19, 0.5)';
           e.target.style.transform = 'scale(1.05)';
         },
         onMouseLeave: (e) => {
-          e.target.style.textShadow = '0 0 8px #00ff88';
+          e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.15), rgba(160, 82, 45, 0.1))';
+          e.target.style.boxShadow = '0 4px 12px rgba(139, 69, 19, 0.3)';
           e.target.style.transform = 'scale(1)';
         }
       }, 'Yes')
     );
 
-    // No, choose language button (G7.7) - Matrix style
+    // No, choose language button (G7.7) - Dune style
     uiElements.push(
       React.createElement('div', {
         key: 'no-button',
         onClick: () => handleLanguageChoice('no'),
         style: {
           ...getGridCellStyle(7, 7, 1, 1),
-          backgroundColor: 'transparent',
-          border: 'none',
-          color: '#00ffcc',
-          fontSize: '12px',
-          fontFamily: 'monospace',
+          background: 'linear-gradient(135deg, rgba(139, 69, 19, 0.15), rgba(160, 82, 45, 0.1))',
+          border: '1px solid rgba(160, 82, 45, 0.4)',
+          borderRadius: '6px',
+          color: '#D2B48C',
+          fontSize: '11px',
+          fontFamily: 'Georgia, serif',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           cursor: 'pointer',
-          textShadow: '0 0 8px #00ffcc',
+          textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
           transition: 'all 0.3s ease',
+          boxShadow: '0 4px 12px rgba(139, 69, 19, 0.3)',
           zIndex: 25
         },
         onMouseEnter: (e) => {
-          e.target.style.textShadow = '0 0 15px #00ffcc, 0 0 25px #00ffcc';
+          e.target.style.background = 'linear-gradient(135deg, rgba(139, 69, 19, 0.25), rgba(160, 82, 45, 0.2))';
+          e.target.style.boxShadow = '0 6px 20px rgba(139, 69, 19, 0.5)';
           e.target.style.transform = 'scale(1.05)';
         },
         onMouseLeave: (e) => {
-          e.target.style.textShadow = '0 0 8px #00ffcc';
+          e.target.style.background = 'linear-gradient(135deg, rgba(139, 69, 19, 0.15), rgba(160, 82, 45, 0.1))';
+          e.target.style.boxShadow = '0 4px 12px rgba(139, 69, 19, 0.3)';
           e.target.style.transform = 'scale(1)';
         }
       }, 'No, choose language')
     );
   }
 
-  // Language selection grid - Matrix style
+  // Language selection grid - Dune style
   if (showLanguageChoice) {
     const languages = [
       { code: 'en', name: 'English' },
@@ -541,25 +563,29 @@ Would you like me to speak to you in ${language}?`;
           onClick: () => handleLanguageSelect(lang.code),
           style: {
             ...getGridCellStyle(col, row, 1, 1),
-            backgroundColor: 'transparent',
-            border: 'none',
-            color: '#00ff88',
-            fontSize: '11px',
-            fontFamily: 'monospace',
+            background: 'linear-gradient(135deg, rgba(210, 180, 140, 0.1), rgba(160, 82, 45, 0.05))',
+            border: '1px solid rgba(210, 180, 140, 0.3)',
+            borderRadius: '4px',
+            color: '#D2B48C',
+            fontSize: '10px',
+            fontFamily: 'Georgia, serif',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            textShadow: '0 0 6px #00ff88',
+            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
             transition: 'all 0.3s ease',
+            boxShadow: '0 2px 8px rgba(139, 69, 19, 0.2)',
             zIndex: 25
           },
           onMouseEnter: (e) => {
-            e.target.style.textShadow = '0 0 12px #00ff88, 0 0 20px #00ff88';
+            e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.2), rgba(160, 82, 45, 0.15))';
+            e.target.style.boxShadow = '0 4px 16px rgba(139, 69, 19, 0.4)';
             e.target.style.transform = 'scale(1.1)';
           },
           onMouseLeave: (e) => {
-            e.target.style.textShadow = '0 0 6px #00ff88';
+            e.target.style.background = 'linear-gradient(135deg, rgba(210, 180, 140, 0.1), rgba(160, 82, 45, 0.05))';
+            e.target.style.boxShadow = '0 2px 8px rgba(139, 69, 19, 0.2)';
             e.target.style.transform = 'scale(1)';
           }
         }, lang.name)
