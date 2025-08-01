@@ -667,35 +667,14 @@ Would you like me to speak to you in ${language}?`;
   }
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
-      <GridPlay
-        backgroundComponent={<StarryBackground />}
-        gridCols={gridConfigs.standard.gridCols}
-        gridRows={gridConfigs.standard.gridRows}
-        uiElements={uiElements}
-        gridActions={gridActions}
-      />
-      
-      {/* Scene Viewer - positioned below the grid */}
-      {(selectedScene || sceneLoading || sceneError) && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1000,
-          maxWidth: '90vw',
-          width: '600px'
-        }}>
-          <SceneViewer
-            scene={selectedScene}
-            isLoading={sceneLoading}
-            error={sceneError}
-            onClose={handleCloseScene}
-          />
-        </div>
-      )}
-    </div>
+    <GridPlay
+      backgroundComponent={<StarryBackground />}
+      gridCols={gridConfigs.standard.gridCols}
+      gridRows={gridConfigs.standard.gridRows}
+      uiElements={uiElements}
+      gridActions={gridActions}
+      showSceneViewer={true}
+    />
   );
 };
 
