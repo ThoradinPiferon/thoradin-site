@@ -292,18 +292,7 @@ export function validateGridConfig(config) {
   };
 }
 
-/**
- * Get grid dimensions for a configuration
- * @param {Object} config - Grid configuration object
- * @returns {Object} { rows, cols, totalTiles }
- */
-export function getGridDimensions(config) {
-  return {
-    rows: config.rows,
-    cols: config.cols,
-    totalTiles: config.rows * config.cols
-  };
-}
+
 
 /**
  * Create a grid configuration with custom dimensions
