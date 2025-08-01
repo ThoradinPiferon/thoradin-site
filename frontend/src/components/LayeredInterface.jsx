@@ -229,9 +229,15 @@ const LayeredInterface = () => {
           setIsZooming(false);
           console.log('✅ Grid Zoom Completed');
           
-          // Now handle the scene transition
-          console.log('✅ Scene Changed to 1.1');
-          handleNextAction(data);
+          // Force transition to Scene 1.1 (Matrix Awakening)
+          console.log('✅ Forcing transition to Scene 1.1');
+          setCurrentScene(1);
+          setCurrentSubscene(1);
+          
+          // Restart Matrix animation
+          if (matrixRef.current) {
+            matrixRef.current.restartAnimation();
+          }
         } else {
           // Handle zoom functionality for other scenes
           if (data.zoomTo && matrixRef.current) {
@@ -354,6 +360,7 @@ const LayeredInterface = () => {
       {/* Background Layer */}
       <div className="background-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
         <MatrixSpiralCanvas 
+          ref={matrixRef}
           isRunning={currentScene === 1 && currentSubscene === 1}
           isStatic={currentScene === 1 && currentSubscene === 2}
           onAnimationComplete={handleAnimationComplete}
