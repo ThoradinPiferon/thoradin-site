@@ -172,4 +172,31 @@ router.post('/test-transition', async (req, res) => {
   }
 });
 
+/**
+ * Debug endpoint to test SceneEngine functionality
+ */
+router.get('/debug', async (req, res) => {
+  try {
+    console.log('🔍 Debug: SceneEngine object:', typeof sceneEngine);
+    console.log('🔍 Debug: SceneEngine methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(sceneEngine)));
+    console.log('🔍 Debug: evaluateSceneTransition exists:', typeof sceneEngine.evaluateSceneTransition);
+    
+    res.json({
+      success: true,
+      debug: {
+        sceneEngineType: typeof sceneEngine,
+        hasEvaluateSceneTransition: typeof sceneEngine.evaluateSceneTransition === 'function',
+        methods: Object.getOwnPropertyNames(Object.getPrototypeOf(sceneEngine))
+      }
+    });
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Debug failed',
+      error: error.message
+    });
+  }
+});
+
 export default router; 
