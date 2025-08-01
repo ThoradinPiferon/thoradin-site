@@ -10,6 +10,111 @@ import {
   gridConfigs
 } from '../utils/gridElements';
 
+// Word Balloon Component
+const WordBalloon = ({ message, isVisible, onClose }) => {
+  const [currentText, setCurrentText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (isVisible && message) {
+      setIsTyping(true);
+      setCurrentIndex(0);
+      setCurrentText('');
+      
+      const typeText = () => {
+        if (currentIndex < message.length) {
+          setCurrentText(prev => prev + message[currentIndex]);
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          setIsTyping(false);
+        }
+      };
+
+      const interval = setInterval(typeText, 50);
+      return () => clearInterval(interval);
+    }
+  }, [isVisible, message, currentIndex]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      zIndex: 30,
+      maxWidth: '400px',
+      width: '90%'
+    }}>
+      {/* Balloon */}
+      <div style={{
+        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+        border: '2px solid #00ff88',
+        borderRadius: '20px',
+        padding: '20px',
+        color: '#ffffff',
+        fontSize: '16px',
+        lineHeight: '1.6',
+        textAlign: 'center',
+        boxShadow: '0 0 20px rgba(0, 255, 136, 0.3)',
+        position: 'relative'
+      }}>
+        {/* Balloon tail */}
+        <div style={{
+          position: 'absolute',
+          bottom: '-10px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '0',
+          height: '0',
+          borderLeft: '10px solid transparent',
+          borderRight: '10px solid transparent',
+          borderTop: '10px solid rgba(0, 0, 0, 0.9)'
+        }} />
+        
+        <div style={{
+          position: 'absolute',
+          bottom: '-8px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '0',
+          height: '0',
+          borderLeft: '8px solid transparent',
+          borderRight: '8px solid transparent',
+          borderTop: '8px solid #00ff88'
+        }} />
+
+        <div style={{ marginBottom: '15px' }}>
+          {currentText}
+          {isTyping && <span style={{ color: '#00ff88' }}>|</span>}
+        </div>
+
+        {!isTyping && (
+          <button
+            onClick={onClose}
+            style={{
+              backgroundColor: 'transparent',
+              border: '1px solid #00ff88',
+              color: '#00ff88',
+              padding: '8px 16px',
+              borderRadius: '5px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              marginTop: '10px'
+            }}
+            onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 136, 0.1)'}
+            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+          >
+            Enter the Vault
+          </button>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Starry Background Component
 const StarryBackground = () => {
   const canvasRef = useRef(null);
@@ -80,8 +185,77 @@ const VaultInteraction = () => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connected');
+  const [showWelcome, setShowWelcome] = useState(true);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Get user's location and time info
+  const getUserInfo = () => {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    
+    // Get timezone city (simplified - you could use a more sophisticated timezone library)
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let cityName = 'Unknown City';
+    
+    // Map common timezones to city names
+    const timezoneCities = {
+      'America/New_York': 'New York',
+      'America/Chicago': 'Chicago',
+      'America/Denver': 'Denver',
+      'America/Los_Angeles': 'Los Angeles',
+      'Europe/London': 'London',
+      'Europe/Paris': 'Paris',
+      'Europe/Berlin': 'Berlin',
+      'Asia/Tokyo': 'Tokyo',
+      'Asia/Shanghai': 'Shanghai',
+      'Australia/Sydney': 'Sydney'
+    };
+    
+    cityName = timezoneCities[timezone] || timezone.split('/').pop() || 'Unknown City';
+    
+    // Detect language
+    const language = navigator.language || 'en';
+    const languageNames = {
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'zh': 'Chinese'
+    };
+    
+    const detectedLanguage = languageNames[language.split('-')[0]] || 'English';
+    
+    return {
+      city: cityName,
+      time: timeString,
+      language: detectedLanguage
+    };
+  };
+
+  // Generate welcome message
+  const getWelcomeMessage = () => {
+    const { city, time, language } = getUserInfo();
+    
+    return `Hello, brave little being.
+
+Not everyone dares to enter the Vault.
+
+The fact that you arrived from somewhere near ${city}…
+…at this very hour: ${time},
+means you're open to travel far beyond the ordinary.
+
+Would you like me to speak to you in ${language}?`;
+  };
 
   // Get API base URL with fallback
   const getApiBaseUrl = () => {
@@ -354,13 +528,25 @@ const VaultInteraction = () => {
   const gridActions = [];
 
   return (
-    <GridPlay
-      backgroundComponent={<StarryBackground />}
-      gridCols={gridConfigs.standard.gridCols}
-      gridRows={gridConfigs.standard.gridRows}
-      uiElements={uiElements}
-      gridActions={gridActions}
-    />
+    <>
+      {/* Word Balloon Welcome */}
+      <WordBalloon
+        message={getWelcomeMessage()}
+        isVisible={showWelcome}
+        onClose={() => setShowWelcome(false)}
+      />
+      
+      {/* Main Vault Interface */}
+      {!showWelcome && (
+        <GridPlay
+          backgroundComponent={<StarryBackground />}
+          gridCols={gridConfigs.standard.gridCols}
+          gridRows={gridConfigs.standard.gridRows}
+          uiElements={uiElements}
+          gridActions={gridActions}
+        />
+      )}
+    </>
   );
 };
 
