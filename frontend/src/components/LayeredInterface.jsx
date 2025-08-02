@@ -49,15 +49,16 @@ const LayeredInterface = () => {
 
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
-    // Special case for Scene 1.1 (Matrix Awakening) - 1x1 invisible grid
+    // Special case for Scene 1.1 (Matrix Awakening) - full grid with A1 trigger
     if (sceneId === 1 && subsceneId === 1) {
       return {
-        rows: 1,
-        cols: 1,
-        gap: '0px',
-        padding: '0px',
+        rows: 7,
+        cols: 11,
+        gap: '2px',
+        padding: '20px',
         debug: false,
-        invisibleMode: true
+        invisibleMode: false, // Make grid visible so A1 can be clicked
+        triggerTile: 'A1' // Mark A1 as the trigger tile
       };
     }
     
@@ -225,10 +226,35 @@ const LayeredInterface = () => {
     // Use ref to get current scene state (avoids stale closure issues)
     const currentSceneState = currentSceneRef.current;
     
-    // Disable clicks for Scene 1.1 (Matrix Awakening)
+    // Special handling for Scene 1.1 (Matrix Awakening) - allow A1 clicks to stop spiral
     if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
-      console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening)');
-      return;
+      const gridId = getGridId(col, row);
+      console.log(`🎮 Grid click during Scene 1.1: ${gridId}`);
+      
+      // Check if this is A1 (the trigger tile)
+      if (gridId === 'A1') {
+        console.log('🎬 A1 clicked during spiral animation - triggering frontend-only spiral stop');
+        
+        // Frontend-only spiral stop - no backend call needed
+        if (matrixRef.current && matrixRef.current.stopSpiral) {
+          matrixRef.current.stopSpiral();
+          console.log('✅ Spiral animation stopped via frontend trigger');
+        } else {
+          console.log('⚠️ Matrix ref or stopSpiral method not available');
+        }
+        
+        // Clear auto-advance timer since user manually stopped
+        if (autoAdvanceTimer) {
+          clearTimeout(autoAdvanceTimer);
+          setAutoAdvanceTimer(null);
+          console.log('⏰ Auto-advance cancelled by A1 click');
+        }
+        
+        return; // Exit early - no backend call needed
+      } else {
+        console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
+        return;
+      }
     }
     
     // Set processing flag to prevent multiple clicks
