@@ -130,10 +130,15 @@ export function getSceneGridConfig(sceneId, subsceneId, customConfig = {}) {
  */
 export function generateTileIds(config) {
   const { rows, cols } = config;
+  
+  // Validate grid dimensions to prevent RangeError
+  const validRows = Math.max(1, Math.min(rows || 7, 100)); // Limit to reasonable range
+  const validCols = Math.max(1, Math.min(cols || 11, 100)); // Limit to reasonable range
+  
   const tileIds = [];
   
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
+  for (let row = 0; row < validRows; row++) {
+    for (let col = 0; col < validCols; col++) {
       tileIds.push(getGridId(col, row));
     }
   }
@@ -149,11 +154,16 @@ export function generateTileIds(config) {
  */
 export function generateGridActions(config, clickHandler) {
   const { rows, cols } = config;
-  const actions = new Array(rows * cols).fill(null);
+  
+  // Validate grid dimensions to prevent RangeError
+  const validRows = Math.max(1, Math.min(rows || 7, 100)); // Limit to reasonable range
+  const validCols = Math.max(1, Math.min(cols || 11, 100)); // Limit to reasonable range
+  
+  const actions = new Array(validRows * validCols).fill(null);
   
   for (let i = 0; i < actions.length; i++) {
-    const row = Math.floor(i / cols);
-    const col = i % cols;
+    const row = Math.floor(i / validCols);
+    const col = i % validCols;
     actions[i] = () => clickHandler(row, col, i);
   }
   
@@ -168,10 +178,14 @@ export function generateGridActions(config, clickHandler) {
 export function getGridStyles(config) {
   const { rows, cols, gap, padding } = config;
   
+  // Validate grid dimensions to prevent CSS issues
+  const validRows = Math.max(1, Math.min(rows || 7, 100)); // Limit to reasonable range
+  const validCols = Math.max(1, Math.min(cols || 11, 100)); // Limit to reasonable range
+  
   return {
     display: 'grid',
-    gridTemplateColumns: `repeat(${cols}, 1fr)`,
-    gridTemplateRows: `repeat(${rows}, 1fr)`,
+    gridTemplateColumns: `repeat(${validCols}, 1fr)`,
+    gridTemplateRows: `repeat(${validRows}, 1fr)`,
     gap: gap,
     padding: padding,
     width: '100%',
