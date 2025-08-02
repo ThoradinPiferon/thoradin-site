@@ -38,6 +38,37 @@ export const getOrCreateSession = async (sessionId, userId = null) => {
     console.log(`🎭 SoulKey: Session ${sessionId} ready for tracking`);
     return session;
   } catch (error) {
+    // Fallback: try without the include if relation doesn't exist
+    if (error.message.includes('Unknown field `soulKeyLogs`')) {
+      console.warn('⚠️ SoulKey: soulKeyLogs relation not available, using fallback mode');
+      
+      let session = await prisma.gridSession.findUnique({
+        where: { id: sessionId }
+      });
+
+      if (!session) {
+        session = await prisma.gridSession.create({
+          data: {
+            id: sessionId,
+            userId: userId || null,
+            sessionName: `SoulKey Session ${new Date().toISOString().slice(0, 19)}`,
+            isActive: true
+          }
+        });
+      }
+
+      // Store in memory for quick access (without logs for now)
+      activeSessions.set(sessionId, {
+        id: session.id,
+        userId: session.userId,
+        logs: [],
+        lastActivity: new Date()
+      });
+
+      console.log(`🎭 SoulKey: Session ${sessionId} ready for tracking (fallback mode)`);
+      return session;
+    }
+    
     console.error('❌ SoulKey: Error creating/retrieving session:', error);
     throw error;
   }
@@ -125,6 +156,34 @@ export const getSessionInsights = async (sessionId) => {
     console.log(`🎭 SoulKey: Session insights generated for ${sessionId}`);
     return insights;
   } catch (error) {
+    // Fallback: try without the include if relation doesn't exist
+    if (error.message.includes('Unknown field `soulKeyLogs`')) {
+      console.warn('⚠️ SoulKey: soulKeyLogs relation not available, using fallback insights');
+      
+      const session = await prisma.gridSession.findUnique({
+        where: { id: sessionId }
+      });
+
+      if (!session) {
+        throw new Error(`Session ${sessionId} not found`);
+      }
+
+      // Return basic insights without logs
+      const insights = {
+        sessionId,
+        totalInteractions: 0,
+        scenesVisited: [],
+        tilesClicked: [],
+        zoomActions: 0,
+        sceneTransitions: 0,
+        journeyPattern: [],
+        note: 'SoulKey logging temporarily unavailable'
+      };
+
+      console.log(`🎭 SoulKey: Basic session insights generated for ${sessionId} (fallback mode)`);
+      return insights;
+    }
+    
     console.error('❌ SoulKey: Error getting session insights:', error);
     throw error;
   }
