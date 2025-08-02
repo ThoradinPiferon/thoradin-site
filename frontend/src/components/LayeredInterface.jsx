@@ -18,16 +18,21 @@ const LayeredInterface = () => {
   const [isProcessingClick, setIsProcessingClick] = useState(false); // Prevent multiple clicks
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const [matrixState, setMatrixState] = useState('running'); // 'running', 'static', 'zooming'
+  const [backendGridConfig, setBackendGridConfig] = useState(null); // Backend-fetched grid configuration
+  const [isLoadingGrid, setIsLoadingGrid] = useState(false); // Loading state for grid fetch
   const matrixRef = useRef(null);
   const currentSceneRef = useRef({ scene: 1, subscene: 1 });
   const sessionIdRef = useRef(null);
   
-  // Generate session ID on component mount
+  // Generate session ID and fetch initial grid config on component mount
   useEffect(() => {
     if (!sessionIdRef.current) {
       sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       console.log(`🎭 SoulKey: Session started with ID: ${sessionIdRef.current}`);
     }
+    
+    // Fetch initial grid configuration
+    fetchGridConfig(currentScene, currentSubscene);
   }, []);
 
   // Manage matrix state based on scene transitions
@@ -94,16 +99,52 @@ const LayeredInterface = () => {
     };
   };
 
+  // Use backend-fetched grid config if available, otherwise fallback
   let gridConfig;
   try {
-    gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
-    console.log('🔧 Fallback grid config created:', gridConfig);
+    if (backendGridConfig) {
+      console.log('🔧 Using backend-fetched grid config:', backendGridConfig);
+      gridConfig = backendGridConfig;
+    } else {
+      gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
+      console.log('🔧 Using fallback grid config:', gridConfig);
+    }
   } catch (error) {
     console.error('❌ Error creating grid config:', error);
     // Emergency fallback
     gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
   }
   
+  // Fetch grid configuration from backend
+  const fetchGridConfig = async (sceneId, subsceneId) => {
+    try {
+      setIsLoadingGrid(true);
+      console.log(`🔄 Fetching grid config for Scene ${sceneId}.${subsceneId}`);
+      
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid?sceneId=${sceneId}&subsceneId=${subsceneId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Backend grid config received:', data);
+        setBackendGridConfig(data);
+        return data;
+      } else {
+        console.warn('⚠️ Backend grid config fetch failed, using fallback');
+        return null;
+      }
+    } catch (error) {
+      console.error('❌ Error fetching grid config:', error);
+      return null;
+    } finally {
+      setIsLoadingGrid(false);
+    }
+  };
+
   // Handle animation completion
   const handleAnimationComplete = () => {
     console.log('🎬 Matrix animation completed');
@@ -409,7 +450,7 @@ const LayeredInterface = () => {
   };
   
   // Handle the next action after zoom (or immediately if no zoom)
-  const handleNextAction = (data) => {
+  const handleNextAction = async (data) => {
     console.log('🎭 handleNextAction called with data:', data);
     
     // Backend controls the scene transitions
@@ -423,6 +464,13 @@ const LayeredInterface = () => {
       setCurrentSubscene(data.subsceneId);
       currentSceneRef.current.subscene = data.subsceneId;
     }
+    
+    // Trigger grid rehydration after scene transition
+    const newSceneId = data.sceneId || currentSceneRef.current.scene;
+    const newSubsceneId = data.subsceneId || currentSceneRef.current.subscene;
+    
+    console.log(`🔄 Triggering grid rehydration for Scene ${newSceneId}.${newSubsceneId}`);
+    await fetchGridConfig(newSceneId, newSubsceneId);
     
     // Backend controls Matrix animation - now using state-based transitions
     if (data.matrixAction === 'fastForward' && matrixRef.current) {
