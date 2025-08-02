@@ -44,8 +44,7 @@ const MatrixSpiralCanvas = forwardRef(({
   phrase = "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", 
   onGridZoom, 
   onIntroComplete,
-  isRunning = true,
-  isStatic = false,
+  matrixState = 'running', // 'running', 'static', 'zooming'
   onAnimationComplete
 }, ref) => {
   const canvasRef = useRef(null);
@@ -59,7 +58,7 @@ const MatrixSpiralCanvas = forwardRef(({
   const animationIdRef = useRef(null);
 
   // Debug logging for animation state
-  console.log(`🎬 MatrixSpiralCanvas: isRunning=${isRunning}, isStatic=${isStatic}, currentScene=${isRunning ? '1.1' : isStatic ? '1.2' : 'other'}`);
+  console.log(`🎬 MatrixSpiralCanvas: matrixState=${matrixState}`);
 
   // Expose zoom function through ref
   useEffect(() => {
@@ -259,8 +258,8 @@ const MatrixSpiralCanvas = forwardRef(({
       const totalDuration = 480; // 8 seconds total (5s build-up + 3s reveal)
       const sentenceRevealDuration = 300; // 5 seconds - when sentence starts revealing
 
-      // Handle different animation states based on props
-      if (isStatic) {
+      // Handle different animation states based on matrixState
+      if (matrixState === 'static') {
         // Scene 1.2: Draw static final state
         console.log('🎬 Drawing static Matrix background for Scene 1.2');
         const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
@@ -317,7 +316,7 @@ const MatrixSpiralCanvas = forwardRef(({
       }
 
       // Scene 1.1: Animated Matrix background
-      if (!isRunning) {
+      if (matrixState !== 'running') {
         // Not running - don't animate
         console.log('🎬 Matrix animation paused');
         return;

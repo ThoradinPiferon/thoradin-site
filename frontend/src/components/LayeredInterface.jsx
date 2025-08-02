@@ -16,6 +16,7 @@ const LayeredInterface = () => {
   const [isZooming, setIsZooming] = useState(false);
   const [isProcessingClick, setIsProcessingClick] = useState(false); // Prevent multiple clicks
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
+  const [matrixState, setMatrixState] = useState('running'); // 'running', 'static', 'zooming'
   const matrixRef = useRef(null);
   const currentSceneRef = useRef({ scene: 1, subscene: 1 });
   const sessionIdRef = useRef(null);
@@ -28,11 +29,17 @@ const LayeredInterface = () => {
     }
   }, []);
 
-  // Reset zoom state when transitioning to Scene 1.2
+  // Manage matrix state based on scene transitions
   useEffect(() => {
-    if (currentScene === 1 && currentSubscene === 2) {
-      console.log('🎭 Scene 1.2 detected - resetting zoom state');
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('🎭 Scene 1.1 detected - setting matrix to running');
+      setMatrixState('running');
+    } else if (currentScene === 1 && currentSubscene === 2) {
+      console.log('🎭 Scene 1.2 detected - setting matrix to static');
+      setMatrixState('static');
       setIsZooming(false);
+    } else {
+      console.log('🎭 Other scene detected - keeping matrix state');
     }
   }, [currentScene, currentSubscene]);
 
@@ -272,19 +279,20 @@ const LayeredInterface = () => {
             console.log(`🎬 Scene 1.2: Backend requested zoom to ${data.zoomTo} then transition`);
             console.log('✅ Grid Zoom Started');
             setIsZooming(true);
+            setMatrixState('zooming'); // Set matrix to zooming state
             
             // Use global zoom utility
             console.log(`🎬 Starting zoom animation to grid ${data.zoomTo}`);
             await handleGridZoom(data.zoomTo);
             console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
             
-            // Add a longer pause to let the zoom effect sink in and ensure sequential execution
-            console.log('⏳ Waiting 2 seconds after zoom before processing next action...');
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Let the zoom effect sink in naturally (no artificial delay)
+            console.log('🎬 Zoom completed - processing next action immediately');
             
             // Reset zoom state
             setIsZooming(false);
             console.log('✅ Grid Zoom Completed');
+            // Matrix state will be updated by handleNextAction based on scene transition
             
             // Handle the next action from backend
             console.log('✅ Processing next action from backend:', data.nextAction);
@@ -304,9 +312,8 @@ const LayeredInterface = () => {
             await handleGridZoom(data.zoomTo);
             console.log(`🎬 Zoom animation completed for ${data.zoomTo}`);
             
-            // Add pause to ensure sequential execution
-            console.log('⏳ Waiting 1.5 seconds after zoom before processing next action...');
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Let the zoom effect sink in naturally (no artificial delay)
+            console.log('🎬 Zoom completed - processing next action immediately');
             
             // Reset zoom state
             setIsZooming(false);
@@ -390,15 +397,17 @@ const LayeredInterface = () => {
       currentSceneRef.current.subscene = data.subsceneId;
     }
     
-    // Backend controls Matrix animation
+    // Backend controls Matrix animation - now using state-based transitions
     if (data.matrixAction === 'fastForward' && matrixRef.current) {
       console.log('✅ Matrix fastForward triggered');
       matrixRef.current.fastForwardToEnd();
+      setMatrixState('static'); // Transition to static state
     } else if (data.matrixAction === 'restart' && matrixRef.current) {
       console.log('✅ Matrix restart triggered');
       // Only restart animation if we're not coming from Scene 1.2 (to avoid spiral replay)
       if (!(currentSceneRef.current.scene === 1 && currentSceneRef.current.subscene === 2)) {
         matrixRef.current.restartAnimation();
+        setMatrixState('running'); // Transition to running state
       } else {
         console.log('🎭 Skipping matrix restart - coming from Scene 1.2');
       }
@@ -439,8 +448,7 @@ const LayeredInterface = () => {
       <div className="background-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
         <MatrixSpiralCanvas 
           ref={matrixRef}
-          isRunning={currentScene === 1 && currentSubscene === 1}
-          isStatic={currentScene === 1 && currentSubscene === 2}
+          matrixState={matrixState}
           onAnimationComplete={handleAnimationComplete}
         />
       </div>
