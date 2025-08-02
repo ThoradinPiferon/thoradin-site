@@ -18,7 +18,8 @@ const GridPlay = ({
   currentSubscene,
   gridActions = [],
   showSceneViewer = false,
-  isZooming = false
+  isZooming = false,
+  isProcessingClick = false
 }) => {
   console.log(`🎮 GridPlay rendering: ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, config:`, gridConfig);
   
@@ -125,9 +126,9 @@ const GridPlay = ({
     // Determine button text based on configuration
     let buttonText = showInvisibleButtons ? '' : gridId;
     
-    // Disable clicks for Scene 1.1 (Matrix Awakening) or during zoom
+    // Disable clicks for Scene 1.1 (Matrix Awakening), during zoom, or while processing
     const isScene11 = currentScene === 1 && currentSubscene === 1;
-    const isDisabled = isScene11 || isZooming;
+    const isDisabled = isScene11 || isZooming || isProcessingClick;
     
     // Add zoom state logging
     if (isZooming) {
@@ -140,6 +141,8 @@ const GridPlay = ({
           console.log('🚫 Click disabled for Scene 1.1'); 
         } else if (isZooming) {
           console.log('🚫 Click disabled during zoom animation'); 
+        } else if (isProcessingClick) {
+          console.log('🚫 Click disabled - processing previous click'); 
         }
       } : 
       () => {

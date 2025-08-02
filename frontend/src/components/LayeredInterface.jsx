@@ -14,6 +14,7 @@ const LayeredInterface = () => {
   const [currentSubscene, setCurrentSubscene] = useState(1); // Subscene ID
   const [animationComplete, setAnimationComplete] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
+  const [isProcessingClick, setIsProcessingClick] = useState(false); // Prevent multiple clicks
   const [autoAdvanceTimer, setAutoAdvanceTimer] = useState(null);
   const matrixRef = useRef(null);
   const currentSceneRef = useRef({ scene: 1, subscene: 1 });
@@ -207,6 +208,12 @@ const LayeredInterface = () => {
   
   // Handle grid clicks - all actions go through backend
   const handleGridClick = async (row, col, gridIndex) => {
+    // Prevent multiple simultaneous clicks
+    if (isProcessingClick) {
+      console.log('🚫 Click blocked - already processing previous click');
+      return;
+    }
+    
     // Use ref to get current scene state (avoids stale closure issues)
     const currentSceneState = currentSceneRef.current;
     
@@ -215,6 +222,10 @@ const LayeredInterface = () => {
       console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening)');
       return;
     }
+    
+    // Set processing flag to prevent multiple clicks
+    setIsProcessingClick(true);
+    console.log('🔒 Click processing started - blocking further clicks');
     
     // Clear auto-advance timer if user clicks during Scene 1.1
     if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
@@ -267,8 +278,9 @@ const LayeredInterface = () => {
             await handleGridZoom(data.zoomTo);
             console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
             
-            // Add a pause to let the zoom effect sink in
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Add a longer pause to let the zoom effect sink in and ensure sequential execution
+            console.log('⏳ Waiting 2 seconds after zoom before processing next action...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
             
             // Reset zoom state
             setIsZooming(false);
@@ -290,6 +302,11 @@ const LayeredInterface = () => {
             
             // Use global zoom utility
             await handleGridZoom(data.zoomTo);
+            console.log(`🎬 Zoom animation completed for ${data.zoomTo}`);
+            
+            // Add pause to ensure sequential execution
+            console.log('⏳ Waiting 1.5 seconds after zoom before processing next action...');
+            await new Promise(resolve => setTimeout(resolve, 1500));
             
             // Reset zoom state
             setIsZooming(false);
@@ -314,6 +331,10 @@ const LayeredInterface = () => {
       console.error('❌ Error calling backend grid action:', error);
       // Fallback to local logic when backend fails
       handleLocalFallback(gridId);
+    } finally {
+      // Always reset processing flag
+      setIsProcessingClick(false);
+      console.log('🔓 Click processing completed - allowing new clicks');
     }
   };
 
@@ -452,6 +473,7 @@ const LayeredInterface = () => {
           currentScene={currentScene}
           currentSubscene={currentSubscene}
           isZooming={effectiveIsZooming}
+          isProcessingClick={isProcessingClick}
         />
       </div>
 
