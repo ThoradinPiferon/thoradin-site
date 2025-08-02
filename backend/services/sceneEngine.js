@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database.js';
 import { 
   getSceneData, 
   hasAutoAdvance, 
@@ -6,8 +6,6 @@ import {
   getSceneConfig 
 } from './sceneSeed.js';
 import { getSceneLogic } from './sceneLogic.js';
-
-const prisma = new PrismaClient();
 
 class SceneEngine {
   constructor() {

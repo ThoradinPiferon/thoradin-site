@@ -18,6 +18,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust proxy for proper IP detection behind Render/Vercel
+app.set('trust proxy', 1);
+
 // Function to find available port
 const findAvailablePort = async (startPort) => {
   const isPortAvailable = (port) => {

@@ -2,10 +2,9 @@ import express from 'express';
 import { body, validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../config/database.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // Validation middleware
 const validateRegistration = [
