@@ -17,7 +17,9 @@
     "postinstall": "prisma generate",
     "deploy": "npm run db:migrate:deploy && npm start",
     "fix:production": "node fix-production-db.js",
-    "deploy:with-fix": "npm run fix:production && npm start"
+    "deploy:with-fix": "npm run fix:production && npm start",
+    "force:migrate": "node force-migrate-production.js",
+    "deploy:force": "npm run force:migrate && npm start"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",

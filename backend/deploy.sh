@@ -8,9 +8,9 @@ echo "🚀 Starting Thoradin Backend deployment..."
 # Set environment
 export NODE_ENV=production
 
-# Run comprehensive production database fix
-echo "🔧 Running production database fix..."
-npm run fix:production
+# Run force migration to ensure all tables and constraints are correct
+echo "🚨 Running force migration for production database..."
+npm run force:migrate
 
 # Start the server
 echo "🌐 Starting server..."
