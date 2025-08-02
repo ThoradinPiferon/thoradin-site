@@ -8,17 +8,9 @@ echo "🚀 Starting Thoradin Backend deployment..."
 # Set environment
 export NODE_ENV=production
 
-# Generate Prisma client
-echo "📦 Generating Prisma client..."
-npx prisma generate
-
-# Run database migrations
-echo "🗄️ Running database migrations..."
-npx prisma migrate deploy
-
-# Check migration status
-echo "🔍 Checking migration status..."
-npx prisma migrate status
+# Run comprehensive production database fix
+echo "🔧 Running production database fix..."
+npm run fix:production
 
 # Start the server
 echo "🌐 Starting server..."

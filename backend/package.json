@@ -15,7 +15,9 @@
     "test": "jest",
     "lint": "eslint .",
     "postinstall": "prisma generate",
-    "deploy": "npm run db:migrate:deploy && npm start"
+    "deploy": "npm run db:migrate:deploy && npm start",
+    "fix:production": "node fix-production-db.js",
+    "deploy:with-fix": "npm run fix:production && npm start"
   },
   "dependencies": {
     "@prisma/client": "^5.7.1",
