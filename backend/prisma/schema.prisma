@@ -62,12 +62,12 @@ model AIResponse {
 
 model GridSession {
   id          String   @id @default(cuid())
-  userId      String
+  userId      String?
   sessionName String
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   soulKeyLogs SoulKeyLog[]
 
   @@map("grid_sessions")

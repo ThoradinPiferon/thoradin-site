@@ -21,7 +21,7 @@ export const getOrCreateSession = async (sessionId, userId = null) => {
       session = await prisma.gridSession.create({
         data: {
           id: sessionId,
-          userId: userId || 'anonymous',
+          userId: userId || null,
           sessionName: `SoulKey Session ${new Date().toISOString().slice(0, 19)}`,
           isActive: true
         },

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { setMatrixCanvasRef } from '../utils/zoomUtils';
+import { getGridId } from '../utils/gridHelpers';
 
 // Light Spiral Calculation with Exponential Speed
 function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
