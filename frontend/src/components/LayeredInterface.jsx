@@ -38,25 +38,33 @@ const LayeredInterface = () => {
     fetchScenarioData(currentScene, currentSubscene);
   }, []);
 
-  // Manage matrix state based on scene transitions - only after grid is ready
+  // LAYERED ARCHITECTURE: Step 4 - Background Layer (Matrix Animation)
+  // Only starts after Scenario → Grid → Front Layers are ready
   useEffect(() => {
-    // Don't start Matrix animation until grid configuration is loaded
+    // Step 1: Wait for scenario layer to be complete
     if (isLoadingScenario) {
-      console.log('🎭 Waiting for scenario data to load before starting Matrix animation');
+      console.log('🎭 [LAYER 4] Waiting for scenario data to load before starting Matrix animation');
       return;
     }
     
+    // Step 2: Wait for grid layer to be ready
+    if (!isGridReady) {
+      console.log('🎭 [LAYER 4] Waiting for grid configuration to be ready before starting Matrix animation');
+      return;
+    }
+    
+    // Step 3: All layers ready, start background animation
     if (currentScene === 1 && currentSubscene === 1) {
-      console.log('🎭 Scene 1.1 detected - grid ready, setting matrix to running');
+      console.log('🎭 [LAYER 4] All layers ready - Scene 1.1 detected, starting Matrix animation');
       setMatrixState('running');
     } else if (currentScene === 1 && currentSubscene === 2) {
-      console.log('🎭 Scene 1.2 detected - setting matrix to static');
+      console.log('🎭 [LAYER 4] All layers ready - Scene 1.2 detected, setting Matrix to static');
       setMatrixState('static');
       setIsZooming(false);
     } else {
-      console.log('🎭 Other scene detected - keeping matrix state');
+      console.log('🎭 [LAYER 4] All layers ready - Other scene detected, keeping Matrix state');
     }
-  }, [currentScene, currentSubscene, isLoadingScenario]);
+  }, [currentScene, currentSubscene, isLoadingScenario, isGridReady]);
 
   // Force zoom state to false for Scene 1.2 debugging
   const effectiveIsZooming = (currentScene === 1 && currentSubscene === 2) ? false : isZooming;
@@ -162,38 +170,33 @@ const LayeredInterface = () => {
     };
   };
 
-  // Use backend-fetched grid config if available, otherwise fallback
+  // LAYERED ARCHITECTURE: Scenario → Grid → Front Layers → Background Layer
+  
+  // Step 1: Scenario Layer - Wait for scenario data to be fully loaded
   let gridConfig;
   let isGridReady = false;
   
   try {
-    // Priority 1: Use scenario data if available
+    // ONLY proceed if scenario data is fully loaded
     if (scenarioData && scenarioData.gridConfig && !isLoadingScenario) {
-      console.log('🎭 Using scenario-driven grid config:', scenarioData.gridConfig);
+      console.log('🎭 [LAYER 1] Scenario data ready, proceeding to Grid layer');
       gridConfig = scenarioData.gridConfig;
       isGridReady = true;
     }
-    // Priority 2: Use backend grid config if available
-    else if (backendGridConfig && !isLoadingGrid) {
-      console.log('🔧 Using backend-fetched grid config:', backendGridConfig);
-      gridConfig = backendGridConfig;
-      isGridReady = true;
-    }
-    // Priority 3: Use fallback config (only if not loading)
-    else if (!isLoadingScenario && !isLoadingGrid) {
-      gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
-      console.log('🔧 Using fallback grid config for Scene', currentScene, currentSubscene, ':', gridConfig);
-      isGridReady = true;
-    }
-    // Still loading - use safe default
-    else {
-      console.log('⏳ Grid configuration still loading, using safe default');
+    // Still loading scenario - don't proceed to grid layer yet
+    else if (isLoadingScenario) {
+      console.log('⏳ [LAYER 1] Scenario data still loading, waiting...');
       gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
       isGridReady = false;
     }
+    // Scenario failed to load - use emergency fallback
+    else {
+      console.log('⚠️ [LAYER 1] Scenario data failed, using emergency fallback');
+      gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
+      isGridReady = true; // Allow grid to render with fallback
+    }
   } catch (error) {
-    console.error('❌ Error creating grid config:', error);
-    // Emergency fallback
+    console.error('❌ [LAYER 1] Critical error in scenario layer:', error);
     gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
     isGridReady = false;
   }
@@ -735,7 +738,8 @@ const LayeredInterface = () => {
         />
       )}
 
-      {/* Grid Layer - only render when grid is ready */}
+      {/* LAYERED ARCHITECTURE: Step 3 - Front Layers (Grid Interaction) */}
+      {/* Only renders after Scenario → Grid layers are ready */}
       {isGridReady && (
         <div className="grid-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
           <GridPlay
@@ -751,9 +755,9 @@ const LayeredInterface = () => {
         </div>
       )}
       
-      {/* Loading indicator when grid is not ready */}
+      {/* Loading indicator when layers are not ready */}
       {!isGridReady && (
-        <div className="grid-loading" style={{ 
+        <div className="layers-loading" style={{ 
           position: 'absolute', 
           top: '50%', 
           left: '50%', 
@@ -763,7 +767,7 @@ const LayeredInterface = () => {
           fontFamily: 'monospace',
           fontSize: '14px'
         }}>
-          Loading grid configuration...
+          {isLoadingScenario ? 'Loading scenario data...' : 'Preparing grid configuration...'}
         </div>
       )}
 
