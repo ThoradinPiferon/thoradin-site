@@ -447,7 +447,7 @@ const MatrixSpiralCanvas = forwardRef(({
       }
 
       // Continue animation loop only if running and not complete
-      if (isRunning && !animationComplete.current) {
+      if (matrixState === 'running' && !animationComplete.current) {
         frameRef.current++;
         animationIdRef.current = requestAnimationFrame(draw);
       } else {
@@ -457,9 +457,9 @@ const MatrixSpiralCanvas = forwardRef(({
     };
 
     // Start animation if running
-    if (isRunning) {
+    if (matrixState === 'running') {
       draw();
-    } else if (isStatic) {
+    } else if (matrixState === 'static') {
       // Draw static state immediately
       draw();
     }
@@ -470,7 +470,7 @@ const MatrixSpiralCanvas = forwardRef(({
         cancelAnimationFrame(animationIdRef.current);
       }
     };
-  }, [phrase, isRunning, isStatic, onAnimationComplete]);
+  }, [phrase, matrixState, onAnimationComplete]);
 
   // Log character count and string length
   useEffect(() => {
