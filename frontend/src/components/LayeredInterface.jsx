@@ -226,49 +226,19 @@ const LayeredInterface = () => {
         const data = await response.json();
         console.log('✅ Backend auto-advance response:', data);
         
-        // Update scene state based on backend response
-        if (data.sceneId) {
-          setCurrentScene(data.sceneId);
-          currentSceneRef.current.scene = data.sceneId;
-        }
-        if (data.subsceneId) {
-          setCurrentSubscene(data.subsceneId);
-          currentSceneRef.current.subscene = data.subsceneId;
-        }
-        
-        // Trigger grid rehydration after scene transition
-        const newSceneId = data.sceneId || currentSceneRef.current.scene;
-        const newSubsceneId = data.subsceneId || currentSceneRef.current.subscene;
-        console.log(`🔄 Auto-advance: Triggering grid rehydration for Scene ${newSceneId}.${newSubsceneId}`);
-        await fetchGridConfig(newSceneId, newSubsceneId);
-        
-        // Handle Matrix animation
-        if (data.matrixAction === 'fastForward' && matrixRef.current) {
-          matrixRef.current.fastForwardToEnd();
-        }
+        // Use modular sequence for backend response
+        await performSceneTransitionSequence([
+          () => changeScene(data.sceneId || 1, data.subsceneId || 2),
+          () => rehydrateGridFromScene(data.sceneId || 1, data.subsceneId || 2),
+          () => data.matrixAction === 'fastForward' ? fastForwardMatrix() : Promise.resolve()
+        ], 'Auto-advance (Backend)');
       } else {
         console.log('⚠️ Backend auto-advance failed, using local fallback');
-        // Local fallback
-        setCurrentScene(1);
-        setCurrentSubscene(2);
-        currentSceneRef.current.scene = 1;
-        currentSceneRef.current.subscene = 2;
-        
-        // Trigger grid rehydration for local fallback
-        console.log(`🔄 Auto-advance fallback: Triggering grid rehydration for Scene 1.2`);
-        await fetchGridConfig(1, 2);
+        await performAutoAdvance();
       }
     } catch (error) {
       console.log('⚠️ Auto-advance error, using local fallback:', error);
-      // Local fallback
-      setCurrentScene(1);
-      setCurrentSubscene(2);
-      currentSceneRef.current.scene = 1;
-      currentSceneRef.current.subscene = 2;
-      
-      // Trigger grid rehydration for error fallback
-      console.log(`🔄 Auto-advance error fallback: Triggering grid rehydration for Scene 1.2`);
-      await fetchGridConfig(1, 2);
+      await performAutoAdvance();
     }
     
     setAutoAdvanceTimer(null);
@@ -293,22 +263,7 @@ const LayeredInterface = () => {
       // Check if this is A1 (the trigger tile)
       if (gridId === 'A1') {
         console.log('🎬 A1 clicked during spiral animation - triggering frontend-only spiral stop');
-        
-        // Frontend-only spiral stop - no backend call needed
-        if (matrixRef.current && matrixRef.current.stopSpiral) {
-          matrixRef.current.stopSpiral();
-          console.log('✅ Spiral animation stopped via frontend trigger');
-        } else {
-          console.log('⚠️ Matrix ref or stopSpiral method not available');
-        }
-        
-        // Clear auto-advance timer since user manually stopped
-        if (autoAdvanceTimer) {
-          clearTimeout(autoAdvanceTimer);
-          setAutoAdvanceTimer(null);
-          console.log('⏰ Auto-advance cancelled by A1 click');
-        }
-        
+        await performA1SpiralStop();
         return; // Exit early - no backend call needed
       } else {
         console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
@@ -363,26 +318,18 @@ const LayeredInterface = () => {
           // Check if backend returned a zoom action structure
           if (data.zoomTo && data.nextAction) {
             console.log(`🎬 Scene 1.2: Backend requested zoom to ${data.zoomTo} then transition`);
-            console.log('✅ Grid Zoom Started');
             setIsZooming(true);
-            setMatrixState('zooming'); // Set matrix to zooming state
+            setMatrixState('zooming');
             
-            // Use clean auto-detection zoom
-            console.log(`🎬 Starting zoom animation to grid ${data.zoomTo}`);
-            await zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene);
-            console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
-            
-            // Let the zoom effect sink in naturally (no artificial delay)
-            console.log('🎬 Zoom completed - processing next action immediately');
-            
-            // Reset zoom state
-            setIsZooming(false);
-            console.log('✅ Grid Zoom Completed');
-            // Matrix state will be updated by handleNextAction based on scene transition
-            
-            // Handle the next action from backend
-            console.log('✅ Processing next action from backend:', data.nextAction);
-            handleNextAction(data.nextAction);
+            // Use modular zoom transition sequence
+            await performSceneTransitionSequence([
+              () => zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene),
+              () => {
+                setIsZooming(false);
+                console.log('✅ Grid Zoom Completed');
+              },
+              () => handleNextAction(data.nextAction)
+            ], `Zoom to ${data.zoomTo} → Backend Action`);
           } else {
             // Fallback: direct scene transition
             console.log('⚠️ Backend didn\'t return zoom structure, using direct transition');
@@ -437,40 +384,34 @@ const LayeredInterface = () => {
     
     if (currentScene === 1 && currentSubscene === 1) {
       // Scene 1.1: Fast-forward to Scene 1.2
-      setCurrentScene(1);
-      setCurrentSubscene(2);
-      console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.2`);
-      await fetchGridConfig(1, 2);
-      if (matrixRef.current) {
-        matrixRef.current.fastForwardToEnd();
-      }
+      await performSceneTransitionSequence([
+        () => changeScene(1, 2),
+        () => rehydrateGridFromScene(1, 2),
+        () => fastForwardMatrix()
+      ], 'Local Fallback: Scene 1.1 → 1.2');
     } else if (currentScene === 1 && currentSubscene === 2) {
       // Scene 1.2: Check if it's K7 (vault entrance)
       if (gridId === 'K7') {
-        setCurrentScene(2);
-        setCurrentSubscene(1);
-        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 2.1`);
-        await fetchGridConfig(2, 1);
+        await performSceneTransitionSequence([
+          () => changeScene(2, 1),
+          () => rehydrateGridFromScene(2, 1)
+        ], 'Local Fallback: Scene 1.2 → 2.1 (Vault)');
       } else {
         // Restart matrix
-        setCurrentScene(1);
-        setCurrentSubscene(1);
-        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.1`);
-        await fetchGridConfig(1, 1);
-        if (matrixRef.current) {
-          matrixRef.current.restartAnimation();
-        }
+        await performSceneTransitionSequence([
+          () => changeScene(1, 1),
+          () => rehydrateGridFromScene(1, 1),
+          () => restartMatrixIfActive(1, 1)
+        ], 'Local Fallback: Scene 1.2 → 1.1 (Restart)');
       }
     } else if (currentScene === 2 && currentSubscene === 1) {
       // Scene 2.1: Check if it's K7 (return to homepage)
       if (gridId === 'K7') {
-        setCurrentScene(1);
-        setCurrentSubscene(1);
-        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.1`);
-        await fetchGridConfig(1, 1);
-        if (matrixRef.current) {
-          matrixRef.current.restartAnimation();
-        }
+        await performSceneTransitionSequence([
+          () => changeScene(1, 1),
+          () => rehydrateGridFromScene(1, 1),
+          () => restartMatrixIfActive(1, 1)
+        ], 'Local Fallback: Scene 2.1 → 1.1 (Home)');
       }
     }
   };
@@ -479,52 +420,38 @@ const LayeredInterface = () => {
   const handleNextAction = async (data) => {
     console.log('🎭 handleNextAction called with data:', data);
     
-    // Backend controls the scene transitions
-    if (data.sceneId) {
-      console.log(`✅ Setting scene to ${data.sceneId}`);
-      setCurrentScene(data.sceneId);
-      currentSceneRef.current.scene = data.sceneId;
-    }
-    if (data.subsceneId) {
-      console.log(`✅ Setting subscene to ${data.subsceneId}`);
-      setCurrentSubscene(data.subsceneId);
-      currentSceneRef.current.subscene = data.subsceneId;
-    }
+    // Build action sequence based on backend response
+    const actions = [];
     
-    // Trigger grid rehydration after scene transition
-    const newSceneId = data.sceneId || currentSceneRef.current.scene;
-    const newSubsceneId = data.subsceneId || currentSceneRef.current.subscene;
-    
-    console.log(`🔄 Triggering grid rehydration for Scene ${newSceneId}.${newSubsceneId}`);
-    await fetchGridConfig(newSceneId, newSubsceneId);
-    
-    // Backend controls Matrix animation - now using state-based transitions
-    if (data.matrixAction === 'fastForward' && matrixRef.current) {
-      console.log('✅ Matrix fastForward triggered');
-      matrixRef.current.fastForwardToEnd();
-      setMatrixState('static'); // Transition to static state
-    } else if (data.matrixAction === 'restart' && matrixRef.current) {
-      console.log('✅ Matrix restart triggered');
-      matrixRef.current.restartAnimation();
-      setMatrixState('running'); // Transition to running state
+    // Scene transition
+    if (data.sceneId || data.subsceneId) {
+      const sceneId = data.sceneId || currentSceneRef.current.scene;
+      const subsceneId = data.subsceneId || currentSceneRef.current.subscene;
+      actions.push(() => changeScene(sceneId, subsceneId));
+      actions.push(() => rehydrateGridFromScene(sceneId, subsceneId));
     }
     
-    // Check if we're transitioning to Scene 1.1 (Matrix animation) - ALWAYS restart
+    // Matrix actions
+    if (data.matrixAction === 'fastForward') {
+      actions.push(() => fastForwardMatrix());
+    } else if (data.matrixAction === 'restart') {
+      actions.push(() => restartMatrixIfActive(data.sceneId, data.subsceneId));
+    }
+    
+    // Special handling for Scene 1.1 transitions
     if (data.sceneId === 1 && data.subsceneId === 1) {
-      console.log('✅ Transitioning to Scene 1.1 - restarting Matrix animation');
-      if (matrixRef.current) {
-        matrixRef.current.restartAnimation();
-        setMatrixState('running');
-      }
+      actions.push(() => restartMatrixIfActive(1, 1));
     }
     
-    // Backend controls navigation/scenarios
+    // Execute the sequence
+    if (actions.length > 0) {
+      await performSceneTransitionSequence(actions, 'Backend Next Action');
+    }
+    
+    // Handle additional backend data
     if (data.navigateTo) {
       console.log('Backend requested navigation to:', data.navigateTo);
-      // In a single-page app, this would trigger a state change to render the Vault scenario
     }
-    
-    // Show backend messages
     if (data.message) {
       console.log('🎭 Backend message:', data.message);
     }
@@ -541,6 +468,156 @@ const LayeredInterface = () => {
   console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
   console.log(`🎭 Should be invisible: ${shouldShowInvisibleButtons}`);
   console.log(`🎭 Zoom State: isZooming=${isZooming}, effectiveIsZooming=${effectiveIsZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
+  
+  // ============================================================================
+  // MODULAR SCENE TRANSITION SYSTEM
+  // ============================================================================
+  
+  /**
+   * Execute a sequence of scene transition actions in order
+   * @param {Array<Function>} actions - Array of async functions to execute
+   * @param {string} sequenceName - Name for debugging/logging
+   */
+  const performSceneTransitionSequence = async (actions, sequenceName = 'Scene Transition') => {
+    console.log(`🎬 Starting ${sequenceName} sequence with ${actions.length} actions`);
+    
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i];
+      const actionName = action.name || `Action ${i + 1}`;
+      
+      try {
+        console.log(`🎬 [${sequenceName}] Executing ${actionName} (${i + 1}/${actions.length})`);
+        await action();
+        console.log(`✅ [${sequenceName}] ${actionName} completed successfully`);
+      } catch (error) {
+        console.error(`❌ [${sequenceName}] ${actionName} failed:`, error);
+        // Continue with next action (or could implement retry logic here)
+      }
+    }
+    
+    console.log(`🎬 ${sequenceName} sequence completed`);
+  };
+
+  // ============================================================================
+  // STANDALONE SCENE ACTIONS
+  // ============================================================================
+  
+  /**
+   * Change scene state (frontend only)
+   */
+  const changeScene = async (sceneId, subsceneId) => {
+    console.log(`🎭 Changing scene to ${sceneId}.${subsceneId}`);
+    setCurrentScene(sceneId);
+    setCurrentSubscene(subsceneId);
+    currentSceneRef.current.scene = sceneId;
+    currentSceneRef.current.subscene = subsceneId;
+  };
+
+  /**
+   * Rehydrate grid configuration for a specific scene
+   */
+  const rehydrateGridFromScene = async (sceneId, subsceneId) => {
+    console.log(`🔄 Rehydrating grid for Scene ${sceneId}.${subsceneId}`);
+    await fetchGridConfig(sceneId, subsceneId);
+  };
+
+  /**
+   * Restart Matrix animation if transitioning to Scene 1.1
+   */
+  const restartMatrixIfActive = async (sceneId, subsceneId) => {
+    if (sceneId === 1 && subsceneId === 1) {
+      console.log('🎬 Restarting Matrix animation for Scene 1.1');
+      if (matrixRef.current) {
+        matrixRef.current.restartAnimation();
+        setMatrixState('running');
+      }
+    } else {
+      console.log(`🎬 No Matrix restart needed for Scene ${sceneId}.${subsceneId}`);
+    }
+  };
+
+  /**
+   * Fast-forward Matrix animation to end
+   */
+  const fastForwardMatrix = async () => {
+    console.log('🎬 Fast-forwarding Matrix animation');
+    if (matrixRef.current) {
+      matrixRef.current.fastForwardToEnd();
+      setMatrixState('static');
+    }
+  };
+
+  /**
+   * Stop Matrix spiral animation (frontend-only)
+   */
+  const stopMatrixSpiral = async () => {
+    console.log('🎬 Stopping Matrix spiral animation');
+    if (matrixRef.current && matrixRef.current.stopSpiral) {
+      matrixRef.current.stopSpiral();
+    }
+  };
+
+  /**
+   * Clear auto-advance timer
+   */
+  const clearAutoAdvanceTimer = async () => {
+    if (autoAdvanceTimer) {
+      clearTimeout(autoAdvanceTimer);
+      setAutoAdvanceTimer(null);
+      console.log('⏰ Auto-advance timer cleared');
+    }
+  };
+
+  /**
+   * Set up auto-advance timer for Scene 1.1
+   */
+  const setupAutoAdvanceTimer = async () => {
+    if (currentScene === 1 && currentSubscene === 1) {
+      console.log('⏰ Setting up auto-advance timer for Scene 1.1');
+      const timer = setTimeout(() => {
+        console.log('⏰ Auto-advance triggered for Scene 1.1');
+        handleAutoAdvance();
+      }, 8000); // 8 seconds
+      setAutoAdvanceTimer(timer);
+    }
+  };
+
+  // ============================================================================
+  // SCENE TRANSITION SEQUENCES
+  // ============================================================================
+  
+  /**
+   * Standard zoom transition sequence
+   */
+  const performZoomTransition = async (gridId, targetScene, targetSubscene, zoomOptions = {}) => {
+    await performSceneTransitionSequence([
+      () => zoomToTile(gridId, zoomOptions),
+      () => changeScene(targetScene, targetSubscene),
+      () => rehydrateGridFromScene(targetScene, targetSubscene),
+      () => restartMatrixIfActive(targetScene, targetSubscene)
+    ], `Zoom to ${gridId} → Scene ${targetScene}.${targetSubscene}`);
+  };
+
+  /**
+   * A1 click during Scene 1.1 (frontend-only spiral stop)
+   */
+  const performA1SpiralStop = async () => {
+    await performSceneTransitionSequence([
+      () => clearAutoAdvanceTimer(),
+      () => stopMatrixSpiral()
+    ], 'A1 Spiral Stop');
+  };
+
+  /**
+   * Auto-advance from Scene 1.1 to Scene 1.2
+   */
+  const performAutoAdvance = async () => {
+    await performSceneTransitionSequence([
+      () => changeScene(1, 2),
+      () => rehydrateGridFromScene(1, 2),
+      () => fastForwardMatrix()
+    ], 'Auto-advance to Scene 1.2');
+  };
   
   return (
     <div className="layered-interface" style={{ position: 'relative', width: '100vw', height: '100vh' }}>
