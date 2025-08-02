@@ -150,6 +150,7 @@ model SceneSubscene {
   effects      String?  // JSON string for effects configuration
   choices      String?  // JSON string for choices array
   nextScene    String?  // JSON string for next scene configuration
+  nextScenes   String?  // JSON string for array of next scenes with trigger tiles
   echoTriggers String[] // Array of echo trigger strings
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())

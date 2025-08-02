@@ -31,7 +31,8 @@ class SceneEngine {
           ...scene,
           gridConfig: JSON.parse(scene.gridConfig || '{}'),
           effects: JSON.parse(scene.effects || '{}'),
-          choices: JSON.parse(scene.choices || '[]')
+          choices: JSON.parse(scene.choices || '[]'),
+          nextScenes: scene.nextScenes ? JSON.parse(scene.nextScenes) : null
         };
       }
     } catch (error) {

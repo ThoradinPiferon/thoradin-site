@@ -22,6 +22,7 @@ async function seedSceneSubscenes() {
           gridConfig: JSON.stringify(scene.gridConfig || {}),
           effects: JSON.stringify(scene.effects || {}),
           choices: JSON.stringify(scene.choices || []),
+          nextScenes: JSON.stringify(scene.nextScenes || []),
           isActive: true
         },
         create: {
@@ -33,6 +34,7 @@ async function seedSceneSubscenes() {
           gridConfig: JSON.stringify(scene.gridConfig || {}),
           effects: JSON.stringify(scene.effects || {}),
           choices: JSON.stringify(scene.choices || []),
+          nextScenes: JSON.stringify(scene.nextScenes || []),
           isActive: true
         }
       });

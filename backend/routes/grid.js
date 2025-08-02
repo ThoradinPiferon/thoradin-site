@@ -95,6 +95,90 @@ router.get('/scenes', async (req, res) => {
 });
 
 /**
+ * Get scenario data by scene and subscene IDs (query parameters)
+ * Returns complete scenario information including grid config, next scenes, and metadata
+ */
+router.get('/scenario', async (req, res) => {
+  try {
+    const { sceneId, subsceneId } = req.query;
+    
+    if (!sceneId || !subsceneId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required query parameters: sceneId, subsceneId'
+      });
+    }
+
+    console.log(`🎭 Scenario request: Scene ${sceneId}.${subsceneId}`);
+
+    // Get scene data from scene engine
+    const sceneData = await sceneEngine.getSceneData(
+      parseInt(sceneId), 
+      parseInt(subsceneId)
+    );
+
+    if (!sceneData) {
+      return res.status(404).json({
+        success: false,
+        message: `Scene ${sceneId}.${subsceneId} not found`
+      });
+    }
+
+    // Use nextScenes as-is (already parsed by SceneEngine)
+    const nextScenes = sceneData.nextScenes || [];
+
+    // Build scenario response
+    const scenario = {
+      sceneId: parseInt(sceneId),
+      subsceneId: parseInt(subsceneId),
+      gridConfig: {
+        rows: sceneData.gridConfig?.rows || 7,
+        cols: sceneData.gridConfig?.cols || 11,
+        gap: sceneData.gridConfig?.gap || '2px',
+        padding: sceneData.gridConfig?.padding || '20px',
+        debug: sceneData.gridConfig?.debug || false,
+        invisibleMode: sceneData.gridConfig?.invisibleMode || false,
+        matrixAnimationMode: sceneData.gridConfig?.matrixAnimationMode || false,
+        triggerTile: sceneData.gridConfig?.triggerTile || null
+      },
+      nextScenes: nextScenes.map(nextScene => ({
+        sceneId: nextScene.sceneId,
+        subsceneId: nextScene.subsceneId,
+        triggerTile: nextScene.triggerTile,
+        label: nextScene.label
+      })),
+      metadata: {
+        title: sceneData.title,
+        description: sceneData.description,
+        backgroundType: sceneData.backgroundType,
+        backgroundImage: sceneData.animationUrl || null,
+        effects: sceneData.effects || {},
+        choices: sceneData.choices || [],
+        echoTriggers: sceneData.echoTriggers || []
+      }
+    };
+
+    console.log(`✅ Scenario for Scene ${sceneId}.${subsceneId}:`, {
+      gridConfig: scenario.gridConfig,
+      nextScenesCount: scenario.nextScenes.length,
+      backgroundType: scenario.metadata.backgroundType
+    });
+
+    res.json({
+      success: true,
+      ...scenario
+    });
+  } catch (error) {
+    console.error('❌ Scenario error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get scenario data',
+      error: error.message
+    });
+  }
+});
+
+/**
  * Get grid configuration by scene and subscene IDs (query parameters)
  */
 router.get('/', async (req, res) => {

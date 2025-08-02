@@ -47,6 +47,9 @@ export const sceneSeedData = [
       }
     ],
     nextScene: { sceneId: 1, subsceneId: 2 }, // Auto-advance to Scene 1.2
+    nextScenes: [
+      { sceneId: 1, subsceneId: 2, triggerTile: "A1", label: "Fast-forward Matrix Animation" }
+    ],
     echoTriggers: ["matrix_awakening"]
   },
   
@@ -57,7 +60,16 @@ export const sceneSeedData = [
     title: "Matrix Spiral Static",
     description: "The spiral has reached its final form",
     backgroundType: "matrix_spiral_static",
-    gridConfig: { rows: 7, cols: 11 },
+    gridConfig: { 
+      rows: 7, 
+      cols: 11,
+      gap: '2px',
+      padding: '20px',
+      debug: false,
+      invisibleMode: false,
+      matrixAnimationMode: false,
+      triggerTile: null
+    },
     tiles: ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1",
             "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2", "K2",
             "A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", "I3", "J3", "K3",
@@ -93,6 +105,19 @@ export const sceneSeedData = [
       }
     ],
     nextScene: null,
+    nextScenes: [
+      { sceneId: 2, subsceneId: 1, triggerTile: "K7", label: "Navigate to Vault" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "A1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "B1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "C1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "D1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "E1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "F1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "G1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "H1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "I1", label: "Restart Matrix" },
+      { sceneId: 1, subsceneId: 1, triggerTile: "J1", label: "Restart Matrix" }
+    ],
     echoTriggers: ["matrix_static"]
   },
   
@@ -103,7 +128,16 @@ export const sceneSeedData = [
     title: "Vault Interface",
     description: "The AI awaits your questions",
     backgroundType: "vault_background",
-    gridConfig: { rows: 7, cols: 11 },
+    gridConfig: { 
+      rows: 7, 
+      cols: 11,
+      gap: '2px',
+      padding: '20px',
+      debug: false,
+      invisibleMode: false,
+      matrixAnimationMode: false,
+      triggerTile: null
+    },
     tiles: ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1",
             "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2", "K2",
             "A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", "I3", "J3", "K3",
@@ -139,6 +173,19 @@ export const sceneSeedData = [
       }
     ],
     nextScene: null,
+    nextScenes: [
+      { sceneId: 1, subsceneId: 1, triggerTile: "K7", label: "Return to Homepage" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "A1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "B1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "C1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "D1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "E1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "F1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "G1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "H1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "I1", label: "Vault Interaction" },
+      { sceneId: 2, subsceneId: 1, triggerTile: "J1", label: "Vault Interaction" }
+    ],
     echoTriggers: ["vault_interface"]
   }
 ];
