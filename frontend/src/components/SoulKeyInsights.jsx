@@ -12,7 +12,7 @@ const SoulKeyInsights = ({ sessionId }) => {
     setError(null);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'}/grid/soulkey/${sessionId}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid/soulkey/${sessionId}`);
       
       if (response.ok) {
         const data = await response.json();

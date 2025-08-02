@@ -1,6 +1,6 @@
 class LanguageService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
     this.currentLanguage = this.detectBrowserLanguage();
