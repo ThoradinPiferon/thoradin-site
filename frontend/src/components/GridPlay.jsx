@@ -42,13 +42,31 @@ const GridPlay = ({
   const validRows = Math.max(1, Math.min(rows || 7, 100)); // Limit to reasonable range
   const validCols = Math.max(1, Math.min(cols || 11, 100)); // Limit to reasonable range
   
-  // Generate grid tiles
-  const tiles = [];
-  for (let row = 0; row < validRows; row++) {
-    for (let col = 0; col < validCols; col++) {
+  // Additional safety check - if dimensions are still invalid, use safe defaults
+  let finalRows, finalCols, tiles, tileIds;
+  
+  if (!Number.isInteger(validRows) || !Number.isInteger(validCols) || validRows <= 0 || validCols <= 0) {
+    console.error('❌ Invalid grid dimensions detected, using safe defaults:', { rows, cols, validRows, validCols });
+    finalRows = 7;
+    finalCols = 11;
+  } else {
+    finalRows = validRows;
+    finalCols = validCols;
+  }
+  
+  // Generate grid tiles with final validated dimensions
+  tiles = [];
+  for (let row = 0; row < finalRows; row++) {
+    for (let col = 0; col < finalCols; col++) {
       tiles.push({ row, col });
     }
   }
+  
+  // Generate tile IDs for this configuration with validated dimensions
+  const validatedConfig = { ...config, rows: finalRows, cols: finalCols };
+  tileIds = generateTileIds(validatedConfig);
+  
+  console.log('✅ Using validated grid configuration:', validatedConfig);
   
   console.log('GridPlay rendering with props:', { 
     sceneName,

@@ -180,7 +180,17 @@ const LayeredInterface = () => {
     // ONLY proceed if scenario data is fully loaded
     if (scenarioData && scenarioData.gridConfig && !isLoadingScenario) {
       console.log('🎭 [LAYER 1] Scenario data ready, proceeding to Grid layer');
-      gridConfig = scenarioData.gridConfig;
+      
+      // Validate grid dimensions to prevent RangeError
+      const { rows, cols } = scenarioData.gridConfig;
+      const validRows = Math.max(1, Math.min(rows || 7, 100));
+      const validCols = Math.max(1, Math.min(cols || 11, 100));
+      
+      gridConfig = {
+        ...scenarioData.gridConfig,
+        rows: validRows,
+        cols: validCols
+      };
       isGridReady = true;
     }
     // Still loading scenario - don't proceed to grid layer yet
@@ -192,7 +202,18 @@ const LayeredInterface = () => {
     // Scenario failed to load - use emergency fallback
     else {
       console.log('⚠️ [LAYER 1] Scenario data failed, using emergency fallback');
-      gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
+      const fallbackConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
+      
+      // Validate fallback dimensions
+      const { rows, cols } = fallbackConfig;
+      const validRows = Math.max(1, Math.min(rows || 7, 100));
+      const validCols = Math.max(1, Math.min(cols || 11, 100));
+      
+      gridConfig = {
+        ...fallbackConfig,
+        rows: validRows,
+        cols: validCols
+      };
       isGridReady = true; // Allow grid to render with fallback
     }
   } catch (error) {
