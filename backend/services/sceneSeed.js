@@ -5,21 +5,47 @@ import { prisma } from '../config/database.js';
  * Defines the structure and default data for scenes and subscenes
  */
 export const sceneSeedData = [
-  // Scene 1.1 - Matrix Awakening (Single Tile)
+  // Scene 1.1 - Matrix Awakening (Full Grid A1-K7, A1 communicates with background layer)
   {
     sceneId: 1,
     subsceneId: 1,
     title: "Matrix Awakening",
     description: "The spiral begins to spin...",
     backgroundType: "matrix_spiral",
-    gridConfig: { rows: 1, cols: 1 },
-    tiles: ["A1"],
-    invisibleMode: true,
+    gridConfig: { 
+      rows: 7, 
+      cols: 11,
+      gap: '2px',
+      padding: '20px',
+      debug: false,
+      invisibleMode: false,
+      matrixAnimationMode: true,
+      triggerTile: 'A1'
+    },
+    tiles: ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1", "I1", "J1", "K1",
+            "A2", "B2", "C2", "D2", "E2", "F2", "G2", "H2", "I2", "J2", "K2",
+            "A3", "B3", "C3", "D3", "E3", "F3", "G3", "H3", "I3", "J3", "K3",
+            "A4", "B4", "C4", "D4", "E4", "F4", "G4", "H4", "I4", "J4", "K4",
+            "A5", "B5", "C5", "D5", "E5", "F5", "G5", "H5", "I5", "J5", "K5",
+            "A6", "B6", "C6", "D6", "E6", "F6", "G6", "H6", "I6", "J6", "K6",
+            "A7", "B7", "C7", "D7", "E7", "F7", "G7", "H7", "I7", "J7", "K7"],
+    invisibleMode: false,
     effects: {
       autoAdvanceAfter: 8000, // 8 seconds
       nextScene: { sceneId: 1, subsceneId: 2 }
     },
-    choices: [], // No choices - auto-advance only
+    choices: [
+      {
+        label: "Fast-forward Matrix Animation",
+        next: [1, 2],
+        condition: "gridId === 'A1'",
+        effects: {
+          animationTrigger: "matrix_fast_forward",
+          transitionType: "immediate"
+        },
+        echo: "matrix_fast_forward"
+      }
+    ],
     nextScene: { sceneId: 1, subsceneId: 2 }, // Auto-advance to Scene 1.2
     echoTriggers: ["matrix_awakening"]
   },

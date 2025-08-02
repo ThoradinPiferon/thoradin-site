@@ -95,7 +95,66 @@ router.get('/scenes', async (req, res) => {
 });
 
 /**
- * Get scene data by scene and subscene IDs
+ * Get grid configuration by scene and subscene IDs (query parameters)
+ */
+router.get('/', async (req, res) => {
+  try {
+    const { sceneId, subsceneId } = req.query;
+    
+    if (!sceneId || !subsceneId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required query parameters: sceneId, subsceneId'
+      });
+    }
+
+    console.log(`🔄 Grid config request: Scene ${sceneId}.${subsceneId}`);
+
+    // Get scene data from scene engine
+    const sceneData = await sceneEngine.getSceneData(
+      parseInt(sceneId), 
+      parseInt(subsceneId)
+    );
+
+    if (!sceneData) {
+      return res.status(404).json({
+        success: false,
+        message: `Scene ${sceneId}.${subsceneId} not found`
+      });
+    }
+
+    // Return grid configuration based on scene data
+    const gridConfig = {
+      rows: sceneData.gridConfig?.rows || 7,
+      cols: sceneData.gridConfig?.cols || 11,
+      gap: sceneData.gridConfig?.gap || '2px',
+      padding: sceneData.gridConfig?.padding || '20px',
+      debug: sceneData.gridConfig?.debug || false,
+      invisibleMode: sceneData.gridConfig?.invisibleMode || false,
+      matrixAnimationMode: sceneData.gridConfig?.matrixAnimationMode || false,
+      triggerTile: sceneData.gridConfig?.triggerTile || null
+    };
+
+    console.log(`✅ Grid config for Scene ${sceneId}.${subsceneId}:`, gridConfig);
+
+    res.json({
+      success: true,
+      sceneId: parseInt(sceneId),
+      subsceneId: parseInt(subsceneId),
+      gridConfig
+    });
+  } catch (error) {
+    console.error('❌ Grid config error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get grid configuration',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * Get scene data by scene and subscene IDs (path parameters)
  */
 router.get('/scene/:sceneId/:subsceneId', async (req, res) => {
   try {
