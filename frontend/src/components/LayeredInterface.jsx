@@ -102,12 +102,12 @@ const LayeredInterface = () => {
   // Use backend-fetched grid config if available, otherwise fallback
   let gridConfig;
   try {
-    if (backendGridConfig) {
+    if (backendGridConfig && !isLoadingGrid) {
       console.log('🔧 Using backend-fetched grid config:', backendGridConfig);
       gridConfig = backendGridConfig;
     } else {
       gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
-      console.log('🔧 Using fallback grid config:', gridConfig);
+      console.log('🔧 Using fallback grid config for Scene', currentScene, currentSubscene, ':', gridConfig);
     }
   } catch (error) {
     console.error('❌ Error creating grid config:', error);
@@ -134,11 +134,15 @@ const LayeredInterface = () => {
         setBackendGridConfig(data);
         return data;
       } else {
-        console.warn('⚠️ Backend grid config fetch failed, using fallback');
+        console.warn(`⚠️ Backend grid config fetch failed (${response.status}), using fallback`);
+        // Clear any stale backend config to force fallback
+        setBackendGridConfig(null);
         return null;
       }
     } catch (error) {
       console.error('❌ Error fetching grid config:', error);
+      // Clear any stale backend config to force fallback
+      setBackendGridConfig(null);
       return null;
     } finally {
       setIsLoadingGrid(false);
@@ -501,18 +505,17 @@ const LayeredInterface = () => {
       setMatrixState('static'); // Transition to static state
     } else if (data.matrixAction === 'restart' && matrixRef.current) {
       console.log('✅ Matrix restart triggered');
-      // Only restart animation if we're not coming from Scene 1.2 (to avoid spiral replay)
-      if (!(currentSceneRef.current.scene === 1 && currentSceneRef.current.subscene === 2)) {
-        matrixRef.current.restartAnimation();
-        setMatrixState('running'); // Transition to running state
-      } else {
-        console.log('🎭 Skipping matrix restart - coming from Scene 1.2');
-      }
+      matrixRef.current.restartAnimation();
+      setMatrixState('running'); // Transition to running state
     }
     
-    // Check if we're transitioning to Scene 1.1 (Matrix animation)
+    // Check if we're transitioning to Scene 1.1 (Matrix animation) - ALWAYS restart
     if (data.sceneId === 1 && data.subsceneId === 1) {
-      console.log('✅ Matrix animation playing');
+      console.log('✅ Transitioning to Scene 1.1 - restarting Matrix animation');
+      if (matrixRef.current) {
+        matrixRef.current.restartAnimation();
+        setMatrixState('running');
+      }
     }
     
     // Backend controls navigation/scenarios
