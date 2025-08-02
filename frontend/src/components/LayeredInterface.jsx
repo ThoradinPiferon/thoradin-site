@@ -54,7 +54,7 @@ const LayeredInterface = () => {
 
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
-    // Special case for Scene 1.1 (Matrix Awakening) - full grid with A1 trigger
+    // Scene 1.1 (Matrix Awakening) - full grid A1-K7, Matrix animation is grid-agnostic
     if (sceneId === 1 && subsceneId === 1) {
       return {
         rows: 7,
@@ -62,8 +62,8 @@ const LayeredInterface = () => {
         gap: '2px',
         padding: '20px',
         debug: false,
-        invisibleMode: false, // Make grid visible so A1 can be clicked
-        triggerTile: 'A1' // Mark A1 as the trigger tile
+        invisibleMode: false, // Full grid visible - any click fast-forwards Matrix
+        matrixAnimationMode: true // Matrix animation handles everything
       };
     }
     
@@ -149,12 +149,12 @@ const LayeredInterface = () => {
     }
   };
 
-  // Handle animation completion
+  // Handle animation completion - Matrix animation is grid-agnostic
   const handleAnimationComplete = () => {
-    console.log('🎬 Matrix animation completed');
-    // Auto-advance to Scene 1.2 when animation completes
+    console.log('🎬 Matrix animation completed - auto-advancing to next scene');
+    // Auto-advance is part of the Matrix animation, not grid interaction
     if (currentScene === 1 && currentSubscene === 1) {
-      console.log('⏰ Animation completed - triggering auto-advance');
+      console.log('⏰ Matrix animation auto-advancing to Scene 1.2');
       handleAutoAdvance();
     }
   };
@@ -260,15 +260,10 @@ const LayeredInterface = () => {
       const gridId = getGridId(col, row);
       console.log(`🎮 Grid click during Scene 1.1: ${gridId}`);
       
-      // Check if this is A1 (the trigger tile)
-      if (gridId === 'A1') {
-        console.log('🎬 A1 clicked during spiral animation - triggering frontend-only spiral stop');
-        await performA1SpiralStop();
-        return; // Exit early - no backend call needed
-      } else {
-        console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
-        return;
-      }
+      // Scene 1.1: Matrix animation is grid-agnostic - any click should fast-forward
+      console.log('🎬 Grid click during Scene 1.1 - fast-forwarding Matrix animation');
+      await performScene1GridClick();
+      return; // Exit early - no backend call needed
     }
     
     // Set processing flag to prevent multiple clicks
@@ -472,6 +467,13 @@ const LayeredInterface = () => {
   // ============================================================================
   // MODULAR SCENE TRANSITION SYSTEM
   // ============================================================================
+  // 
+  // ARCHITECTURAL PRINCIPLES:
+  // 1. Matrix animation is grid-agnostic - works on any grid layout (A1-K7, 1x1, etc.)
+  // 2. Auto-advance is part of Matrix animation, not grid interaction
+  // 3. Grid system supports layer fallback - if no handlers in top layer, use layer below
+  // 4. Scene 1.1 doesn't need specific click handlers - Matrix animation handles everything
+  // 5. Any grid click during Scene 1.1 fast-forwards the Matrix animation
   
   /**
    * Execute a sequence of scene transition actions in order
@@ -599,13 +601,13 @@ const LayeredInterface = () => {
   };
 
   /**
-   * A1 click during Scene 1.1 (frontend-only spiral stop)
+   * Scene 1.1 grid click - fast-forward Matrix animation (grid-agnostic)
    */
-  const performA1SpiralStop = async () => {
+  const performScene1GridClick = async () => {
     await performSceneTransitionSequence([
       () => clearAutoAdvanceTimer(),
-      () => stopMatrixSpiral()
-    ], 'A1 Spiral Stop');
+      () => fastForwardMatrix()
+    ], 'Scene 1.1 Grid Click - Fast Forward');
   };
 
   /**
