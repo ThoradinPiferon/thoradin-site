@@ -151,6 +151,7 @@ router.get('/scenario', async (req, res) => {
         triggerTile: nextScene.triggerTile,
         label: nextScene.label
       })),
+      tiles: sceneData.tiles || [],
       metadata: {
         title: sceneData.title,
         description: sceneData.description,

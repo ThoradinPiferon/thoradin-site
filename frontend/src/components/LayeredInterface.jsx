@@ -381,7 +381,16 @@ const LayeredInterface = () => {
     console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
 
     try {
-      // Scenario-driven approach: Check if this tile triggers a next scene
+      // TILE HANDLER SYSTEM: Dynamic dispatch based on backend tile definitions
+      const tile = scenarioData?.tiles?.find(t => t.id === gridId);
+      
+      if (tile) {
+        console.log(`🎯 Tile handler found for ${gridId}:`, tile);
+        await handleTileByType(tile, gridId);
+        return;
+      }
+      
+      // Fallback: Scenario-driven approach: Check if this tile triggers a next scene
       const nextScene = nextScenes.find(scene => scene.triggerTile === gridId);
       
       if (nextScene) {
@@ -392,7 +401,7 @@ const LayeredInterface = () => {
         return;
       }
       
-      // Special handling for Scene 1.1 A1 (communicates with background layer)
+      // Legacy fallback: Special handling for Scene 1.1 A1 (communicates with background layer)
       if (currentSceneState.scene === 1 && currentSceneState.subscene === 1 && gridId === 'A1') {
         console.log('🎬 A1 clicked - communicating with background layer (Matrix animation)');
         await performA1BackgroundCommunication();
@@ -728,6 +737,118 @@ const LayeredInterface = () => {
       () => rehydrateGridFromScene(1, 2),
       () => fastForwardMatrix()
     ], 'Auto-advance to Scene 1.2');
+  };
+
+  // TILE HANDLER SYSTEM: Dynamic dispatch based on handler types
+  const handleTileByType = async (tile, gridId) => {
+    console.log(`🎯 Executing tile handler for ${gridId}:`, tile.handler);
+    
+    switch (tile.handler) {
+      case "frontend":
+        return await executeFrontendActions(tile.actions.frontend, tile.effects, gridId);
+        
+      case "backend":
+        return await executeBackendActions(tile.actions.backend, tile.effects, gridId);
+        
+      case "both":
+        return await executeCombinedActions(tile.actions, tile.effects, gridId);
+        
+      case "none":
+        console.log(`🚫 Tile ${gridId} has no handler - ignoring click`);
+        return;
+        
+      default:
+        console.warn(`⚠️ Unknown tile handler type: ${tile.handler} for ${gridId}`);
+        return;
+    }
+  };
+
+  // Execute frontend-only actions (animations, UI changes, background communication)
+  const executeFrontendActions = async (actions, effects, gridId) => {
+    console.log(`🎬 Executing frontend actions for ${gridId}:`, actions);
+    
+    if (!actions || actions.length === 0) {
+      console.log(`🚫 No frontend actions defined for ${gridId}`);
+      return;
+    }
+    
+    for (const action of actions) {
+      switch (action) {
+        case "background_communication":
+          await communicateWithBackgroundLayer("fast_forward");
+          break;
+          
+        case "matrix_animation_trigger":
+          await communicateWithBackgroundLayer("restart");
+          break;
+          
+        case "zoom_animation":
+          // Zoom animation will be handled by the transition system
+          console.log(`🎬 Zoom animation triggered for ${gridId}`);
+          break;
+          
+        default:
+          console.warn(`⚠️ Unknown frontend action: ${action}`);
+      }
+    }
+    
+    // Apply effects if any
+    if (effects && Object.keys(effects).length > 0) {
+      console.log(`🎬 Applying frontend effects for ${gridId}:`, effects);
+    }
+  };
+
+  // Execute backend-only actions (API calls, data updates)
+  const executeBackendActions = async (actions, effects, gridId) => {
+    console.log(`🔧 Executing backend actions for ${gridId}:`, actions);
+    
+    if (!actions || actions.length === 0) {
+      console.log(`🚫 No backend actions defined for ${gridId}`);
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid/action`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          gridId: gridId,
+          currentScene: currentSceneRef.current.scene,
+          currentSubscene: currentSceneRef.current.subscene,
+          action: 'tile_handler',
+          actions: actions,
+          effects: effects,
+          sessionId: sessionIdRef.current
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Backend tile handler response:', data);
+        handleNextAction(data);
+      } else {
+        console.error('❌ Backend tile handler failed:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error executing backend tile actions:', error);
+    }
+  };
+
+  // Execute combined actions (frontend + backend)
+  const executeCombinedActions = async (actions, effects, gridId) => {
+    console.log(`🔄 Executing combined actions for ${gridId}:`, actions);
+    
+    // Execute frontend actions first
+    if (actions.frontend && actions.frontend.length > 0) {
+      await executeFrontendActions(actions.frontend, effects, gridId);
+    }
+    
+    // Then execute backend actions
+    if (actions.backend && actions.backend.length > 0) {
+      await executeBackendActions(actions.backend, effects, gridId);
+    }
   };
   
   return (
