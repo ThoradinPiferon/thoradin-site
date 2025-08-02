@@ -59,9 +59,19 @@ const MatrixSpiralCanvas = forwardRef(({
   const zoomState = useRef({ active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 });
   const animationIdRef = useRef(null);
   const drawRef = useRef(null);
+  
+  // Performance optimizations
+  const staticSpiralRef = useRef(null);
+  const lastMatrixStateRef = useRef(null);
+  const lastFrameRef = useRef(-1);
 
-  // Debug logging for animation state
-  console.log(`🎬 MatrixSpiralCanvas: matrixState=${matrixState}`);
+  // Only log state changes, not every render
+  useEffect(() => {
+    if (lastMatrixStateRef.current !== matrixState) {
+      console.log(`🎬 MatrixSpiralCanvas: matrixState changed to ${matrixState}`);
+      lastMatrixStateRef.current = matrixState;
+    }
+  }, [matrixState]);
 
   // Register this background with the generic zoom manager
   useEffect(() => {
@@ -247,6 +257,8 @@ const MatrixSpiralCanvas = forwardRef(({
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // Clear static spiral cache when canvas size changes
+      staticSpiralRef.current = null;
     };
     
     window.addEventListener('resize', resize);
@@ -277,9 +289,16 @@ const MatrixSpiralCanvas = forwardRef(({
 
       // Handle different animation states based on matrixState
       if (matrixState === 'static') {
-        // Scene 1.2: Draw static final state
-        console.log('🎬 Drawing static Matrix background for Scene 1.2');
-        const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
+        // Scene 1.2: Draw static final state - CACHE THE SPIRAL
+        if (!staticSpiralRef.current) {
+          staticSpiralRef.current = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
+        }
+        const spiral = staticSpiralRef.current;
+        
+        // Pre-calculate static values to avoid repeated calculations
+        const totalSpiralChars = spiral.length;
+        const phraseStartIndex = totalSpiralChars - phrase.length;
+        const phraseLength = phrase.length;
         
         // Draw static spiral background with fully revealed phrase
         spiral.forEach(({ x, y, index, radius }) => {
@@ -292,13 +311,11 @@ const MatrixSpiralCanvas = forwardRef(({
           
           ctx.font = `${fontSize}px monospace`;
           
-          // Calculate if this should be part of the phrase
-          const totalSpiralChars = spiral.length;
-          const phraseStartIndex = totalSpiralChars - phrase.length;
+          // Use pre-calculated values
           const isPhraseChar = index >= phraseStartIndex;
           const phraseCharIndex = index - phraseStartIndex;
           
-          if (isPhraseChar && phraseCharIndex < phrase.length) {
+          if (isPhraseChar && phraseCharIndex < phraseLength) {
             // Phrase characters - fully revealed and bright green
             const phraseChar = phrase[phraseCharIndex];
             ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
@@ -314,7 +331,7 @@ const MatrixSpiralCanvas = forwardRef(({
         });
         
         // Draw fully spelled horizontal sentence
-        const sentenceWidth = phrase.length * 20;
+        const sentenceWidth = phraseLength * 20;
         const startX = centerX - sentenceWidth / 2;
         const sentenceY = centerY;
         
@@ -324,7 +341,7 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.shadowBlur = 8;
         
         // Draw ALL letters of the phrase (fully spelled out)
-        for (let i = 0; i < phrase.length; i++) {
+        for (let i = 0; i < phraseLength; i++) {
           ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
         }
         
@@ -335,11 +352,13 @@ const MatrixSpiralCanvas = forwardRef(({
       // Scene 1.1: Animated Matrix background
       if (matrixState !== 'running') {
         // Not running - don't animate
-        console.log('🎬 Matrix animation paused');
         return;
       }
 
-      console.log('🎬 Drawing animated Matrix background for Scene 1.1');
+      // Only log frame changes, not every frame
+      if (lastFrameRef.current !== frameRef.current) {
+        lastFrameRef.current = frameRef.current;
+      }
 
       // Check if sentence reveal should start
       if (frameRef.current >= sentenceRevealDuration && !sentenceRevealActive.current) {
@@ -361,8 +380,13 @@ const MatrixSpiralCanvas = forwardRef(({
         fillComplete.current = true;
       }
 
-      // Generate spiral points
+      // Generate spiral points - only if frame changed
       const spiral = generateSpiralPoints(350, centerX, centerY, frameRef.current, maxRadius, fillDuration);
+
+      // Pre-calculate common values to avoid repeated calculations
+      const totalSpiralChars = spiral.length;
+      const phraseStartIndex = totalSpiralChars - phrase.length;
+      const phraseLength = phrase.length;
 
       // Draw spiral characters
       spiral.forEach(({ x, y, index, radius }) => {
@@ -375,20 +399,18 @@ const MatrixSpiralCanvas = forwardRef(({
         
         ctx.font = `${fontSize}px monospace`;
         
-        // Calculate if this should be part of the phrase (last characters to emerge)
-        const totalSpiralChars = spiral.length;
-        const phraseStartIndex = totalSpiralChars - phrase.length;
+        // Use pre-calculated values
         const isPhraseChar = index >= phraseStartIndex;
         const phraseCharIndex = index - phraseStartIndex;
         
-        if (isPhraseChar && phraseCharIndex < phrase.length) {
+        if (isPhraseChar && phraseCharIndex < phraseLength) {
           // This is part of the phrase
           const phraseChar = phrase[phraseCharIndex];
           
           // Check if sentence should be revealed
           if (sentenceRevealActive.current) {
             const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180; // 3 seconds for sentence reveal (5s to 8s)
-            const shouldReveal = phraseCharIndex <= sentenceProgress * phrase.length;
+            const shouldReveal = phraseCharIndex <= sentenceProgress * phraseLength;
             
             if (shouldReveal) {
               // Bright green for revealed phrase characters
@@ -433,7 +455,7 @@ const MatrixSpiralCanvas = forwardRef(({
       // Draw horizontal sentence
       if (sentenceRevealActive.current) {
         const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180;
-        const sentenceWidth = phrase.length * 20;
+        const sentenceWidth = phraseLength * 20;
         const startX = centerX - sentenceWidth / 2;
         const sentenceY = centerY;
         
@@ -442,8 +464,8 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.shadowColor = '#00ffcc';
         ctx.shadowBlur = 8;
         
-        for (let i = 0; i < phrase.length; i++) {
-          if (i <= sentenceProgress * phrase.length) {
+        for (let i = 0; i < phraseLength; i++) {
+          if (i <= sentenceProgress * phraseLength) {
             ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
           }
         }
