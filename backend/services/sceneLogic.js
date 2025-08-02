@@ -39,8 +39,8 @@ const sceneLogicMap = {
       };
 
       // After zoom completes, determine the next scene
-      if (gridId === 'G11.7') {
-        // G11.7 navigates to Vault (Scene 2.1) after zoom
+      if (gridId === 'K7') {
+        // K7 (bottom-right corner) navigates to Vault (Scene 2.1) after zoom
         zoomAction.nextAction = {
           sceneId: 2,
           subsceneId: 1,
@@ -50,6 +50,18 @@ const sceneLogicMap = {
             animationTrigger: 'scene_transition',
             transitionType: 'vault_entrance',
             echo: 'vault_destination'
+          }
+        };
+      } else if (gridId === 'F6') {
+        // F6 shows a special message (for testing)
+        zoomAction.nextAction = {
+          sceneId: 1,
+          subsceneId: 2,
+          message: 'F6 clicked - special test tile!',
+          effects: {
+            animationTrigger: 'test_interaction',
+            transitionType: 'none',
+            echo: 'test_echo'
           }
         };
       } else {
@@ -74,7 +86,7 @@ const sceneLogicMap = {
   // Scene 2.1 - Vault Interface
   '2.1': {
     processAction: (gridId, action, sceneData) => {
-      if (gridId === 'G11.7') {
+      if (gridId === 'K7') {
         // Return to homepage (Scene 1.1) with zoom
         return {
           zoomTo: gridId,

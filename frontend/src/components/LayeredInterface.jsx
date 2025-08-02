@@ -254,6 +254,7 @@ const LayeredInterface = () => {
         // Special handling for Scene 1.2: Handle backend zoom response structure
         if (currentSceneState.scene === 1 && currentSceneState.subscene === 2) {
           console.log(`🎬 Scene 1.2: Processing backend response:`, data);
+          console.log(`🎬 Scene 1.2: zoomTo=${data.zoomTo}, nextAction=${JSON.stringify(data.nextAction)}`);
           
           // Check if backend returned a zoom action structure
           if (data.zoomTo && data.nextAction) {
@@ -374,7 +375,12 @@ const LayeredInterface = () => {
       matrixRef.current.fastForwardToEnd();
     } else if (data.matrixAction === 'restart' && matrixRef.current) {
       console.log('✅ Matrix restart triggered');
-      matrixRef.current.restartAnimation();
+      // Only restart animation if we're not coming from Scene 1.2 (to avoid spiral replay)
+      if (!(currentSceneRef.current.scene === 1 && currentSceneRef.current.subscene === 2)) {
+        matrixRef.current.restartAnimation();
+      } else {
+        console.log('🎭 Skipping matrix restart - coming from Scene 1.2');
+      }
     }
     
     // Check if we're transitioning to Scene 1.1 (Matrix animation)
@@ -386,6 +392,11 @@ const LayeredInterface = () => {
     if (data.navigateTo) {
       console.log('Backend requested navigation to:', data.navigateTo);
       // In a single-page app, this would trigger a state change to render the Vault scenario
+    }
+    
+    // Show backend messages
+    if (data.message) {
+      console.log('🎭 Backend message:', data.message);
     }
   };
   
