@@ -168,9 +168,9 @@ const GridPlay = ({
           console.log('🚫 Click disabled - processing previous click'); 
         }
       } : 
-      () => {
-        console.log(`🎯 Tile ${gridId} clicked! Calling onTileClick(${row}, ${col}, ${gridIndex})`);
-        onTileClick(row, col, gridIndex);
+      (event) => {
+        console.log(`🎯 Tile ${gridId} clicked! Calling onTileClick(${row}, ${col}, ${gridIndex}) with event`);
+        onTileClick(row, col, gridIndex, event);
       };
     
     return (

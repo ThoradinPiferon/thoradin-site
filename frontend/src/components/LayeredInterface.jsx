@@ -3,8 +3,12 @@ import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 import GridPlay from './GridPlay';
 import { generateGridActions } from '../utils/gridConfig';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
-import { handleGridZoom, isZooming as getZoomState } from '../utils/zoomUtils';
-import { zoomToTile, isZooming as getGenericZoomState } from '../utils/sceneZoomManager';
+import { 
+  performCursorZoom, 
+  getCursorPosition, 
+  isCursorZooming, 
+  setMatrixCanvasRef 
+} from '../utils/cursorZoomSystem';
 import ZoomTestComponent from './ZoomTestComponent';
 import SoulKeyInsights from './SoulKeyInsights.jsx';
 
@@ -352,7 +356,7 @@ const LayeredInterface = () => {
   };
   
   // Handle grid clicks - scenario-driven approach
-  const handleGridClick = async (row, col, gridIndex) => {
+  const handleGridClick = async (row, col, gridIndex, event) => {
     // Prevent multiple simultaneous clicks
     if (isProcessingClick) {
       console.log('🚫 Click blocked - already processing previous click');
@@ -378,7 +382,10 @@ const LayeredInterface = () => {
     const gridId = getGridId(col, row);
     console.log(`🎮 Grid click: ${gridId} in Scene ${currentSceneState.scene}.${currentSceneState.subscene}`);
     console.log(`🔍 Current state at click time: currentScene=${currentSceneState.scene}, currentSubscene=${currentSceneState.subscene}`);
-    console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
+    
+    // Get cursor position for zoom
+    const cursorPos = event ? getCursorPosition(event) : null;
+    console.log(`🎯 Cursor position:`, cursorPos);
 
     try {
       // TILE HANDLER SYSTEM: Dynamic dispatch based on backend tile definitions
@@ -386,7 +393,7 @@ const LayeredInterface = () => {
       
       if (tile) {
         console.log(`🎯 Tile handler found for ${gridId}:`, tile);
-        await handleTileByType(tile, gridId);
+        await handleTileByType(tile, gridId, cursorPos);
         return;
       }
       
@@ -740,18 +747,18 @@ const LayeredInterface = () => {
   };
 
   // TILE HANDLER SYSTEM: Dynamic dispatch based on handler types
-  const handleTileByType = async (tile, gridId) => {
+  const handleTileByType = async (tile, gridId, cursorPos = null) => {
     console.log(`🎯 Executing tile handler for ${gridId}:`, tile.handler);
     
     switch (tile.handler) {
       case "frontend":
-        return await executeFrontendActions(tile.actions.frontend, tile.effects, gridId);
+        return await executeFrontendActions(tile.actions.frontend, tile.effects, gridId, cursorPos);
         
       case "backend":
         return await executeBackendActions(tile.actions.backend, tile.effects, gridId);
         
       case "both":
-        return await executeCombinedActions(tile.actions, tile.effects, gridId);
+        return await executeCombinedActions(tile.actions, tile.effects, gridId, cursorPos);
         
       case "none":
         console.log(`🚫 Tile ${gridId} has no handler - ignoring click`);
@@ -764,7 +771,7 @@ const LayeredInterface = () => {
   };
 
   // Execute frontend-only actions (animations, UI changes, background communication)
-  const executeFrontendActions = async (actions, effects, gridId) => {
+  const executeFrontendActions = async (actions, effects, gridId, cursorPos = null) => {
     console.log(`🎬 Executing frontend actions for ${gridId}:`, actions);
     
     if (!actions || actions.length === 0) {
@@ -783,8 +790,26 @@ const LayeredInterface = () => {
           break;
           
         case "zoom_animation":
-          // Zoom animation will be handled by the transition system
-          console.log(`🎬 Zoom animation triggered for ${gridId}`);
+          // Cursor-based zoom animation
+          if (cursorPos) {
+            console.log(`🎯 Performing cursor-based zoom for ${gridId} at (${cursorPos.x.toFixed(3)}, ${cursorPos.y.toFixed(3)})`);
+            await performCursorZoom(cursorPos, {
+              duration: 1200,
+              precisionThreshold: 0.2,
+              minZoom: 1.5,
+              maxZoom: 3.5
+            });
+          } else {
+            console.log(`🎬 Zoom animation triggered for ${gridId} (no cursor position)`);
+          }
+          break;
+          
+        case "cursor_zoom":
+          // Direct cursor zoom
+          if (cursorPos) {
+            console.log(`🎯 Direct cursor zoom for ${gridId}`);
+            await performCursorZoom(cursorPos);
+          }
           break;
           
         default:
@@ -837,12 +862,12 @@ const LayeredInterface = () => {
   };
 
   // Execute combined actions (frontend + backend)
-  const executeCombinedActions = async (actions, effects, gridId) => {
+  const executeCombinedActions = async (actions, effects, gridId, cursorPos = null) => {
     console.log(`🔄 Executing combined actions for ${gridId}:`, actions);
     
     // Execute frontend actions first
     if (actions.frontend && actions.frontend.length > 0) {
-      await executeFrontendActions(actions.frontend, effects, gridId);
+      await executeFrontendActions(actions.frontend, effects, gridId, cursorPos);
     }
     
     // Then execute backend actions

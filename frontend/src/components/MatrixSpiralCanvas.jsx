@@ -3,6 +3,7 @@ import { setMatrixCanvasRef } from '../utils/zoomUtils';
 import { getGridId } from '../utils/gridHelpers';
 import { registerBackgroundZoomHandler, setActiveBackgroundRef } from '../utils/sceneZoomManager';
 import { registerBackgroundTypeZoomHandler } from '../utils/sceneDefinitions';
+import { setMatrixCanvasRef as setCursorZoomRef } from '../utils/cursorZoomSystem';
 
 // Light Spiral Calculation with Exponential Speed
 function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
@@ -84,12 +85,15 @@ const MatrixSpiralCanvas = forwardRef(({
     // Set as active background reference
     setActiveBackgroundRef(canvasRef.current);
     
+    // Register with cursor zoom system
+    setCursorZoomRef(canvasRef.current);
+    
     // Legacy support for direct zoom calls
     if (onGridZoom) {
       onGridZoom(handleGridZoom);
     }
     
-    console.log('🎬 MatrixSpiralCanvas registered with scene definitions system');
+    console.log('🎬 MatrixSpiralCanvas registered with scene definitions and cursor zoom systems');
   }, [onGridZoom, onIntroComplete]);
 
   // Zoom transition function - now returns a Promise
@@ -245,6 +249,73 @@ const MatrixSpiralCanvas = forwardRef(({
         // Animation not complete, resolve immediately
         resolve();
       }
+    });
+  };
+
+  // Cursor-based zoom function
+  const performCursorZoom = async (zoomParams) => {
+    return new Promise((resolve) => {
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        resolve();
+        return;
+      }
+      
+      const { centerX, centerY, zoomLevel, duration = 1200, easing = 'ease-in-out', precision } = zoomParams;
+      
+      console.log(`🎯 Cursor zoom triggered:`, {
+        center: `(${centerX.toFixed(3)}, ${centerY.toFixed(3)})`,
+        zoomLevel: zoomLevel.toFixed(2),
+        precision: precision.toFixed(3),
+        duration
+      });
+      
+      // Convert normalized coordinates to canvas coordinates
+      const targetX = centerX * canvas.width;
+      const targetY = centerY * canvas.height;
+      
+      // Set zoom state with cursor-based parameters
+      zoomState.current = {
+        active: true,
+        targetX,
+        targetY,
+        progress: 0,
+        zoomLevel,
+        precision,
+        duration,
+        easing
+      };
+      
+      // Calculate animation steps
+      const steps = Math.floor(duration / 16); // 60fps
+      let currentStep = 0;
+      
+      // Start cursor-based zoom animation
+      const animateCursorZoom = () => {
+        if (currentStep < steps) {
+          // Apply easing
+          let easedProgress;
+          if (easing === 'ease-in-out') {
+            const t = currentStep / steps;
+            easedProgress = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+          } else {
+            easedProgress = currentStep / steps;
+          }
+          
+          zoomState.current.progress = easedProgress;
+          currentStep++;
+          
+          draw();
+          requestAnimationFrame(animateCursorZoom);
+        } else {
+          // Zoom complete
+          zoomState.current.active = false;
+          console.log(`✅ Cursor zoom completed: ${zoomLevel.toFixed(2)}x at (${centerX.toFixed(3)}, ${centerY.toFixed(3)})`);
+          resolve();
+        }
+      };
+      
+      animateCursorZoom();
     });
   };
 
@@ -703,7 +774,8 @@ const MatrixSpiralCanvas = forwardRef(({
   // Register this component with the global zoom utility
   useEffect(() => {
     setMatrixCanvasRef({
-      handleGridZoom: (colIndex, rowIndex) => handleGridZoom(colIndex, rowIndex)
+      handleGridZoom: (colIndex, rowIndex) => handleGridZoom(colIndex, rowIndex),
+      performCursorZoom: (zoomParams) => performCursorZoom(zoomParams)
     });
     
     return () => {
