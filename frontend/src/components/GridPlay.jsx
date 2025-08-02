@@ -23,16 +23,6 @@ const GridPlay = ({
 }) => {
   console.log(`🎮 GridPlay rendering: ${sceneName}, showInvisibleButtons: ${showInvisibleButtons}, config:`, gridConfig);
   
-  const { rows, cols, gap, padding, debug } = gridConfig;
-  
-  // Generate grid tiles
-  const tiles = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      tiles.push({ row, col });
-    }
-  }
-
   // Get grid configuration based on scene name or use provided config
   const config = gridConfig || (() => {
     // Fallback config if getGridConfig is not available
@@ -45,6 +35,20 @@ const GridPlay = ({
       debug: false
     };
   })();
+  
+  const { rows, cols, gap, padding, debug } = config;
+  
+  // Validate grid dimensions to prevent RangeError
+  const validRows = Math.max(1, Math.min(rows || 7, 100)); // Limit to reasonable range
+  const validCols = Math.max(1, Math.min(cols || 11, 100)); // Limit to reasonable range
+  
+  // Generate grid tiles
+  const tiles = [];
+  for (let row = 0; row < validRows; row++) {
+    for (let col = 0; col < validCols; col++) {
+      tiles.push({ row, col });
+    }
+  }
   
   console.log('GridPlay rendering with props:', { 
     sceneName,
@@ -62,8 +66,9 @@ const GridPlay = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Generate tile IDs for this configuration
-  const tileIds = generateTileIds(config);
+  // Generate tile IDs for this configuration with validated dimensions
+  const validatedConfig = { ...config, rows: validRows, cols: validCols };
+  const tileIds = generateTileIds(validatedConfig);
   
   const handleTileClick = async (row, col) => {
     // Disable clicks during zooming

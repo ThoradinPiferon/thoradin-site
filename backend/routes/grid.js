@@ -126,6 +126,10 @@ router.get('/scenario', async (req, res) => {
 
     // Use nextScenes as-is (already parsed by SceneEngine)
     const nextScenes = sceneData.nextScenes || [];
+    
+    // Handle effects and choices - they might already be parsed by SceneEngine
+    const effects = typeof sceneData.effects === 'string' ? JSON.parse(sceneData.effects) : (sceneData.effects || {});
+    const choices = typeof sceneData.choices === 'string' ? JSON.parse(sceneData.choices) : (sceneData.choices || []);
 
     // Build scenario response
     const scenario = {
@@ -152,8 +156,8 @@ router.get('/scenario', async (req, res) => {
         description: sceneData.description,
         backgroundType: sceneData.backgroundType,
         backgroundImage: sceneData.animationUrl || null,
-        effects: sceneData.effects || {},
-        choices: sceneData.choices || [],
+        effects: effects,
+        choices: choices,
         echoTriggers: sceneData.echoTriggers || []
       }
     };
@@ -370,20 +374,26 @@ router.get('/debug', async (req, res) => {
 router.get('/soulkey/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
+    console.log(`🎭 SoulKey: Requesting insights for session ${sessionId}`);
+    
     const { getSessionInsights } = await import('../services/soulKeyService.js');
     
     const insights = await getSessionInsights(sessionId);
     
+    console.log(`✅ SoulKey: Insights generated for session ${sessionId}`);
     res.json({
       success: true,
       insights
     });
   } catch (error) {
-    console.error('Error getting SoulKey insights:', error);
-    res.status(500).json({
+    console.error('❌ Error getting SoulKey insights:', error);
+    
+    // Return a more graceful error response
+    res.status(404).json({
       success: false,
-      message: 'Failed to get SoulKey insights',
-      error: error.message
+      message: 'Session not found or SoulKey service unavailable',
+      error: error.message,
+      sessionId: req.params.sessionId
     });
   }
 });
