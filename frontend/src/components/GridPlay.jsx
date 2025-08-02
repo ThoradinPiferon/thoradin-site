@@ -142,7 +142,10 @@ const GridPlay = ({
           console.log('🚫 Click disabled during zoom animation'); 
         }
       } : 
-      () => onTileClick(row, col, gridIndex);
+      () => {
+        console.log(`🎯 Tile ${gridId} clicked! Calling onTileClick(${row}, ${col}, ${gridIndex})`);
+        onTileClick(row, col, gridIndex);
+      };
     
     return (
       <button

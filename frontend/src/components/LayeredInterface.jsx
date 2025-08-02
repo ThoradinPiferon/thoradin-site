@@ -27,6 +27,17 @@ const LayeredInterface = () => {
     }
   }, []);
 
+  // Reset zoom state when transitioning to Scene 1.2
+  useEffect(() => {
+    if (currentScene === 1 && currentSubscene === 2) {
+      console.log('🎭 Scene 1.2 detected - resetting zoom state');
+      setIsZooming(false);
+    }
+  }, [currentScene, currentSubscene]);
+
+  // Force zoom state to false for Scene 1.2 debugging
+  const effectiveIsZooming = (currentScene === 1 && currentSubscene === 2) ? false : isZooming;
+
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
     // Special case for Scene 1.1 (Matrix Awakening) - 1x1 invisible grid
@@ -217,6 +228,7 @@ const LayeredInterface = () => {
     const gridId = getGridId(col, row);
     console.log(`🎮 Grid click: ${gridId} in Scene ${currentSceneState.scene}.${currentSceneState.subscene}`);
     console.log(`🔍 Current state at click time: currentScene=${currentSceneState.scene}, currentSubscene=${currentSceneState.subscene}`);
+    console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}`);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid/action`, {
@@ -232,6 +244,8 @@ const LayeredInterface = () => {
           sessionId: sessionIdRef.current
         })
       });
+      
+      console.log(`🔍 Backend response status: ${response.status}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -385,6 +399,7 @@ const LayeredInterface = () => {
   console.log(`🎭 Grid Config Details:`, gridConfig);
   console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
   console.log(`🎭 Should be invisible: ${shouldShowInvisibleButtons}`);
+  console.log(`🎭 Zoom State: isZooming=${isZooming}, effectiveIsZooming=${effectiveIsZooming}, globalZoomState=${getZoomState()}`);
   
   return (
     <div className="layered-interface" style={{ position: 'relative', width: '100vw', height: '100vh' }}>
@@ -425,7 +440,7 @@ const LayeredInterface = () => {
           showInvisibleButtons={shouldShowInvisibleButtons}
           currentScene={currentScene}
           currentSubscene={currentSubscene}
-          isZooming={isZooming}
+          isZooming={effectiveIsZooming}
         />
       </div>
 
