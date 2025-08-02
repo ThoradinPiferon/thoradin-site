@@ -4,6 +4,7 @@ import GridPlay from './GridPlay';
 import { generateGridActions } from '../utils/gridConfig';
 import { getGridId, parseGridId } from '../utils/gridHelpers';
 import { handleGridZoom, isZooming as getZoomState } from '../utils/zoomUtils';
+import { zoomToTile, isZooming as getGenericZoomState } from '../utils/sceneZoomManager';
 import ZoomTestComponent from './ZoomTestComponent';
 import SoulKeyInsights from './SoulKeyInsights.jsx';
 
@@ -246,7 +247,7 @@ const LayeredInterface = () => {
     const gridId = getGridId(col, row);
     console.log(`🎮 Grid click: ${gridId} in Scene ${currentSceneState.scene}.${currentSceneState.subscene}`);
     console.log(`🔍 Current state at click time: currentScene=${currentSceneState.scene}, currentSubscene=${currentSceneState.subscene}`);
-    console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}`);
+    console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
 
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid/action`, {
@@ -281,9 +282,9 @@ const LayeredInterface = () => {
             setIsZooming(true);
             setMatrixState('zooming'); // Set matrix to zooming state
             
-            // Use global zoom utility
+            // Use generic zoom manager
             console.log(`🎬 Starting zoom animation to grid ${data.zoomTo}`);
-            await handleGridZoom(data.zoomTo);
+            await zoomToTile(data.zoomTo, {}, 'matrix');
             console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
             
             // Let the zoom effect sink in naturally (no artificial delay)
@@ -308,8 +309,8 @@ const LayeredInterface = () => {
             console.log(`🎬 Zooming to ${data.zoomTo}...`);
             setIsZooming(true);
             
-            // Use global zoom utility
-            await handleGridZoom(data.zoomTo);
+            // Use generic zoom manager
+            await zoomToTile(data.zoomTo, {}, 'matrix');
             console.log(`🎬 Zoom animation completed for ${data.zoomTo}`);
             
             // Let the zoom effect sink in naturally (no artificial delay)
@@ -440,7 +441,7 @@ const LayeredInterface = () => {
   console.log(`🎭 Grid Config Details:`, gridConfig);
   console.log(`🎭 Scene State: currentScene=${currentScene}, currentSubscene=${currentSubscene}`);
   console.log(`🎭 Should be invisible: ${shouldShowInvisibleButtons}`);
-  console.log(`🎭 Zoom State: isZooming=${isZooming}, effectiveIsZooming=${effectiveIsZooming}, globalZoomState=${getZoomState()}`);
+  console.log(`🎭 Zoom State: isZooming=${isZooming}, effectiveIsZooming=${effectiveIsZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
   
   return (
     <div className="layered-interface" style={{ position: 'relative', width: '100vw', height: '100vh' }}>
