@@ -20,19 +20,22 @@ const LayeredInterface = () => {
   const [matrixState, setMatrixState] = useState('running'); // 'running', 'static', 'zooming'
   const [backendGridConfig, setBackendGridConfig] = useState(null); // Backend-fetched grid configuration
   const [isLoadingGrid, setIsLoadingGrid] = useState(false); // Loading state for grid fetch
+  const [scenarioData, setScenarioData] = useState(null); // Complete scenario data from backend
+  const [nextScenes, setNextScenes] = useState([]); // Available next scenes with trigger tiles
+  const [isLoadingScenario, setIsLoadingScenario] = useState(false); // Loading state for scenario fetch
   const matrixRef = useRef(null);
   const currentSceneRef = useRef({ scene: 1, subscene: 1 });
   const sessionIdRef = useRef(null);
   
-  // Generate session ID and fetch initial grid config on component mount
+  // Generate session ID and fetch initial scenario on component mount
   useEffect(() => {
     if (!sessionIdRef.current) {
       sessionIdRef.current = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       console.log(`🎭 SoulKey: Session started with ID: ${sessionIdRef.current}`);
     }
     
-    // Fetch initial grid configuration
-    fetchGridConfig(currentScene, currentSubscene);
+    // Fetch initial scenario data
+    fetchScenarioData(currentScene, currentSubscene);
   }, []);
 
   // Manage matrix state based on scene transitions
@@ -52,8 +55,61 @@ const LayeredInterface = () => {
   // Force zoom state to false for Scene 1.2 debugging
   const effectiveIsZooming = (currentScene === 1 && currentSubscene === 2) ? false : isZooming;
 
+  // Fetch scenario data from backend
+  const fetchScenarioData = async (sceneId, subsceneId) => {
+    setIsLoadingScenario(true);
+    try {
+      console.log(`🎭 Fetching scenario data for Scene ${sceneId}.${subsceneId}`);
+      
+      const response = await fetch(`/api/grid/scenario?sceneId=${sceneId}&subsceneId=${subsceneId}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log(`✅ Scenario data loaded for Scene ${sceneId}.${subsceneId}:`, {
+          gridConfig: data.gridConfig,
+          nextScenesCount: data.nextScenes.length,
+          backgroundType: data.metadata.backgroundType
+        });
+        
+        setScenarioData(data);
+        setNextScenes(data.nextScenes);
+        setBackendGridConfig(data.gridConfig);
+        
+        // Update current scene state
+        setCurrentScene(data.sceneId);
+        setCurrentSubscene(data.subsceneId);
+        currentSceneRef.current = { scene: data.sceneId, subscene: data.subsceneId };
+        
+        return data;
+      } else {
+        throw new Error(data.message || 'Failed to fetch scenario data');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching scenario data:', error);
+      
+      // Fallback to local grid config
+      const fallbackConfig = getSceneGridConfigFallback(sceneId, subsceneId);
+      setBackendGridConfig(fallbackConfig);
+      setNextScenes([]);
+      
+      return null;
+    } finally {
+      setIsLoadingScenario(false);
+    }
+  };
+
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
+    // Use scenario data if available, otherwise fallback to hardcoded configs
+    if (scenarioData && scenarioData.gridConfig) {
+      return scenarioData.gridConfig;
+    }
+    
     // Scene 1.1 (Matrix Awakening) - full grid A1-K7, A1 communicates with background layer
     if (sceneId === 1 && subsceneId === 1) {
       return {
@@ -103,10 +159,18 @@ const LayeredInterface = () => {
   // Use backend-fetched grid config if available, otherwise fallback
   let gridConfig;
   try {
-    if (backendGridConfig && !isLoadingGrid) {
+    // Priority 1: Use scenario data if available
+    if (scenarioData && scenarioData.gridConfig && !isLoadingScenario) {
+      console.log('🎭 Using scenario-driven grid config:', scenarioData.gridConfig);
+      gridConfig = scenarioData.gridConfig;
+    }
+    // Priority 2: Use backend grid config if available
+    else if (backendGridConfig && !isLoadingGrid) {
       console.log('🔧 Using backend-fetched grid config:', backendGridConfig);
       gridConfig = backendGridConfig;
-    } else {
+    }
+    // Priority 3: Use fallback config
+    else {
       gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
       console.log('🔧 Using fallback grid config for Scene', currentScene, currentSubscene, ':', gridConfig);
     }
@@ -245,7 +309,7 @@ const LayeredInterface = () => {
     setAutoAdvanceTimer(null);
   };
   
-  // Handle grid clicks - all actions go through backend
+  // Handle grid clicks - scenario-driven approach
   const handleGridClick = async (row, col, gridIndex) => {
     // Prevent multiple simultaneous clicks
     if (isProcessingClick) {
@@ -255,22 +319,6 @@ const LayeredInterface = () => {
     
     // Use ref to get current scene state (avoids stale closure issues)
     const currentSceneState = currentSceneRef.current;
-    
-    // Special handling for Scene 1.1 (Matrix Awakening) - allow A1 clicks to stop spiral
-    if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
-      const gridId = getGridId(col, row);
-      console.log(`🎮 Grid click during Scene 1.1: ${gridId}`);
-      
-      // Scene 1.1: A1 click should communicate with background layer (Matrix animation)
-      if (gridId === 'A1') {
-        console.log('🎬 A1 clicked - communicating with background layer (Matrix animation)');
-        await performA1BackgroundCommunication();
-        return; // Exit early - no backend call needed
-      } else {
-        console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
-        return;
-      }
-    }
     
     // Set processing flag to prevent multiple clicks
     setIsProcessingClick(true);
@@ -291,6 +339,33 @@ const LayeredInterface = () => {
     console.log(`🔍 Zoom state at click: isZooming=${isZooming}, globalZoomState=${getZoomState()}, genericZoomState=${getGenericZoomState()}`);
 
     try {
+      // Scenario-driven approach: Check if this tile triggers a next scene
+      const nextScene = nextScenes.find(scene => scene.triggerTile === gridId);
+      
+      if (nextScene) {
+        console.log(`🎭 Scenario transition: ${gridId} → Scene ${nextScene.sceneId}.${nextScene.subsceneId} (${nextScene.label})`);
+        
+        // Perform zoom transition to the next scene
+        await performZoomTransition(gridId, nextScene.sceneId, nextScene.subsceneId);
+        return;
+      }
+      
+      // Special handling for Scene 1.1 A1 (communicates with background layer)
+      if (currentSceneState.scene === 1 && currentSceneState.subscene === 1 && gridId === 'A1') {
+        console.log('🎬 A1 clicked - communicating with background layer (Matrix animation)');
+        await performA1BackgroundCommunication();
+        return;
+      }
+      
+      // If no next scene is defined for this tile, check if it's disabled
+      if (currentSceneState.scene === 1 && currentSceneState.subscene === 1) {
+        console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
+        return;
+      }
+      
+      // Default handling - send to backend for any additional logic
+      console.log('🎮 Sending grid action to backend...');
+      
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/grid/action`, {
         method: 'POST',
         headers: {
@@ -311,58 +386,8 @@ const LayeredInterface = () => {
         const data = await response.json();
         console.log('✅ Backend response:', data);
         
-        // Special handling for Scene 1.2: Handle backend zoom response structure
-        if (currentSceneState.scene === 1 && currentSceneState.subscene === 2) {
-          console.log(`🎬 Scene 1.2: Processing backend response:`, data);
-          console.log(`🎬 Scene 1.2: zoomTo=${data.zoomTo}, nextAction=${JSON.stringify(data.nextAction)}`);
-          
-          // Check if backend returned a zoom action structure
-          if (data.zoomTo && data.nextAction) {
-            console.log(`🎬 Scene 1.2: Backend requested zoom to ${data.zoomTo} then transition`);
-            setIsZooming(true);
-            setMatrixState('zooming');
-            
-            // Use modular zoom transition sequence
-            await performSceneTransitionSequence([
-              () => zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene),
-              () => {
-                setIsZooming(false);
-                console.log('✅ Grid Zoom Completed');
-              },
-              () => handleNextAction(data.nextAction)
-            ], `Zoom to ${data.zoomTo} → Backend Action`);
-          } else {
-            // Fallback: direct scene transition
-            console.log('⚠️ Backend didn\'t return zoom structure, using direct transition');
-            handleNextAction(data);
-          }
-        } else {
-          // Handle zoom functionality for other scenes
-          if (data.zoomTo && matrixRef.current) {
-            console.log(`🎬 Zooming to ${data.zoomTo}...`);
-            setIsZooming(true);
-            
-            // Use clean auto-detection zoom
-            await zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene);
-            console.log(`🎬 Zoom animation completed for ${data.zoomTo}`);
-            
-            // Let the zoom effect sink in naturally (no artificial delay)
-            console.log('🎬 Zoom completed - processing next action immediately');
-            
-            // Reset zoom state
-            setIsZooming(false);
-            
-            // Handle next action after zoom
-            if (data.nextAction) {
-              handleNextAction(data.nextAction);
-            } else {
-              handleNextAction(data);
-            }
-          } else {
-            // No zoom needed, handle action directly
-            handleNextAction(data);
-          }
-        }
+        // Handle backend response (for any additional logic not covered by scenario)
+        handleNextAction(data);
       } else {
         console.error('❌ Backend returned error:', response.status, response.statusText);
         // Fallback to local logic when backend fails
@@ -520,6 +545,9 @@ const LayeredInterface = () => {
     setCurrentSubscene(subsceneId);
     currentSceneRef.current.scene = sceneId;
     currentSceneRef.current.subscene = subsceneId;
+    
+    // Fetch new scenario data for the new scene
+    await fetchScenarioData(sceneId, subsceneId);
   };
 
   /**
@@ -527,7 +555,8 @@ const LayeredInterface = () => {
    */
   const rehydrateGridFromScene = async (sceneId, subsceneId) => {
     console.log(`🔄 Rehydrating grid for Scene ${sceneId}.${subsceneId}`);
-    await fetchGridConfig(sceneId, subsceneId);
+    // Use scenario data instead of separate grid config fetch
+    await fetchScenarioData(sceneId, subsceneId);
   };
 
   /**
