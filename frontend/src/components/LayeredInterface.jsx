@@ -232,6 +232,12 @@ const LayeredInterface = () => {
           currentSceneRef.current.subscene = data.subsceneId;
         }
         
+        // Trigger grid rehydration after scene transition
+        const newSceneId = data.sceneId || currentSceneRef.current.scene;
+        const newSubsceneId = data.subsceneId || currentSceneRef.current.subscene;
+        console.log(`🔄 Auto-advance: Triggering grid rehydration for Scene ${newSceneId}.${newSubsceneId}`);
+        await fetchGridConfig(newSceneId, newSubsceneId);
+        
         // Handle Matrix animation
         if (data.matrixAction === 'fastForward' && matrixRef.current) {
           matrixRef.current.fastForwardToEnd();
@@ -243,6 +249,10 @@ const LayeredInterface = () => {
         setCurrentSubscene(2);
         currentSceneRef.current.scene = 1;
         currentSceneRef.current.subscene = 2;
+        
+        // Trigger grid rehydration for local fallback
+        console.log(`🔄 Auto-advance fallback: Triggering grid rehydration for Scene 1.2`);
+        await fetchGridConfig(1, 2);
       }
     } catch (error) {
       console.log('⚠️ Auto-advance error, using local fallback:', error);
@@ -251,6 +261,10 @@ const LayeredInterface = () => {
       setCurrentSubscene(2);
       currentSceneRef.current.scene = 1;
       currentSceneRef.current.subscene = 2;
+      
+      // Trigger grid rehydration for error fallback
+      console.log(`🔄 Auto-advance error fallback: Triggering grid rehydration for Scene 1.2`);
+      await fetchGridConfig(1, 2);
     }
     
     setAutoAdvanceTimer(null);
@@ -400,12 +414,12 @@ const LayeredInterface = () => {
       } else {
         console.error('❌ Backend returned error:', response.status, response.statusText);
         // Fallback to local logic when backend fails
-        handleLocalFallback(gridId);
+        await handleLocalFallback(gridId);
       }
     } catch (error) {
       console.error('❌ Error calling backend grid action:', error);
       // Fallback to local logic when backend fails
-      handleLocalFallback(gridId);
+      await handleLocalFallback(gridId);
     } finally {
       // Always reset processing flag
       setIsProcessingClick(false);
@@ -414,13 +428,15 @@ const LayeredInterface = () => {
   };
 
   // Local fallback logic when backend is unavailable
-  const handleLocalFallback = (gridId) => {
+  const handleLocalFallback = async (gridId) => {
     console.log('🔄 Using local fallback logic for grid click:', gridId);
     
     if (currentScene === 1 && currentSubscene === 1) {
       // Scene 1.1: Fast-forward to Scene 1.2
       setCurrentScene(1);
       setCurrentSubscene(2);
+      console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.2`);
+      await fetchGridConfig(1, 2);
       if (matrixRef.current) {
         matrixRef.current.fastForwardToEnd();
       }
@@ -429,10 +445,14 @@ const LayeredInterface = () => {
       if (gridId === 'K7') {
         setCurrentScene(2);
         setCurrentSubscene(1);
+        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 2.1`);
+        await fetchGridConfig(2, 1);
       } else {
         // Restart matrix
         setCurrentScene(1);
         setCurrentSubscene(1);
+        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.1`);
+        await fetchGridConfig(1, 1);
         if (matrixRef.current) {
           matrixRef.current.restartAnimation();
         }
@@ -442,6 +462,8 @@ const LayeredInterface = () => {
       if (gridId === 'K7') {
         setCurrentScene(1);
         setCurrentSubscene(1);
+        console.log(`🔄 Local fallback: Triggering grid rehydration for Scene 1.1`);
+        await fetchGridConfig(1, 1);
         if (matrixRef.current) {
           matrixRef.current.restartAnimation();
         }
