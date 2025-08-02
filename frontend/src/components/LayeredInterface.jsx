@@ -38,10 +38,16 @@ const LayeredInterface = () => {
     fetchScenarioData(currentScene, currentSubscene);
   }, []);
 
-  // Manage matrix state based on scene transitions
+  // Manage matrix state based on scene transitions - only after grid is ready
   useEffect(() => {
+    // Don't start Matrix animation until grid configuration is loaded
+    if (isLoadingScenario) {
+      console.log('🎭 Waiting for scenario data to load before starting Matrix animation');
+      return;
+    }
+    
     if (currentScene === 1 && currentSubscene === 1) {
-      console.log('🎭 Scene 1.1 detected - setting matrix to running');
+      console.log('🎭 Scene 1.1 detected - grid ready, setting matrix to running');
       setMatrixState('running');
     } else if (currentScene === 1 && currentSubscene === 2) {
       console.log('🎭 Scene 1.2 detected - setting matrix to static');
@@ -50,7 +56,7 @@ const LayeredInterface = () => {
     } else {
       console.log('🎭 Other scene detected - keeping matrix state');
     }
-  }, [currentScene, currentSubscene]);
+  }, [currentScene, currentSubscene, isLoadingScenario]);
 
   // Force zoom state to false for Scene 1.2 debugging
   const effectiveIsZooming = (currentScene === 1 && currentSubscene === 2) ? false : isZooming;
@@ -158,26 +164,38 @@ const LayeredInterface = () => {
 
   // Use backend-fetched grid config if available, otherwise fallback
   let gridConfig;
+  let isGridReady = false;
+  
   try {
     // Priority 1: Use scenario data if available
     if (scenarioData && scenarioData.gridConfig && !isLoadingScenario) {
       console.log('🎭 Using scenario-driven grid config:', scenarioData.gridConfig);
       gridConfig = scenarioData.gridConfig;
+      isGridReady = true;
     }
     // Priority 2: Use backend grid config if available
     else if (backendGridConfig && !isLoadingGrid) {
       console.log('🔧 Using backend-fetched grid config:', backendGridConfig);
       gridConfig = backendGridConfig;
+      isGridReady = true;
     }
-    // Priority 3: Use fallback config
-    else {
+    // Priority 3: Use fallback config (only if not loading)
+    else if (!isLoadingScenario && !isLoadingGrid) {
       gridConfig = getSceneGridConfigFallback(currentScene, currentSubscene);
       console.log('🔧 Using fallback grid config for Scene', currentScene, currentSubscene, ':', gridConfig);
+      isGridReady = true;
+    }
+    // Still loading - use safe default
+    else {
+      console.log('⏳ Grid configuration still loading, using safe default');
+      gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
+      isGridReady = false;
     }
   } catch (error) {
     console.error('❌ Error creating grid config:', error);
     // Emergency fallback
     gridConfig = { rows: 7, cols: 11, gap: '2px', padding: '20px', debug: false };
+    isGridReady = false;
   }
   
   // Fetch grid configuration from backend
@@ -717,19 +735,37 @@ const LayeredInterface = () => {
         />
       )}
 
-      {/* Grid Layer */}
-      <div className="grid-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
-        <GridPlay
-          gridConfig={gridConfig}
-          sceneName={`Scene ${currentScene}.${currentSubscene}`}
-          onTileClick={handleGridClick}
-          showInvisibleButtons={shouldShowInvisibleButtons}
-          currentScene={currentScene}
-          currentSubscene={currentSubscene}
-          isZooming={effectiveIsZooming}
-          isProcessingClick={isProcessingClick}
-        />
-      </div>
+      {/* Grid Layer - only render when grid is ready */}
+      {isGridReady && (
+        <div className="grid-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+          <GridPlay
+            gridConfig={gridConfig}
+            sceneName={`Scene ${currentScene}.${currentSubscene}`}
+            onTileClick={handleGridClick}
+            showInvisibleButtons={shouldShowInvisibleButtons}
+            currentScene={currentScene}
+            currentSubscene={currentSubscene}
+            isZooming={effectiveIsZooming}
+            isProcessingClick={isProcessingClick}
+          />
+        </div>
+      )}
+      
+      {/* Loading indicator when grid is not ready */}
+      {!isGridReady && (
+        <div className="grid-loading" style={{ 
+          position: 'absolute', 
+          top: '50%', 
+          left: '50%', 
+          transform: 'translate(-50%, -50%)', 
+          zIndex: 2,
+          color: '#00ff00',
+          fontFamily: 'monospace',
+          fontSize: '14px'
+        }}>
+          Loading grid configuration...
+        </div>
+      )}
 
       {/* Zoom Test Component (for development) */}
       <ZoomTestComponent />
