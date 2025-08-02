@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react
 import { setMatrixCanvasRef } from '../utils/zoomUtils';
 import { getGridId } from '../utils/gridHelpers';
 import { registerBackgroundZoomHandler, setActiveBackgroundRef } from '../utils/sceneZoomManager';
+import { registerBackgroundTypeZoomHandler } from '../utils/sceneDefinitions';
 
 // Light Spiral Calculation with Exponential Speed
 function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
@@ -63,7 +64,10 @@ const MatrixSpiralCanvas = forwardRef(({
 
   // Register this background with the generic zoom manager
   useEffect(() => {
-    // Register the matrix background zoom handler
+    // Register the matrix background zoom handler with the scene definitions system
+    registerBackgroundTypeZoomHandler('matrix', handleGridZoom);
+    
+    // Also register with the legacy system for backward compatibility
     registerBackgroundZoomHandler('matrix', canvasRef.current, handleGridZoom);
     
     // Set as active background reference
@@ -74,7 +78,7 @@ const MatrixSpiralCanvas = forwardRef(({
       onGridZoom(handleGridZoom);
     }
     
-    console.log('🎬 MatrixSpiralCanvas registered with generic zoom manager');
+    console.log('🎬 MatrixSpiralCanvas registered with scene definitions system');
   }, [onGridZoom, onIntroComplete]);
 
   // Zoom transition function - now returns a Promise

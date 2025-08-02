@@ -6,6 +6,7 @@
  */
 
 import { parseGridId, getGridId } from './gridHelpers.js';
+import { getSceneDefinitionByNumbers, getSceneZoomHandler, registerBackgroundTypeZoomHandler } from './sceneDefinitions.js';
 
 // Global state for zoom management
 let currentZoomState = {
@@ -44,71 +45,7 @@ export const getActiveBackgroundRef = () => {
   return currentZoomState.activeBackgroundRef;
 };
 
-/**
- * Generic zoom function that works with any background layer
- * @param {string|Object} target - Grid ID string or coordinate object
- * @param {Object} options - Zoom options
- * @param {string} backgroundType - Type of background to zoom on (optional, auto-detected)
- * @returns {Promise} Promise that resolves when zoom completes
- */
-export const zoomToTile = async (target, options = {}, backgroundType = null) => {
-  const { delay = 0, duration = 1000, scale = 2 } = options;
-  
-  // Auto-detect background type if not provided
-  if (!backgroundType) {
-    backgroundType = detectActiveBackgroundType();
-  }
-  
-  if (!backgroundType) {
-    console.error('❌ No active background type detected');
-    return Promise.resolve();
-  }
-  
-  const handler = backgroundZoomHandlers.get(backgroundType);
-  if (!handler) {
-    console.error(`❌ No zoom handler registered for background type: ${backgroundType}`);
-    return Promise.resolve();
-  }
-  
-  // Parse target if it's a string (grid ID)
-  let colIndex, rowIndex;
-  if (typeof target === 'string') {
-    const coords = parseGridId(target);
-    colIndex = coords.colIndex;
-    rowIndex = coords.rowIndex;
-  } else if (typeof target === 'object' && target.colIndex !== undefined && target.rowIndex !== undefined) {
-    colIndex = target.colIndex;
-    rowIndex = target.rowIndex;
-  } else {
-    console.error('❌ Invalid target format:', target);
-    return Promise.resolve();
-  }
-  
-  const gridId = getGridId(colIndex, rowIndex);
-  console.log(`🎬 Generic zoom called: ${gridId} (${colIndex}, ${rowIndex}) on ${backgroundType} background`);
-  
-  // Set zoom state
-  currentZoomState.isZooming = true;
-  currentZoomState.currentTarget = gridId;
-  
-  // Add delay if specified
-  if (delay > 0) {
-    console.log(`⏳ Waiting ${delay}ms before zoom...`);
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
-  
-  try {
-    // Call the background-specific zoom handler
-    await handler.zoomHandler(colIndex, rowIndex, options);
-    console.log(`✅ Generic zoom completed: ${gridId} on ${backgroundType}`);
-  } catch (error) {
-    console.error(`❌ Zoom error on ${backgroundType}:`, error);
-  } finally {
-    // Reset zoom state
-    currentZoomState.isZooming = false;
-    currentZoomState.currentTarget = null;
-  }
-};
+
 
 /**
  * Auto-detect the currently active background type
@@ -125,6 +62,26 @@ const detectActiveBackgroundType = () => {
     // Add more background type detection as needed
   }
   return null;
+};
+
+/**
+ * Auto-detect current scene number
+ * @returns {number} Current scene number (defaults to 1)
+ */
+const detectCurrentScene = () => {
+  // This should be enhanced to get from global state or context
+  // For now, return default
+  return 1;
+};
+
+/**
+ * Auto-detect current subscene number
+ * @returns {number} Current subscene number (defaults to 1)
+ */
+const detectCurrentSubscene = () => {
+  // This should be enhanced to get from global state or context
+  // For now, return default
+  return 1;
 };
 
 /**
@@ -244,6 +201,18 @@ export const getZoomState = () => {
 };
 
 /**
+ * Convenience functions for different zoom patterns
+ */
+export const zoomUtils = {
+  toTile: (gridId, options = {}) => zoomToTile(gridId, options),
+  toTiles: (targets, options = {}) => batchZoomToTiles(targets, options),
+  toRegion: (startGridId, endGridId, options = {}) => regionZoomToTiles(startGridId, endGridId, options),
+  withDelay: (gridId, delay) => zoomToTile(gridId, { delay }),
+  withScale: (gridId, scale) => zoomToTile(gridId, { scale }),
+  withDuration: (gridId, duration) => zoomToTile(gridId, { duration })
+};
+
+/**
  * Check if currently zooming
  * @returns {boolean} True if currently zooming
  */
@@ -261,13 +230,130 @@ export const clearZoomQueue = () => {
 };
 
 /**
- * Convenience functions for different zoom patterns
+ * Clean auto-detection zoom function - the main interface
+ * @param {string|Object} target - Grid ID string or coordinate object
+ * @param {Object} options - Zoom options
+ * @param {number} currentScene - Current scene number (optional, auto-detected)
+ * @param {number} currentSubscene - Current subscene number (optional, auto-detected)
+ * @returns {Promise} Promise that resolves when zoom completes
  */
-export const zoomUtils = {
-  toTile: (gridId, options = {}) => zoomToTile(gridId, options),
-  toTiles: (targets, options = {}) => batchZoomToTiles(targets, options),
-  toRegion: (startGridId, endGridId, options = {}) => regionZoomToTiles(startGridId, endGridId, options),
-  withDelay: (gridId, delay) => zoomToTile(gridId, { delay }),
-  withScale: (gridId, scale) => zoomToTile(gridId, { scale }),
-  withDuration: (gridId, duration) => zoomToTile(gridId, { duration })
+export const zoomToTile = async (target, options = {}, currentScene = null, currentSubscene = null) => {
+  // Auto-detect current scene if not provided
+  if (currentScene === null || currentSubscene === null) {
+    // Try to get from global state or context
+    // For now, we'll use the active background ref to detect
+    currentScene = detectCurrentScene();
+    currentSubscene = detectCurrentSubscene();
+  }
+  
+  const sceneId = `${currentScene}.${currentSubscene}`;
+  const sceneDef = getSceneDefinitionByNumbers(currentScene, currentSubscene);
+  const zoomHandler = getSceneZoomHandler(sceneId);
+  
+  if (!zoomHandler) {
+    const errorMsg = `❌ No zoom handler registered for scene ${sceneId} (${sceneDef.name})`;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  // Parse target if it's a string (grid ID)
+  let colIndex, rowIndex;
+  if (typeof target === 'string') {
+    const coords = parseGridId(target);
+    colIndex = coords.colIndex;
+    rowIndex = coords.rowIndex;
+  } else if (typeof target === 'object' && target.colIndex !== undefined && target.rowIndex !== undefined) {
+    colIndex = target.colIndex;
+    rowIndex = target.rowIndex;
+  } else {
+    const errorMsg = '❌ Invalid target format: ' + target;
+    console.error(errorMsg);
+    throw new Error(errorMsg);
+  }
+  
+  const gridId = getGridId(colIndex, rowIndex);
+  console.log(`🎬 Auto-detected zoom: ${gridId} (${colIndex}, ${rowIndex}) on scene ${sceneId} (${sceneDef.name})`);
+  
+  // Set zoom state
+  currentZoomState.isZooming = true;
+  currentZoomState.currentTarget = gridId;
+  
+  try {
+    // Call the scene-specific zoom handler
+    await zoomHandler(colIndex, rowIndex, options);
+    console.log(`✅ Auto-detected zoom completed: ${gridId} on scene ${sceneId}`);
+  } catch (error) {
+    console.error(`❌ Zoom error on scene ${sceneId}:`, error);
+    throw error;
+  } finally {
+    // Reset zoom state
+    currentZoomState.isZooming = false;
+    currentZoomState.currentTarget = null;
+  }
+};
+
+/**
+ * Legacy zoom function with explicit background type (for backward compatibility)
+ * @param {string|Object} target - Grid ID string or coordinate object
+ * @param {Object} options - Zoom options
+ * @param {string} backgroundType - Type of background to zoom on
+ * @returns {Promise} Promise that resolves when zoom completes
+ */
+export const zoomToTileWithBackground = async (target, options = {}, backgroundType = null) => {
+  const { delay = 0, duration = 1000, scale = 2 } = options;
+  
+  // Auto-detect background type if not provided
+  if (!backgroundType) {
+    backgroundType = detectActiveBackgroundType();
+  }
+  
+  if (!backgroundType) {
+    console.error('❌ No active background type detected');
+    return Promise.resolve();
+  }
+  
+  const handler = backgroundZoomHandlers.get(backgroundType);
+  if (!handler) {
+    console.error(`❌ No zoom handler registered for background type: ${backgroundType}`);
+    return Promise.resolve();
+  }
+  
+  // Parse target if it's a string (grid ID)
+  let colIndex, rowIndex;
+  if (typeof target === 'string') {
+    const coords = parseGridId(target);
+    colIndex = coords.colIndex;
+    rowIndex = coords.rowIndex;
+  } else if (typeof target === 'object' && target.colIndex !== undefined && target.rowIndex !== undefined) {
+    colIndex = target.colIndex;
+    rowIndex = target.rowIndex;
+  } else {
+    console.error('❌ Invalid target format:', target);
+    return Promise.resolve();
+  }
+  
+  const gridId = getGridId(colIndex, rowIndex);
+  console.log(`🎬 Legacy zoom called: ${gridId} (${colIndex}, ${rowIndex}) on ${backgroundType} background`);
+  
+  // Set zoom state
+  currentZoomState.isZooming = true;
+  currentZoomState.currentTarget = gridId;
+  
+  // Add delay if specified
+  if (delay > 0) {
+    console.log(`⏳ Waiting ${delay}ms before zoom...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  
+  try {
+    // Call the background-specific zoom handler
+    await handler.zoomHandler(colIndex, rowIndex, options);
+    console.log(`✅ Legacy zoom completed: ${gridId} on ${backgroundType}`);
+  } catch (error) {
+    console.error(`❌ Zoom error on ${backgroundType}:`, error);
+  } finally {
+    // Reset zoom state
+    currentZoomState.isZooming = false;
+    currentZoomState.currentTarget = null;
+  }
 }; 

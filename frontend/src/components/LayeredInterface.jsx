@@ -282,9 +282,9 @@ const LayeredInterface = () => {
             setIsZooming(true);
             setMatrixState('zooming'); // Set matrix to zooming state
             
-            // Use generic zoom manager
+            // Use clean auto-detection zoom
             console.log(`🎬 Starting zoom animation to grid ${data.zoomTo}`);
-            await zoomToTile(data.zoomTo, {}, 'matrix');
+            await zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene);
             console.log(`🎬 Zoom animation completed for grid ${data.zoomTo}`);
             
             // Let the zoom effect sink in naturally (no artificial delay)
@@ -309,8 +309,8 @@ const LayeredInterface = () => {
             console.log(`🎬 Zooming to ${data.zoomTo}...`);
             setIsZooming(true);
             
-            // Use generic zoom manager
-            await zoomToTile(data.zoomTo, {}, 'matrix');
+            // Use clean auto-detection zoom
+            await zoomToTile(data.zoomTo, {}, currentSceneState.scene, currentSceneState.subscene);
             console.log(`🎬 Zoom animation completed for ${data.zoomTo}`);
             
             // Let the zoom effect sink in naturally (no artificial delay)
