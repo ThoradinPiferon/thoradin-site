@@ -128,6 +128,7 @@ import gridRoutes from './routes/grid.js';
 import aiRoutes from './routes/ai.js';
 import configRoutes from './routes/config.js';
 import sceneRoutes from './routes/scene.js';
+import adminRoutes from './routes/admin.js';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -136,6 +137,7 @@ app.use('/api/grid', gridRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/config', configRoutes);
 app.use('/api/scene', sceneRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Handle non-API routes in production
 if (NODE_ENV === 'production') {
