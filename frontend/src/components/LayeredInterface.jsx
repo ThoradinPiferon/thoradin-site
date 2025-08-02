@@ -54,7 +54,7 @@ const LayeredInterface = () => {
 
   // Get grid configuration based on current scene state with fallback
   const getSceneGridConfigFallback = (sceneId, subsceneId) => {
-    // Scene 1.1 (Matrix Awakening) - full grid A1-K7, Matrix animation is grid-agnostic
+    // Scene 1.1 (Matrix Awakening) - full grid A1-K7, A1 communicates with background layer
     if (sceneId === 1 && subsceneId === 1) {
       return {
         rows: 7,
@@ -62,8 +62,9 @@ const LayeredInterface = () => {
         gap: '2px',
         padding: '20px',
         debug: false,
-        invisibleMode: false, // Full grid visible - any click fast-forwards Matrix
-        matrixAnimationMode: true // Matrix animation handles everything
+        invisibleMode: false, // Full grid visible
+        matrixAnimationMode: true, // Matrix animation handles everything
+        triggerTile: 'A1' // A1 communicates with background layer
       };
     }
     
@@ -260,10 +261,15 @@ const LayeredInterface = () => {
       const gridId = getGridId(col, row);
       console.log(`🎮 Grid click during Scene 1.1: ${gridId}`);
       
-      // Scene 1.1: Matrix animation is grid-agnostic - any click should fast-forward
-      console.log('🎬 Grid click during Scene 1.1 - fast-forwarding Matrix animation');
-      await performScene1GridClick();
-      return; // Exit early - no backend call needed
+      // Scene 1.1: A1 click should communicate with background layer (Matrix animation)
+      if (gridId === 'A1') {
+        console.log('🎬 A1 clicked - communicating with background layer (Matrix animation)');
+        await performA1BackgroundCommunication();
+        return; // Exit early - no backend call needed
+      } else {
+        console.log('🚫 Click disabled for Scene 1.1 (Matrix Awakening) - only A1 allowed');
+        return;
+      }
     }
     
     // Set processing flag to prevent multiple clicks
@@ -472,8 +478,9 @@ const LayeredInterface = () => {
   // 1. Matrix animation is grid-agnostic - works on any grid layout (A1-K7, 1x1, etc.)
   // 2. Auto-advance is part of Matrix animation, not grid interaction
   // 3. Grid system supports layer fallback - if no handlers in top layer, use layer below
-  // 4. Scene 1.1 doesn't need specific click handlers - Matrix animation handles everything
-  // 5. Any grid click during Scene 1.1 fast-forwards the Matrix animation
+  // 4. Top layer (grid) can communicate with background layer (Matrix animation)
+  // 5. A1 click has specific handler that communicates with background layer
+  // 6. communicateWithBackgroundLayer() function enables layer-to-layer communication
   
   /**
    * Execute a sequence of scene transition actions in order
@@ -601,13 +608,44 @@ const LayeredInterface = () => {
   };
 
   /**
-   * Scene 1.1 grid click - fast-forward Matrix animation (grid-agnostic)
+   * A1 click - communicate with background layer (Matrix animation)
+   * This function allows the top layer (grid) to talk to the background layer (Matrix)
    */
-  const performScene1GridClick = async () => {
+  const performA1BackgroundCommunication = async () => {
     await performSceneTransitionSequence([
       () => clearAutoAdvanceTimer(),
-      () => fastForwardMatrix()
-    ], 'Scene 1.1 Grid Click - Fast Forward');
+      () => communicateWithBackgroundLayer('fastForward')
+    ], 'A1 Background Layer Communication');
+  };
+
+  /**
+   * Communicate with background layer (Matrix animation)
+   * @param {string} command - Command to send to background layer
+   */
+  const communicateWithBackgroundLayer = async (command) => {
+    console.log(`🎬 Communicating with background layer: ${command}`);
+    
+    switch (command) {
+      case 'fastForward':
+        if (matrixRef.current) {
+          matrixRef.current.fastForwardToEnd();
+          setMatrixState('static');
+        }
+        break;
+      case 'restart':
+        if (matrixRef.current) {
+          matrixRef.current.restartAnimation();
+          setMatrixState('running');
+        }
+        break;
+      case 'stop':
+        if (matrixRef.current && matrixRef.current.stopSpiral) {
+          matrixRef.current.stopSpiral();
+        }
+        break;
+      default:
+        console.warn(`🎬 Unknown background layer command: ${command}`);
+    }
   };
 
   /**
