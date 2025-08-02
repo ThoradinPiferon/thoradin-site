@@ -58,6 +58,7 @@ const MatrixSpiralCanvas = forwardRef(({
   const sentenceRevealActive = useRef(false);
   const zoomState = useRef({ active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 });
   const animationIdRef = useRef(null);
+  const drawRef = useRef(null);
 
   // Debug logging for animation state
   console.log(`🎬 MatrixSpiralCanvas: matrixState=${matrixState}`);
@@ -259,6 +260,8 @@ const MatrixSpiralCanvas = forwardRef(({
     }
 
     const draw = () => {
+      // Store the draw function in ref for external access
+      drawRef.current = draw;
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
 
@@ -566,16 +569,24 @@ const MatrixSpiralCanvas = forwardRef(({
     sentenceRevealActive.current = false;
     zoomState.current = { active: false, targetX: 0, targetY: 0, progress: 0, gridCol: 0, gridRow: 0 };
     
-    // Restart the animation loop
-    const animate = () => {
-      if (animationComplete.current) return;
-      
-      frameRef.current++;
-      draw();
-      requestAnimationFrame(animate);
-    };
+    // Cancel any existing animation
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current);
+      animationIdRef.current = null;
+    }
     
-    animate();
+    // Restart the animation loop using the stored draw function
+    if (drawRef.current) {
+      const animate = () => {
+        if (animationComplete.current) return;
+        
+        frameRef.current++;
+        drawRef.current();
+        requestAnimationFrame(animate);
+      };
+      
+      animate();
+    }
   };
 
   // Expose functions through ref
