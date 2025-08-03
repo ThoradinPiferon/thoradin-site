@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core scenario system
+model Scenario {
+  sceneId      Int
+  subsceneId   Int
+  title        String
+  description  String?
+  gridConfig   Json // {rows, cols, gap, padding, debug, excelRange}
+  animationConfig Json? // {type, speed, colors, text, duration, effects, interactiveParams}
+  backgroundPath String? // For static files (optional)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@id([sceneId, subsceneId])
+}
+
+// Session tracking
+model Session {
+  id          String        @id @default(cuid())
+  userId      String?
+  data        Json // Session state, preferences, etc.
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Interaction Interaction[]
+}
+
+// Interaction logging
+model Interaction {
+  id         Int      @id @default(autoincrement())
+  sessionId  String
+  sceneId    Int
+  subsceneId Int
+  tileId     String?
+  action     String
+  data       Json // Additional interaction data
+  createdAt  DateTime @default(now())
+
+  session Session @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId, createdAt])
+  @@index([sceneId, subsceneId])
+}
