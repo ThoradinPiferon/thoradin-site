@@ -257,6 +257,42 @@ const LayeredInterface = () => {
       return;
     }
     
+    // Special handler for F1 in scene 1.2 (11x7 grid)
+    if (currentScene === 1 && currentSubscene === 2 && tileId === 'F1') {
+      console.log(`🎯 Special F1 handler in scene 1.2 - triggering zoom and transition to scenario 2.1`);
+      
+      // Trigger the built-in zoom effect in MatrixSpiralCanvas
+      if (matrixRef.current) {
+        // Simulate a click on the canvas to trigger the zoom
+        const canvasElement = matrixRef.current.canvasRef?.current;
+        if (canvasElement) {
+          console.log('🎯 Triggering canvas click to start zoom effect');
+          // Create a synthetic click event at the center of the canvas
+          const rect = canvasElement.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          
+          const clickEvent = new MouseEvent('click', {
+            clientX: centerX,
+            clientY: centerY,
+            bubbles: true,
+            cancelable: true
+          });
+          
+          canvasElement.dispatchEvent(clickEvent);
+        } else {
+          console.log('⚠️ Canvas element not available, proceeding with direct transition');
+          // Fallback: direct transition to scenario 2.1
+          await transitionToScenario(2, 1);
+        }
+      } else {
+        console.log('⚠️ Matrix ref not available, proceeding with direct transition');
+        // Fallback: direct transition to scenario 2.1
+        await transitionToScenario(2, 1);
+      }
+      return;
+    }
+    
 
     
 

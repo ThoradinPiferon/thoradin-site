@@ -630,6 +630,7 @@ const MatrixSpiralCanvas = forwardRef(({
 
   // Expose functions through ref
   useImperativeHandle(ref, () => ({
+    canvasRef,
     fastForwardToEnd,
     restartAnimation,
     drawStaticState,
