@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { getGridId } from '../utils/gridHelpers';
-import { setMatrixCanvasRef } from '../utils/cursorZoomSystem';
 
 // Original Matrix Spiral Canvas with Typing Effect and Sentence Reveal
 const MatrixSpiralCanvas = forwardRef(({ 
@@ -40,6 +39,9 @@ const MatrixSpiralCanvas = forwardRef(({
   const sentenceRevealStart = useRef(0);
   const sentenceRevealActive = useRef(false);
   
+  // Built-in zoom effect for scenario 1.2
+  const zoomRef = useRef({ isZooming: false, startTime: 0, duration: 1200 });
+  
   // Background video/image element
   const backgroundRef = useRef(null);
 
@@ -51,13 +53,9 @@ const MatrixSpiralCanvas = forwardRef(({
     }
   }, [matrixState]);
 
-  // Register with cursor zoom system
-  useEffect(() => {
-    setMatrixCanvasRef(canvasRef.current);
-    console.log('🎬 MatrixSpiralCanvas registered with cursor zoom system');
-  }, []);
 
-  // Handle matrix click for fast-forward
+
+  // Handle matrix click for fast-forward or zoom
   const handleMatrixClick = (event) => {
     if (matrixState === 'running' && config?.type === 'matrix_spiral') {
       console.log('🎬 Matrix clicked - triggering fast-forward');
@@ -69,6 +67,11 @@ const MatrixSpiralCanvas = forwardRef(({
       if (onAnimationComplete) {
         onAnimationComplete();
       }
+    } else if (matrixState === 'static' && config?.type === 'matrix_static') {
+      // Scenario 1.2: Trigger built-in zoom effect
+      console.log('🎬 Matrix clicked - triggering built-in zoom');
+      zoomRef.current.isZooming = true;
+      zoomRef.current.startTime = Date.now();
     }
   };
 
@@ -106,9 +109,6 @@ const MatrixSpiralCanvas = forwardRef(({
 
   // Define draw function
   const draw = () => {
-    // Store the draw function in ref for external access
-    drawRef.current = draw;
-    
     // Ensure canvas is available
     const canvasElement = canvasRef.current;
     if (!canvasElement) {
@@ -118,11 +118,23 @@ const MatrixSpiralCanvas = forwardRef(({
     
     const ctx = canvasElement.getContext('2d');
     const { width, height } = canvasElement;
+    
+    // Get the actual display dimensions (accounting for device pixel ratio scaling)
+    const rect = canvasElement.getBoundingClientRect();
+    const displayWidth = rect.width;
+    const displayHeight = rect.height;
+    
     ctx.clearRect(0, 0, width, height);
 
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const maxRadius = Math.max(width, height) * 0.5;
+    // Use display dimensions for centering (not the full pixel dimensions)
+    const centerX = displayWidth / 2;
+    const centerY = displayHeight / 2;
+    const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
+    
+    // Debug centering (only log occasionally to avoid spam)
+    if (frameRef.current % 60 === 0) { // Log every 60 frames (about once per second)
+      console.log(`🎬 Drawing frame ${frameRef.current}: canvas ${width}x${height}, display ${displayWidth}x${displayHeight}, center (${centerX}, ${centerY}), maxRadius ${maxRadius}`);
+    }
     const fillDuration = 900; // 15 seconds
     const totalDuration = 480; // 8 seconds total
     const sentenceRevealDuration = 300; // 5 seconds - when sentence starts revealing
@@ -135,10 +147,45 @@ const MatrixSpiralCanvas = forwardRef(({
       }
       const spiral = staticSpiralRef.current;
       
+      // Apply zoom effect if active
+      let zoomScale = 1;
+      let zoomOffsetX = 0;
+      let zoomOffsetY = 0;
+      
+      if (zoomRef.current.isZooming) {
+        const elapsed = Date.now() - zoomRef.current.startTime;
+        const progress = Math.min(elapsed / zoomRef.current.duration, 1);
+        const easeProgress = Math.pow(progress, 2); // Quadratic acceleration
+        
+        zoomScale = 1 + (5 * easeProgress); // Zoom to 6x
+        
+        // Calculate zoom offset to keep center point centered
+        zoomOffsetX = centerX * (1 - zoomScale);
+        zoomOffsetY = centerY * (1 - zoomScale);
+        
+        // Check if zoom is complete
+        if (progress >= 1) {
+          console.log('✅ Built-in zoom completed');
+          zoomRef.current.isZooming = false;
+          
+          // Trigger scenario transition after zoom
+          if (onAnimationComplete) {
+            onAnimationComplete();
+          }
+        }
+      }
+      
+      // Apply zoom transformation if active
+      if (zoomRef.current.isZooming) {
+        ctx.save();
+        ctx.translate(zoomOffsetX, zoomOffsetY);
+        ctx.scale(zoomScale, zoomScale);
+      }
+      
       // Draw static spiral background with fully revealed phrase
       spiral.forEach(({ x, y, index, radius }) => {
-        const charIndex = index % characterStream.current.length;
-        const char = characterStream.current[charIndex];
+        const charIndex = index % (characterStream.current?.length || 1);
+        const char = characterStream.current?.[charIndex] || 'A';
         
         const distanceFromCenter = radius / maxRadius;
         const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
@@ -167,6 +214,11 @@ const MatrixSpiralCanvas = forwardRef(({
         }
       });
       
+      // Restore transformation if zoom was active
+      if (zoomRef.current.isZooming) {
+        ctx.restore();
+      }
+      
       // Draw fully spelled horizontal sentence
       const sentenceWidth = phrase.length * 20;
       const startX = centerX - sentenceWidth / 2;
@@ -182,8 +234,10 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
       }
       
-      // No animation loop for static state
-      return;
+      // No animation loop for static state, but continue if zooming
+      if (!zoomRef.current.isZooming) {
+        return;
+      }
     }
 
     // Scene 1.1: Animated Matrix background
@@ -212,9 +266,9 @@ const MatrixSpiralCanvas = forwardRef(({
     const spiralPoints = generateSpiralPoints(350, centerX, centerY, frameRef.current, maxRadius, fillDuration);
 
     // Draw spiral points
-    spiralPoints.forEach(({ x, y, index, radius }) => {
-      const charIndex = index % characterStream.current.length;
-      const char = characterStream.current[charIndex];
+          spiralPoints.forEach(({ x, y, index, radius }) => {
+        const charIndex = index % (characterStream.current?.length || 1);
+        const char = characterStream.current?.[charIndex] || 'A';
       
       const distanceFromCenter = radius / maxRadius;
       const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
@@ -290,6 +344,9 @@ const MatrixSpiralCanvas = forwardRef(({
         }
       }
     }
+    
+    // Store the draw function in ref for external access (at the end to avoid circular reference)
+    drawRef.current = draw;
   };
 
   // Start matrix animation function
@@ -317,7 +374,7 @@ const MatrixSpiralCanvas = forwardRef(({
       if (animationComplete.current) return;
       
       frameRef.current++;
-      if (drawRef.current) {
+      if (drawRef.current && typeof drawRef.current === 'function') {
         drawRef.current();
       } else {
         console.log('🎬 Draw function still not available, calling draw directly');
@@ -391,64 +448,7 @@ const MatrixSpiralCanvas = forwardRef(({
   }, [config, backgroundPath, matrixState]);
 
   // Simple cursor-based zoom function
-  const performCursorZoom = async (zoomParams) => {
-    return new Promise((resolve) => {
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        resolve();
-        return;
-      }
-      
-      const { centerX, centerY, duration = 1200 } = zoomParams;
-      
-      console.log(`🎯 Starting cursor zoom to (${centerX.toFixed(3)}, ${centerY.toFixed(3)})`);
-      
-      // Convert normalized coordinates to canvas coordinates
-      const targetX = centerX * canvas.width;
-      const targetY = centerY * canvas.height;
-      
-      // Create a zoom effect by scaling and translating the canvas
-      const startTime = Date.now();
-      const startScale = 1;
-      const endScale = 6; // Increased to 6x zoom
-      
-      const animateZoom = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        
-        // Exponential easing for increasingly faster zoom
-        const easeProgress = Math.pow(progress, 2); // Quadratic acceleration
-        
-        const currentScale = startScale + (endScale - startScale) * easeProgress;
-        
-        // Apply zoom transformation
-        const ctx = canvas.getContext('2d');
-        ctx.save();
-        ctx.translate(targetX, targetY);
-        ctx.scale(currentScale, currentScale);
-        ctx.translate(-targetX, -targetY);
-        
-        // Redraw the current state
-        if (matrixState === 'static') {
-          drawStaticState();
-        } else {
-          // For running state, we'll just show the static state during zoom
-          drawStaticState();
-        }
-        
-        ctx.restore();
-        
-        if (progress < 1) {
-          requestAnimationFrame(animateZoom);
-        } else {
-          console.log('✅ Cursor zoom completed');
-          resolve();
-        }
-      };
-      
-      requestAnimationFrame(animateZoom);
-    });
-  };
+
 
   // Canvas resize and initialization effect
   useEffect(() => {
@@ -475,6 +475,9 @@ const MatrixSpiralCanvas = forwardRef(({
       
       console.log(`🎬 Canvas resized to: ${canvas.width}x${canvas.height} (device ratio: ${devicePixelRatio})`);
       console.log(`🎬 Canvas rect: ${rect.width}x${rect.height}, position: ${rect.left},${rect.top}`);
+      console.log(`🎬 Window size: ${window.innerWidth}x${window.innerHeight}`);
+      console.log(`🎬 Document size: ${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`);
+      console.log(`🎬 Effective drawing area: ${rect.width}x${rect.height} (after device pixel ratio scaling)`);
     };
     
     window.addEventListener('resize', resize);
@@ -517,9 +520,12 @@ const MatrixSpiralCanvas = forwardRef(({
       ctx.clearRect(0, 0, width, height);
       
       // Draw final state of animation
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const maxRadius = Math.max(width, height) * 0.5;
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = rect.width;
+      const displayHeight = rect.height;
+      const centerX = displayWidth / 2;
+      const centerY = displayHeight / 2;
+      const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
       const totalDuration = 480; // 8 seconds
       
       // Generate final spiral state
@@ -527,8 +533,8 @@ const MatrixSpiralCanvas = forwardRef(({
       
       // Draw final spiral background with fully revealed phrase
       spiral.forEach(({ x, y, index, radius }) => {
-        const charIndex = index % characterStream.current.length;
-        const char = characterStream.current[charIndex];
+        const charIndex = index % (characterStream.current?.length || 1);
+        const char = characterStream.current?.[charIndex] || 'A';
         
         const distanceFromCenter = radius / maxRadius;
         const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
@@ -599,7 +605,7 @@ const MatrixSpiralCanvas = forwardRef(({
       if (animationComplete.current) return;
       
       frameRef.current++;
-      if (drawRef.current) {
+      if (drawRef.current && typeof drawRef.current === 'function') {
         drawRef.current();
       } else {
         console.log('🎬 Draw function still not available during restart, calling draw directly');
@@ -613,7 +619,6 @@ const MatrixSpiralCanvas = forwardRef(({
 
   // Expose functions through ref
   useImperativeHandle(ref, () => ({
-    performCursorZoom,
     fastForwardToEnd,
     restartAnimation,
     drawStaticState,
@@ -655,8 +660,8 @@ const MatrixSpiralCanvas = forwardRef(({
         
         // Draw static spiral background with fully revealed phrase
         spiral.forEach(({ x, y, index, radius }) => {
-          const charIndex = index % characterStream.current.length;
-          const char = characterStream.current[charIndex];
+          const charIndex = index % (characterStream.current?.length || 1);
+          const char = characterStream.current?.[charIndex] || 'A';
           
           const distanceFromCenter = radius / maxRadius;
           const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
@@ -701,16 +706,7 @@ const MatrixSpiralCanvas = forwardRef(({
     }
   }));
 
-  // Register this component with the global zoom utility
-  useEffect(() => {
-    setMatrixCanvasRef({
-      performCursorZoom: (zoomParams) => performCursorZoom(zoomParams)
-    });
-    
-    return () => {
-      setMatrixCanvasRef(null);
-    };
-  }, []);
+
 
   return (
     <>
@@ -752,8 +748,8 @@ const MatrixSpiralCanvas = forwardRef(({
           maxWidth: '100%',
           maxHeight: '100%',
           background: 'black',
-          pointerEvents: matrixState === 'running' && config?.type === 'matrix_spiral' ? 'auto' : 'none',
-          cursor: matrixState === 'running' && config?.type === 'matrix_spiral' ? 'pointer' : 'default',
+          pointerEvents: (matrixState === 'running' && config?.type === 'matrix_spiral') || (matrixState === 'static' && config?.type === 'matrix_static') ? 'auto' : 'none',
+          cursor: (matrixState === 'running' && config?.type === 'matrix_spiral') || (matrixState === 'static' && config?.type === 'matrix_static') ? 'pointer' : 'default',
           display: backgroundPath ? 'none' : 'block',
           objectFit: 'cover',
           overflow: 'hidden'
@@ -764,6 +760,8 @@ const MatrixSpiralCanvas = forwardRef(({
           if (canvasRef.current) {
             const rect = canvasRef.current.getBoundingClientRect();
             console.log(`🎬 Canvas onLoad - rect: ${rect.width}x${rect.height}, position: ${rect.left},${rect.top}`);
+            console.log(`🎬 Canvas onLoad - window: ${window.innerWidth}x${window.innerHeight}`);
+            console.log(`🎬 Canvas onLoad - document: ${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`);
           }
         }}
       />

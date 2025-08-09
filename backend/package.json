@@ -15,6 +15,8 @@
     "force:migrate": "node scripts/safe-migrate.js",
     "fix:db": "node scripts/fix-production-db.js",
     "test:db": "node test-db-connection.js",
+    "seed:prod": "node scripts/seed-production.js",
+    "manage:db": "node scripts/manage-db.js",
     "db:deploy": "npx prisma migrate deploy",
     "build": "npx prisma generate",
     "postinstall": "npx prisma generate"

@@ -48,8 +48,7 @@ const LayeredInterface = () => {
   // LAYER 3: UI COMPONENTS - Zoom and overlays
   // ============================================================================
   
-  const [isZooming, setIsZooming] = useState(false);
-  const [zoomTarget, setZoomTarget] = useState(null);
+
   const [showChat, setShowChat] = useState(false);
   
   // ============================================================================
@@ -125,7 +124,7 @@ const LayeredInterface = () => {
           console.log(`🎬 Setting background path from database: ${dbBackgroundPath}`);
           setBackgroundPath(dbBackgroundPath);
         } else {
-          console.log(`⚠️ No background path in database, using frontend animation`);
+          console.log(`🎨 Using frontend-generated animation (no static background path)`);
           setBackgroundPath(null);
         }
         
@@ -163,32 +162,7 @@ const LayeredInterface = () => {
     }
   };
   
-  // ============================================================================
-  // INDEPENDENT ZOOM SYSTEM - Screen-pointer based
-  // ============================================================================
-  
-  const performCursorZoom = async (cursorPos, onComplete) => {
-    console.log(`🎯 Cursor zoom at: (${cursorPos.x.toFixed(2)}, ${cursorPos.y.toFixed(2)})`);
-    
-    if (isZooming) {
-      console.log('🚫 Zoom already in progress');
-      return;
-    }
-    
-    setIsZooming(true);
-    setZoomTarget(cursorPos);
-    
-    // Simulate zoom animation
-    setTimeout(() => {
-      console.log('✅ Zoom animation completed');
-      setIsZooming(false);
-      setZoomTarget(null);
-      
-      if (onComplete) {
-        onComplete();
-      }
-    }, 1200);
-  };
+
   
   // ============================================================================
   // TILE HANDLER SYSTEM - Dynamic dispatch
@@ -365,12 +339,6 @@ const LayeredInterface = () => {
     
     for (const action of actions || []) {
       switch (action) {
-        case 'cursor_zoom':
-          if (cursorPos) {
-            await performCursorZoom(cursorPos);
-          }
-          break;
-          
         case 'matrix_trigger':
           if (matrixRef.current && typeof matrixRef.current.fastForwardToEnd === 'function') {
             try {
@@ -489,7 +457,7 @@ const LayeredInterface = () => {
             showInvisibleButtons={true}
             currentScene={currentScene}
             currentSubscene={currentSubscene}
-            isZooming={isZooming}
+
             isProcessingClick={false}
           />
         </div>
@@ -511,30 +479,7 @@ const LayeredInterface = () => {
         </div>
       )}
       
-      {/* LAYER 3: UI COMPONENTS - Zoom overlay */}
-      {isZooming && zoomTarget && (
-        <div className="zoom-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          background: 'rgba(0, 0, 0, 0.8)',
-          zIndex: 9999,
-          pointerEvents: 'none'
-        }}>
-          <div style={{
-            position: 'absolute',
-            top: `${zoomTarget.y * 100}%`,
-            left: `${zoomTarget.x * 100}%`,
-            width: '20px',
-            height: '20px',
-            background: 'red',
-            borderRadius: '50%',
-            transform: 'translate(-50%, -50%)'
-          }} />
-        </div>
-      )}
+
       
       {/* LAYER 3: UI COMPONENTS - Thoradin Chat */}
       {currentScene === 2 && currentSubscene === 1 && (
