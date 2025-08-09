@@ -148,11 +148,6 @@ const MatrixSpiralCanvas = forwardRef(({
         }
       });
       
-      // Restore transformation if zoom was active
-      if (zoomRef.current.isZooming) {
-        ctx.restore();
-      }
-      
       // Draw fully spelled horizontal sentence
       const sentenceWidth = phrase.length * 20;
       const startX = centerX - sentenceWidth / 2;
@@ -166,6 +161,11 @@ const MatrixSpiralCanvas = forwardRef(({
       // Draw ALL letters of the phrase (fully spelled out)
       for (let i = 0; i < phrase.length; i++) {
         ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+      }
+      
+      // Restore transformation if zoom was active
+      if (zoomRef.current.isZooming) {
+        ctx.restore();
       }
       
       // Continue to next section for animation loop
@@ -330,13 +330,12 @@ const MatrixSpiralCanvas = forwardRef(({
     const animate = () => {
       draw();
       
-      // Stop animation loop if zoom completed and we're transitioning
-      if (!zoomRef.current.isZooming && onAnimationComplete) {
+      // Continue animation loop while zooming is active
+      if (zoomRef.current.isZooming) {
+        animationIdRef.current = requestAnimationFrame(animate);
+      } else {
         console.log('🎬 Zoom completed - stopping animation loop');
-        return; // Don't continue the loop
       }
-      
-      animationIdRef.current = requestAnimationFrame(animate);
     };
     animationIdRef.current = requestAnimationFrame(animate);
   }
@@ -502,7 +501,8 @@ const MatrixSpiralCanvas = forwardRef(({
   function getResponsiveFontSize(width, height, distanceFromCenter) {
     const screenSize = Math.min(width, height);
     const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02)); // 2% of screen size, min 8px, max 24px
-    return Math.max(6, baseFontSize - distanceFromCenter * (baseFontSize * 0.5));
+    // Make letters smaller near center, larger towards edges
+    return Math.max(6, baseFontSize * (0.5 + distanceFromCenter * 0.8));
   }
 
   // Simple spiral generation
