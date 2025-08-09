@@ -27,44 +27,38 @@ const seedScenarios = async () => {
         title: 'Matrix Awakening',
         description: 'The spiral begins to spin...',
         gridConfig: {
-          rows: 7,
-          cols: 11,
+          rows: 1,
+          cols: 1,
           gap: '2px',
           padding: '20px',
           debug: false,
           invisibleMode: false,
           matrixAnimationMode: true,
-          triggerTile: 'A1'
+          triggerTile: 'A1',
+          excelRange: 'A1:A1'
         },
-        metadata: {
-          backgroundType: 'matrix_spiral',
-          backgroundImage: null,
+        animationConfig: {
+          type: 'matrix_spiral',
+          speed: 'normal',
+          colors: {
+            primary: '#00ff00',
+            secondary: '#00ffcc',
+            background: '#000000'
+          },
+          text: "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS",
+          duration: 8000,
           effects: {
-            autoAdvanceAfter: 8000,
-            nextScene: { sceneId: 1, subsceneId: 2 }
+            glow: true,
+            fade: true,
+            spiral: true
+          },
+          interactiveParams: {
+            zoomSpeed: 1.2,
+            cursorSensitivity: 0.8,
+            animationPause: false
           }
         },
-        tiles: [
-          {
-            id: 'A1',
-            handler: 'frontend',
-            actions: {
-              frontend: ['cursor_zoom', 'matrix_trigger'],
-              backend: null
-            },
-            effects: {
-              animationSpeed: 'fast'
-            }
-          }
-        ],
-        nextScenes: [
-          {
-            sceneId: 1,
-            subsceneId: 2,
-            triggerTile: 'A1',
-            label: 'Fast-forward Matrix Animation'
-          }
-        ]
+        backgroundPath: null
       }
     });
     
@@ -92,30 +86,31 @@ const seedScenarios = async () => {
           debug: false,
           invisibleMode: false,
           matrixAnimationMode: false,
-          triggerTile: 'A1'
+          triggerTile: 'F1',
+          excelRange: 'A1:G7'
         },
-        metadata: {
-          backgroundType: 'matrix_static',
-          backgroundImage: null,
+        animationConfig: {
+          type: 'matrix_static',
+          speed: 'normal',
+          colors: {
+            primary: '#00ff00',
+            secondary: '#00ffcc',
+            background: '#000000'
+          },
+          text: "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS",
+          duration: 8000,
           effects: {
-            autoAdvanceAfter: null,
-            nextScene: null
+            glow: true,
+            fade: true,
+            spiral: false
+          },
+          interactiveParams: {
+            zoomSpeed: 1.2,
+            cursorSensitivity: 0.8,
+            animationPause: false
           }
         },
-        tiles: [
-          {
-            id: 'A1',
-            handler: 'frontend',
-            actions: {
-              frontend: ['cursor_zoom'],
-              backend: null
-            },
-            effects: {
-              animationSpeed: 'normal'
-            }
-          }
-        ],
-        nextScenes: []
+        backgroundPath: null
       }
     });
     
