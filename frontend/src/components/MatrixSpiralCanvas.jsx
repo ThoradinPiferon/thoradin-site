@@ -104,8 +104,19 @@ const MatrixSpiralCanvas = forwardRef(({
       if (zoomRef.current.isZooming) {
         const elapsed = Date.now() - zoomRef.current.startTime;
         const progress = Math.min(elapsed / zoomRef.current.duration, 1);
-        const easeProgress = progress * progress;
-        zoomScale = 1 + (4 * easeProgress); // Changed to 500% zoom (1 + 4 = 5x)
+        
+        // Accelerate after 1 second (40% of 2.5s duration)
+        let easeProgress;
+        if (progress < 0.4) {
+          // First 40%: normal quadratic easing
+          easeProgress = (progress / 0.4) * (progress / 0.4);
+        } else {
+          // After 40%: accelerated cubic easing
+          const acceleratedProgress = (progress - 0.4) / 0.6;
+          easeProgress = 0.16 + (0.84 * acceleratedProgress * acceleratedProgress * acceleratedProgress);
+        }
+        
+        zoomScale = 1 + (8 * easeProgress); // Increased to 800% zoom (1 + 8 = 9x)
 
         const { x: zx, y: zy } = zoomRef.current.target;
         zoomOffsetX = zx * (1 - zoomScale);
@@ -114,18 +125,16 @@ const MatrixSpiralCanvas = forwardRef(({
         if (progress >= 1) {
           zoomRef.current.isZooming = false;
           zoomRef.current.isCompleted = true;
-          // Delay the scenario transition to show zoomed state
-          setTimeout(() => {
-            if (transitionToScenario) {
-              transitionToScenario(2, 1); // Direct transition to scenario 2.1
-            } else if (onAnimationComplete) {
-              onAnimationComplete(); // Fallback to original callback
-            }
-          }, 2000); // Show zoomed state for 2 seconds before transitioning
+          // Immediate transition without static pause
+          if (transitionToScenario) {
+            transitionToScenario(2, 1); // Direct transition to scenario 2.1
+          } else if (onAnimationComplete) {
+            onAnimationComplete(); // Fallback to original callback
+          }
         }
       } else if (zoomRef.current.isCompleted) {
         // Maintain final zoom state
-        zoomScale = 5; // Final zoom level (500% = 5x)
+        zoomScale = 9; // Final zoom level (800% = 9x)
         const { x: zx, y: zy } = zoomRef.current.target;
         zoomOffsetX = zx * (1 - zoomScale);
         zoomOffsetY = zy * (1 - zoomScale);
