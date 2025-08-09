@@ -474,6 +474,7 @@ const MatrixSpiralCanvas = forwardRef(({
       staticSpiralRef.current = null;
       
       console.log(`🎬 Canvas resized to: ${canvas.width}x${canvas.height} (device ratio: ${devicePixelRatio})`);
+      console.log(`🎬 Canvas rect: ${rect.width}x${rect.height}, position: ${rect.left},${rect.top}`);
     };
     
     window.addEventListener('resize', resize);
@@ -758,6 +759,13 @@ const MatrixSpiralCanvas = forwardRef(({
           overflow: 'hidden'
         }} 
         onClick={handleMatrixClick}
+        onLoad={() => {
+          console.log('🎬 Canvas loaded, checking dimensions...');
+          if (canvasRef.current) {
+            const rect = canvasRef.current.getBoundingClientRect();
+            console.log(`🎬 Canvas onLoad - rect: ${rect.width}x${rect.height}, position: ${rect.left},${rect.top}`);
+          }
+        }}
       />
     </>
   );

@@ -267,9 +267,15 @@ const LayeredInterface = () => {
     if (currentScene === 1 && currentSubscene === 1 && tileId === 'A1') {
       console.log(`🎯 Special A1 handler in scene 1.1 - triggering fast-forward to scene 1.2`);
       
-      // Fast-forward matrix animation
-      if (matrixRef.current) {
-        matrixRef.current.fastForwardToEnd();
+      // Fast-forward matrix animation with proper null checks
+      if (matrixRef.current && typeof matrixRef.current.fastForwardToEnd === 'function') {
+        try {
+          matrixRef.current.fastForwardToEnd();
+        } catch (error) {
+          console.error('❌ Error calling fastForwardToEnd:', error);
+        }
+      } else {
+        console.log('⚠️ Matrix ref not ready, proceeding with transition');
       }
       
       // Transition to scene 1.2
@@ -366,8 +372,15 @@ const LayeredInterface = () => {
           break;
           
         case 'matrix_trigger':
-          if (matrixRef.current) {
-            matrixRef.current.fastForwardToEnd();
+          if (matrixRef.current && typeof matrixRef.current.fastForwardToEnd === 'function') {
+            try {
+              matrixRef.current.fastForwardToEnd();
+              setMatrixState('static');
+            } catch (error) {
+              console.error('❌ Error calling fastForwardToEnd:', error);
+            }
+          } else {
+            console.log('⚠️ Matrix ref not ready for matrix_trigger');
             setMatrixState('static');
           }
           break;
