@@ -14,16 +14,20 @@ const prisma = new PrismaClient();
 // Get scenario data by scene and subscene
 router.get('/', async (req, res) => {
   try {
-    const { sceneId, subsceneId } = req.query;
-    
-    console.log(`🎭 Fetching scenario: ${sceneId}.${subsceneId}`);
-    
-    if (!sceneId || !subsceneId) {
-      return res.status(400).json({
-        success: false,
-        message: 'sceneId and subsceneId are required'
-      });
-    }
+      // Handle both correct and corrupted parameter names
+  let sceneId = req.query.sceneId || req.query.sceneld;
+  let subsceneId = req.query.subsceneId || req.query.subsceneld;
+  
+  console.log(`🎭 Fetching scenario: ${sceneId}.${subsceneId}`);
+  console.log(`🔍 Raw query params:`, req.query);
+  
+  if (!sceneId || !subsceneId) {
+    return res.status(400).json({
+      success: false,
+      message: 'sceneId and subsceneId are required',
+      received: req.query
+    });
+  }
     
     // Find scenario in database
     const scenario = await prisma.scenario.findUnique({
