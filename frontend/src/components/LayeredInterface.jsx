@@ -267,14 +267,14 @@ const LayeredInterface = () => {
         const canvasElement = matrixRef.current.canvasRef?.current;
         if (canvasElement) {
           console.log('🎯 Triggering canvas click to start zoom effect');
-          // Create a synthetic click event at the center of the canvas
+          // Use the actual cursor position from the tile click event
           const rect = canvasElement.getBoundingClientRect();
-          const centerX = rect.left + rect.width / 2;
-          const centerY = rect.top + rect.height / 2;
+          const cursorX = event.clientX;
+          const cursorY = event.clientY;
           
           const clickEvent = new MouseEvent('click', {
-            clientX: centerX,
-            clientY: centerY,
+            clientX: cursorX,
+            clientY: cursorY,
             bubbles: true,
             cancelable: true
           });
