@@ -267,9 +267,8 @@ const MatrixSpiralCanvas = forwardRef(({
     draw();
     const animate = () => {
       draw();
-      if (zoomRef.current.isZooming) {
-        animationIdRef.current = requestAnimationFrame(animate);
-      }
+      // Always continue animation loop for zoom responsiveness
+      animationIdRef.current = requestAnimationFrame(animate);
     };
     animationIdRef.current = requestAnimationFrame(animate);
   }
