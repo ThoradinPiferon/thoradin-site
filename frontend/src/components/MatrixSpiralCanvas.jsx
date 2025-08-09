@@ -41,7 +41,8 @@ const MatrixSpiralCanvas = forwardRef(({
     isZooming: false,
     startTime: 0,
     duration: 800, // Reduced from 1200 to 800ms for faster zoom
-    target: { x: 0, y: 0 }
+    target: { x: 0, y: 0 },
+    isCompleted: false // Track if zoom has completed
   });
 
   const backgroundRef = useRef(null);
@@ -111,11 +112,21 @@ const MatrixSpiralCanvas = forwardRef(({
 
         if (progress >= 1) {
           zoomRef.current.isZooming = false;
-          if (onAnimationComplete) onAnimationComplete();
+          zoomRef.current.isCompleted = true;
+          // Delay the scenario transition to show zoomed state
+          setTimeout(() => {
+            if (onAnimationComplete) onAnimationComplete();
+          }, 1000); // Show zoomed state for 1 second before transitioning
         }
+      } else if (zoomRef.current.isCompleted) {
+        // Maintain final zoom state
+        zoomScale = 11; // Final zoom level (1 + 10)
+        const { x: zx, y: zy } = zoomRef.current.target;
+        zoomOffsetX = zx * (1 - zoomScale);
+        zoomOffsetY = zy * (1 - zoomScale);
       }
 
-      if (zoomRef.current.isZooming) {
+      if (zoomRef.current.isZooming || zoomRef.current.isCompleted) {
         ctx.save();
         ctx.translate(zoomOffsetX, zoomOffsetY);
         ctx.scale(zoomScale, zoomScale);
@@ -158,7 +169,7 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
       }
 
-      if (zoomRef.current.isZooming) {
+      if (zoomRef.current.isZooming || zoomRef.current.isCompleted) {
         ctx.restore();
       }
     }
