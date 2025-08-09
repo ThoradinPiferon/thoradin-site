@@ -87,7 +87,7 @@ const MatrixSpiralCanvas = forwardRef(({
 
     const centerX = width / 2;
     const centerY = height / 2;
-    const maxRadius = Math.max(width, height) * 0.5;
+    const maxRadius = Math.min(width, height) * 0.4; // Reduced from 0.5 to 0.4 and use min instead of max
 
     if (matrixState === 'static' || animationComplete.current) {
       if (!staticSpiralRef.current) {
@@ -221,6 +221,26 @@ const MatrixSpiralCanvas = forwardRef(({
           ctx.fillText(char, x, y);
         }
       });
+      
+      // Draw horizontal sentence reveal
+      if (sentenceRevealActive.current) {
+        const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180;
+        const sentenceWidth = phrase.length * 20;
+        const startX = centerX - sentenceWidth / 2;
+        const sentenceY = centerY;
+        
+        ctx.font = '20px monospace';
+        ctx.fillStyle = 'rgba(0,255,180,0.9)';
+        ctx.shadowColor = '#00ffcc';
+        ctx.shadowBlur = 8;
+        
+        // Draw phrase characters progressively
+        for (let i = 0; i < phrase.length; i++) {
+          if (i <= sentenceProgress * phrase.length) {
+            ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+          }
+        }
+      }
     }
 
     drawRef.current = draw;
