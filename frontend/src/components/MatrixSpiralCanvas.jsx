@@ -397,18 +397,13 @@ const MatrixSpiralCanvas = forwardRef(({
     // Draw static state once
     draw();
     
-    // Don't start a new animation loop for static state
-    // Only continue if zooming is active
-    if (zoomRef.current.isZooming) {
-      console.log('🎬 Static state with zoom - starting animation loop');
-      const animate = () => {
-        if (zoomRef.current.isZooming) {
-          draw();
-          animationIdRef.current = requestAnimationFrame(animate);
-        }
-      };
+    // Always start animation loop for static state to handle zoom effects
+    console.log('🎬 Static state - starting animation loop for zoom responsiveness');
+    const animate = () => {
+      draw();
       animationIdRef.current = requestAnimationFrame(animate);
-    }
+    };
+    animationIdRef.current = requestAnimationFrame(animate);
   };
 
   // Handle animation configuration and background path changes
