@@ -123,14 +123,23 @@ const MatrixSpiralCanvas = forwardRef(({
         zoomOffsetY = zy * (1 - zoomScale);
 
         if (progress >= 1) {
+          console.log('🎬 Zoom animation completed - progress:', progress);
+          console.log('🎬 Zoom state before completion:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
+          
           zoomRef.current.isZooming = false;
           zoomRef.current.isCompleted = true;
+          
+          console.log('🎬 Zoom state after completion:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
+          
           // Maintain zoom state and transition smoothly
           setTimeout(() => {
+            console.log('🎬 Executing transition after zoom completion');
             if (transitionToScenario) {
+              console.log('🎬 Calling transitionToScenario(2, 1)');
               // Keep zoom state during transition
               transitionToScenario(2, 1);
             } else if (onAnimationComplete) {
+              console.log('🎬 Calling onAnimationComplete (fallback)');
               onAnimationComplete();
             }
           }, 100); // Small delay to ensure zoom state is maintained
@@ -315,16 +324,24 @@ const MatrixSpiralCanvas = forwardRef(({
 
   const handleMatrixClick = (event) => {
     if (matrixState === 'running' && config?.type === 'matrix_spiral') {
+      console.log('🎬 Matrix clicked - triggering fast-forward');
       fastForwardToEnd();
       if (onAnimationComplete) onAnimationComplete();
     } else if (matrixState === 'static' && config?.type === 'matrix_static') {
+      console.log('🎬 Matrix clicked - triggering zoom effect');
+      console.log('🎬 Zoom state before:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
+      
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const clickX = event.clientX - rect.left;
       const clickY = event.clientY - rect.top;
+      
       zoomRef.current.isZooming = true;
       zoomRef.current.startTime = Date.now();
       zoomRef.current.target = { x: clickX, y: clickY };
+      
+      console.log('🎬 Zoom triggered with target:', { x: clickX, y: clickY });
+      console.log('🎬 Zoom state after:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
     }
   };
 

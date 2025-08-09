@@ -260,6 +260,7 @@ const LayeredInterface = () => {
     // Special handler for F1 in scene 1.2 (11x7 grid)
     if (currentScene === 1 && currentSubscene === 2 && tileId === 'F1') {
       console.log(`🎯 Special F1 handler in scene 1.2 - triggering zoom and transition to scenario 2.1`);
+      console.log(`🎯 F1 click details:`, { currentScene, currentSubscene, tileId, event: !!event });
       
       // Trigger the built-in zoom effect in MatrixSpiralCanvas
       if (matrixRef.current) {
@@ -272,6 +273,8 @@ const LayeredInterface = () => {
           const cursorX = event.clientX;
           const cursorY = event.clientY;
           
+          console.log('🎯 Creating synthetic click event at:', { cursorX, cursorY });
+          
           const clickEvent = new MouseEvent('click', {
             clientX: cursorX,
             clientY: cursorY,
@@ -280,6 +283,7 @@ const LayeredInterface = () => {
           });
           
           canvasElement.dispatchEvent(clickEvent);
+          console.log('🎯 Synthetic click event dispatched');
         } else {
           console.log('⚠️ Canvas element not available, proceeding with direct transition');
           // Fallback: direct transition to scenario 2.1
