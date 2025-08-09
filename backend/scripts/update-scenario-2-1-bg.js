@@ -18,14 +18,14 @@ async function updateScenario21WithBackground() {
         }
       },
       update: {
-        backgroundPath: '/assets/thoradin-vault-bg.png',
+        backgroundPath: '/assets/thoradin-vault-bg.png?v=' + Date.now(),
         gridConfig: {
           columns: 11,
           rows: 7,
           tiles: []
         },
         animationConfig: {
-          type: 'dungeon_vault',
+          type: 'static_background', // Changed from 'dungeon_vault' to 'static_background'
           speed: 'normal',
           colors: { primary: '#ffd700', secondary: '#8b4513', background: '#1a1a2e' },
           text: "Welcome to Thoradin's Vault",
@@ -39,7 +39,7 @@ async function updateScenario21WithBackground() {
         subsceneId: 1,
         title: "Thoradin's Vault",
         description: "Ancient mystical chamber with glowing symbols and stone pedestals",
-        backgroundPath: '/assets/thoradin-vault-bg.png',
+        backgroundPath: '/assets/thoradin-vault-bg.png?v=' + Date.now(),
         gridConfig: {
           columns: 11,
           rows: 7,
