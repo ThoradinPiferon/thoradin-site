@@ -69,6 +69,29 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Database fix endpoint (temporary)
+app.get('/api/fix-db', async (req, res) => {
+  try {
+    console.log('🔧 Manual database fix triggered...');
+    const { execSync } = await import('child_process');
+    
+    // Run the database fix
+    execSync('npm run fix:db', { stdio: 'pipe' });
+    
+    res.json({
+      success: true,
+      message: 'Database fix completed successfully'
+    });
+  } catch (error) {
+    console.error('❌ Database fix failed:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Database fix failed',
+      error: error.message
+    });
+  }
+});
+
 // Scenario routes
 app.use('/api/scenario', scenarioRoutes);
 
