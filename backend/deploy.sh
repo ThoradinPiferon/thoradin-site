@@ -12,6 +12,10 @@ export NODE_ENV=production
 echo "🚨 Running force migration for production database..."
 npm run force:migrate
 
+# Fix database schema if needed
+echo "🔧 Running database fix script..."
+npm run fix:db
+
 # Start the server
 echo "🌐 Starting server..."
 npm start 

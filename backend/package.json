@@ -13,6 +13,7 @@
     "db:reset": "npx prisma migrate reset",
     "db:seed": "node scripts/seed.js",
     "force:migrate": "node scripts/safe-migrate.js",
+    "fix:db": "node scripts/fix-production-db.js",
     "db:deploy": "npx prisma migrate deploy",
     "build": "npx prisma generate",
     "postinstall": "npx prisma generate"
