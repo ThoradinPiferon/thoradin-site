@@ -8,7 +8,8 @@ const MatrixSpiralCanvas = forwardRef(({
   matrixState = 'running',
   animationConfig = null,
   backgroundPath = null,
-  onAnimationComplete
+  onAnimationComplete,
+  transitionToScenario // Add this prop for direct scenario transitions
 }, ref) => {
 
   const defaultAnimationConfig = {
@@ -115,7 +116,11 @@ const MatrixSpiralCanvas = forwardRef(({
           zoomRef.current.isCompleted = true;
           // Delay the scenario transition to show zoomed state
           setTimeout(() => {
-            if (onAnimationComplete) onAnimationComplete();
+            if (transitionToScenario) {
+              transitionToScenario(2, 1); // Direct transition to scenario 2.1
+            } else if (onAnimationComplete) {
+              onAnimationComplete(); // Fallback to original callback
+            }
           }, 1000); // Show zoomed state for 1 second before transitioning
         }
       } else if (zoomRef.current.isCompleted) {

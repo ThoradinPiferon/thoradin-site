@@ -437,6 +437,7 @@ const LayeredInterface = () => {
               animationConfig={animationConfig}
               backgroundPath={backgroundPath}
               onAnimationComplete={handleAnimationComplete}
+              transitionToScenario={transitionToScenario}
             />
           );
         })()}
