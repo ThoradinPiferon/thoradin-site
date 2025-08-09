@@ -41,7 +41,7 @@ const MatrixSpiralCanvas = forwardRef(({
   const zoomRef = useRef({
     isZooming: false,
     startTime: 0,
-    duration: 800, // Reduced from 1200 to 800ms for faster zoom
+    duration: 2500, // Increased to 2.5 seconds for longer zoom
     target: { x: 0, y: 0 },
     isCompleted: false // Track if zoom has completed
   });
@@ -105,7 +105,7 @@ const MatrixSpiralCanvas = forwardRef(({
         const elapsed = Date.now() - zoomRef.current.startTime;
         const progress = Math.min(elapsed / zoomRef.current.duration, 1);
         const easeProgress = progress * progress;
-        zoomScale = 1 + (10 * easeProgress); // Increased from 5 to 10 for deeper zoom
+        zoomScale = 1 + (4 * easeProgress); // Changed to 500% zoom (1 + 4 = 5x)
 
         const { x: zx, y: zy } = zoomRef.current.target;
         zoomOffsetX = zx * (1 - zoomScale);
@@ -121,11 +121,11 @@ const MatrixSpiralCanvas = forwardRef(({
             } else if (onAnimationComplete) {
               onAnimationComplete(); // Fallback to original callback
             }
-          }, 1000); // Show zoomed state for 1 second before transitioning
+          }, 2000); // Show zoomed state for 2 seconds before transitioning
         }
       } else if (zoomRef.current.isCompleted) {
         // Maintain final zoom state
-        zoomScale = 11; // Final zoom level (1 + 10)
+        zoomScale = 5; // Final zoom level (500% = 5x)
         const { x: zx, y: zy } = zoomRef.current.target;
         zoomOffsetX = zx * (1 - zoomScale);
         zoomOffsetY = zy * (1 - zoomScale);
