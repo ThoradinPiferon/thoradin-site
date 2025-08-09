@@ -59,7 +59,7 @@ const MatrixSpiralCanvas = forwardRef(({
   function getResponsiveFontSize(width, height, distanceFromCenter) {
     const screenSize = Math.min(width, height);
     const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02));
-    return Math.max(6, baseFontSize * (0.5 + distanceFromCenter * 0.8));
+    return Math.max(6, baseFontSize * (0.6 + distanceFromCenter * 0.4)); // Reduced scaling factor from 0.8 to 0.4
   }
 
   function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDur) {
