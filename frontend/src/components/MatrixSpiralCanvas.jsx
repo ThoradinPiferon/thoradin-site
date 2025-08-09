@@ -87,7 +87,7 @@ const MatrixSpiralCanvas = forwardRef(({
 
     const centerX = width / 2;
     const centerY = height / 2;
-    const maxRadius = Math.min(width, height) * 0.4; // Reduced from 0.5 to 0.4 and use min instead of max
+    const maxRadius = Math.min(width, height) * 0.48; // Increased by 20% from 0.4 to 0.48
 
     if (matrixState === 'static' || animationComplete.current) {
       if (!staticSpiralRef.current) {
