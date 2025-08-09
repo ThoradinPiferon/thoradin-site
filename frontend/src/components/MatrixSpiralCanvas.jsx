@@ -40,7 +40,7 @@ const MatrixSpiralCanvas = forwardRef(({
   const zoomRef = useRef({
     isZooming: false,
     startTime: 0,
-    duration: 1200,
+    duration: 800, // Reduced from 1200 to 800ms for faster zoom
     target: { x: 0, y: 0 }
   });
 
@@ -103,7 +103,7 @@ const MatrixSpiralCanvas = forwardRef(({
         const elapsed = Date.now() - zoomRef.current.startTime;
         const progress = Math.min(elapsed / zoomRef.current.duration, 1);
         const easeProgress = progress * progress;
-        zoomScale = 1 + (5 * easeProgress);
+        zoomScale = 1 + (10 * easeProgress); // Increased from 5 to 10 for deeper zoom
 
         const { x: zx, y: zy } = zoomRef.current.target;
         zoomOffsetX = zx * (1 - zoomScale);
