@@ -45,70 +45,8 @@ const MatrixSpiralCanvas = forwardRef(({
   // Background video/image element
   const backgroundRef = useRef(null);
 
-  // Only log state changes, not every render
-  useEffect(() => {
-    if (lastMatrixStateRef.current !== matrixState) {
-      console.log(`🎬 MatrixSpiralCanvas: matrixState changed to ${matrixState}`);
-      lastMatrixStateRef.current = matrixState;
-    }
-  }, [matrixState]);
-
-
-
-  // Handle matrix click for fast-forward or zoom
-  const handleMatrixClick = (event) => {
-    if (matrixState === 'running' && config?.type === 'matrix_spiral') {
-      console.log('🎬 Matrix clicked - triggering fast-forward');
-      
-      // Fast-forward to end state
-      fastForwardToEnd();
-      
-      // Call onAnimationComplete to trigger scenario transition
-      if (onAnimationComplete) {
-        onAnimationComplete();
-      }
-    } else if (matrixState === 'static' && config?.type === 'matrix_static') {
-      // Scenario 1.2: Trigger built-in zoom effect
-      console.log('🎬 Matrix clicked - triggering built-in zoom');
-      zoomRef.current.isZooming = true;
-      zoomRef.current.startTime = Date.now();
-    }
-  };
-
-  // Simple character generation
-  const lightChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  function getRandomMatrixChar() {
-    return lightChars[Math.floor(Math.random() * lightChars.length)];
-  }
-  
-  // Responsive font size calculation
-  function getResponsiveFontSize(width, height, distanceFromCenter) {
-    const screenSize = Math.min(width, height);
-    const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02)); // 2% of screen size, min 8px, max 24px
-    return Math.max(6, baseFontSize - distanceFromCenter * (baseFontSize * 0.5));
-  }
-
-  // Simple spiral generation
-  function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
-    const points = [];
-    const progress = Math.min(frame / fillDuration, 1);
-    
-    for (let i = 0; i < total; i++) {
-      const t = i * 0.1 + frame * 0.05;
-      const radius = maxRadius * progress * (i / total);
-      const angle = t;
-
-      const x = centerX + radius * Math.cos(angle);
-      const y = centerY + radius * Math.sin(angle);
-
-      points.push({ x, y, index: i, radius: radius });
-    }
-
-    return points;
-  }
-
-  // Define draw function
-  const draw = () => {
+  // Hoisted function declarations (to avoid TDZ issues)
+  function draw() {
     // Ensure canvas is available
     const canvasElement = canvasRef.current;
     if (!canvasElement) {
@@ -124,7 +62,9 @@ const MatrixSpiralCanvas = forwardRef(({
     const displayWidth = rect.width;
     const displayHeight = rect.height;
     
-    ctx.clearRect(0, 0, width, height);
+    // Clear with CSS pixel dimensions after scaling
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
 
     // Use display dimensions for centering (not the full pixel dimensions)
     const centerX = displayWidth / 2;
@@ -239,112 +179,111 @@ const MatrixSpiralCanvas = forwardRef(({
 
     // Scene 1.1: Animated Matrix background (only if running)
     if (matrixState === 'running') {
-
-    // Check if sentence reveal should start
-    if (frameRef.current >= sentenceRevealDuration && !sentenceRevealActive.current) {
-      sentenceRevealStart.current = frameRef.current;
-      sentenceRevealActive.current = true;
-    }
-
-    // Check if animation is complete
-    if (frameRef.current >= totalDuration && !animationComplete.current) {
-      animationComplete.current = true;
-      console.log('✅ Matrix animation completed');
-      if (onAnimationComplete) {
-        onAnimationComplete();
+      // Check if sentence reveal should start
+      if (frameRef.current >= sentenceRevealDuration && !sentenceRevealActive.current) {
+        sentenceRevealStart.current = frameRef.current;
+        sentenceRevealActive.current = true;
       }
-      return;
-    }
 
-    // Generate spiral points for current frame
-    const spiralPoints = generateSpiralPoints(350, centerX, centerY, frameRef.current, maxRadius, fillDuration);
+      // Check if animation is complete
+      if (frameRef.current >= totalDuration && !animationComplete.current) {
+        animationComplete.current = true;
+        console.log('✅ Matrix animation completed');
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+        return;
+      }
 
-    // Draw spiral points
-          spiralPoints.forEach(({ x, y, index, radius }) => {
+      // Generate spiral points for current frame
+      const spiralPoints = generateSpiralPoints(350, centerX, centerY, frameRef.current, maxRadius, fillDuration);
+
+      // Draw spiral points
+      spiralPoints.forEach(({ x, y, index, radius }) => {
         const charIndex = index % (characterStream.current?.length || 1);
         const char = characterStream.current?.[charIndex] || 'A';
-      
-      const distanceFromCenter = radius / maxRadius;
-      const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-      const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
-      
-      ctx.font = `${fontSize}px monospace`;
-      
-      // Determine if this is a phrase character
-      const totalSpiralChars = spiralPoints.length;
-      const phraseStartIndex = totalSpiralChars - phrase.length;
-      const isPhraseChar = index >= phraseStartIndex;
-      const phraseCharIndex = index - phraseStartIndex;
-      
-      if (isPhraseChar && phraseCharIndex < phrase.length) {
-        // Phrase characters - check if they should be revealed
-        if (sentenceRevealActive.current) {
-          const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180; // 3 seconds for sentence reveal
-          const shouldReveal = phraseCharIndex <= sentenceProgress * phrase.length;
-          
-          if (shouldReveal) {
-            // Bright green for revealed phrase characters
-            const phraseChar = phrase[phraseCharIndex];
-            ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
-            ctx.shadowColor = '#00ffcc';
-            ctx.shadowBlur = 5;
-            ctx.fillText(phraseChar, x, y);
+        
+        const distanceFromCenter = radius / maxRadius;
+        const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
+        const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
+        
+        ctx.font = `${fontSize}px monospace`;
+        
+        // Determine if this is a phrase character
+        const totalSpiralChars = spiralPoints.length;
+        const phraseStartIndex = totalSpiralChars - phrase.length;
+        const isPhraseChar = index >= phraseStartIndex;
+        const phraseCharIndex = index - phraseStartIndex;
+        
+        if (isPhraseChar && phraseCharIndex < phrase.length) {
+          // Phrase characters - check if they should be revealed
+          if (sentenceRevealActive.current) {
+            const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180; // 3 seconds for sentence reveal
+            const shouldReveal = phraseCharIndex <= sentenceProgress * phrase.length;
+            
+            if (shouldReveal) {
+              // Bright green for revealed phrase characters
+              const phraseChar = phrase[phraseCharIndex];
+              ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
+              ctx.shadowColor = '#00ffcc';
+              ctx.shadowBlur = 5;
+              ctx.fillText(phraseChar, x, y);
+            } else {
+              // Not revealed yet - show as random character
+              ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.3})`;
+              ctx.shadowColor = '#00ff00';
+              ctx.shadowBlur = 1;
+              ctx.fillText(char, x, y);
+            }
           } else {
-            // Not revealed yet - show as random character
-            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.3})`;
+            // Before sentence reveal - show as random character
+            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.8})`;
             ctx.shadowColor = '#00ff00';
             ctx.shadowBlur = 1;
             ctx.fillText(char, x, y);
           }
         } else {
-          // Before sentence reveal - show as random character
-          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.8})`;
-          ctx.shadowColor = '#00ff00';
-          ctx.shadowBlur = 1;
+          // Background spiral - fade to background when sentence is revealing
+          if (sentenceRevealActive.current) {
+            const fadeProgress = (frameRef.current - sentenceRevealStart.current) / 180;
+            const fadeOpacity = Math.max(0.05, baseOpacity * 0.2 * (1 - fadeProgress * 0.5));
+            ctx.fillStyle = `rgba(0,255,0,${fadeOpacity})`;
+            ctx.shadowBlur = 0;
+          } else {
+            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.8})`;
+            ctx.shadowColor = '#00ff00';
+            ctx.shadowBlur = 1;
+          }
           ctx.fillText(char, x, y);
         }
-      } else {
-        // Background spiral - fade to background when sentence is revealing
-        if (sentenceRevealActive.current) {
-          const fadeProgress = (frameRef.current - sentenceRevealStart.current) / 180;
-          const fadeOpacity = Math.max(0.05, baseOpacity * 0.2 * (1 - fadeProgress * 0.5));
-          ctx.fillStyle = `rgba(0,255,0,${fadeOpacity})`;
-          ctx.shadowBlur = 0;
-        } else {
-          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.8})`;
-          ctx.shadowColor = '#00ff00';
-          ctx.shadowBlur = 1;
-        }
-        ctx.fillText(char, x, y);
-      }
-    });
-  }
-    // Draw horizontal sentence reveal
-    if (sentenceRevealActive.current) {
-      const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180;
-      const sentenceWidth = phrase.length * 20;
-      const startX = centerX - sentenceWidth / 2;
-      const sentenceY = centerY;
-      
-      ctx.font = '20px monospace';
-      ctx.fillStyle = 'rgba(0,255,180,0.9)';
-      ctx.shadowColor = '#00ffcc';
-      ctx.shadowBlur = 8;
-      
-      // Draw phrase characters progressively
-      for (let i = 0; i < phrase.length; i++) {
-        if (i <= sentenceProgress * phrase.length) {
-          ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+      });
+
+      // Draw horizontal sentence reveal
+      if (sentenceRevealActive.current) {
+        const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180;
+        const sentenceWidth = phrase.length * 20;
+        const startX = centerX - sentenceWidth / 2;
+        const sentenceY = centerY;
+        
+        ctx.font = '20px monospace';
+        ctx.fillStyle = 'rgba(0,255,180,0.9)';
+        ctx.shadowColor = '#00ffcc';
+        ctx.shadowBlur = 8;
+        
+        // Draw phrase characters progressively
+        for (let i = 0; i < phrase.length; i++) {
+          if (i <= sentenceProgress * phrase.length) {
+            ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+          }
         }
       }
     }
     
     // Store the draw function in ref for external access (at the end to avoid circular reference)
     drawRef.current = draw;
-  };
+  }
 
-  // Start matrix animation function
-  const startMatrixAnimation = () => {
+  function startMatrixAnimation() {
     console.log('🎬 Starting matrix animation...');
     frameRef.current = 0;
     animationComplete.current = false;
@@ -378,10 +317,9 @@ const MatrixSpiralCanvas = forwardRef(({
     };
     
     animate();
-  };
+  }
 
-  // Draw static state function
-  const drawStaticState = () => {
+  function drawStaticState() {
     console.log('🎬 Drawing static matrix state');
     
     // Cancel any existing animation
@@ -407,7 +345,196 @@ const MatrixSpiralCanvas = forwardRef(({
       animationIdRef.current = requestAnimationFrame(animate);
     };
     animationIdRef.current = requestAnimationFrame(animate);
+  }
+
+  function fastForwardToEnd() {
+    console.log('🎬 Fast-forwarding to end state');
+    
+    // Cancel any ongoing animation
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current);
+      animationIdRef.current = null;
+    }
+    
+    // Mark animation as complete
+    animationComplete.current = true;
+    
+    // Force immediate static state rendering
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext('2d');
+      const { width, height } = canvas;
+      
+      // Get the actual display dimensions
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = rect.width;
+      const displayHeight = rect.height;
+      
+      // Clear with CSS pixel dimensions
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      
+      // Draw static final state immediately
+      const centerX = displayWidth / 2;
+      const centerY = displayHeight / 2;
+      const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
+      const totalDuration = 480;
+      
+      // Use cached static spiral or generate it
+      if (!staticSpiralRef.current) {
+        staticSpiralRef.current = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
+      }
+      const spiral = staticSpiralRef.current;
+      
+      // Pre-calculate static values
+      const totalSpiralChars = spiral.length;
+      const phraseStartIndex = totalSpiralChars - phrase.length;
+      const phraseLength = phrase.length;
+      
+      // Draw static spiral background with fully revealed phrase
+      spiral.forEach(({ x, y, index, radius }) => {
+        const charIndex = index % (characterStream.current?.length || 1);
+        const char = characterStream.current?.[charIndex] || 'A';
+        
+        const distanceFromCenter = radius / maxRadius;
+        const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
+        const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
+        
+        ctx.font = `${fontSize}px monospace`;
+        
+        const isPhraseChar = index >= phraseStartIndex;
+        const phraseCharIndex = index - phraseStartIndex;
+        
+        if (isPhraseChar && phraseCharIndex < phraseLength) {
+          // Phrase characters - fully revealed and bright green
+          const phraseChar = phrase[phraseCharIndex];
+          ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
+          ctx.shadowColor = '#00ffcc';
+          ctx.shadowBlur = 5;
+          ctx.fillText(phraseChar, x, y);
+        } else {
+          // Background spiral - faded to background
+          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
+          ctx.shadowBlur = 0;
+          ctx.fillText(char, x, y);
+        }
+      });
+      
+      // Draw fully spelled horizontal sentence
+      const sentenceWidth = phraseLength * 20;
+      const startX = centerX - sentenceWidth / 2;
+      const sentenceY = centerY;
+      
+      ctx.font = '20px monospace';
+      ctx.fillStyle = 'rgba(0,255,180,0.9)';
+      ctx.shadowColor = '#00ffcc';
+      ctx.shadowBlur = 8;
+      
+      for (let i = 0; i < phraseLength; i++) {
+        ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
+      }
+    }
+    
+    console.log('✅ Fast-forward completed');
+  }
+
+  function restartAnimation() {
+    console.log('Restarting Matrix animation...');
+    frameRef.current = 0;
+    animationComplete.current = false;
+    sentenceRevealStart.current = 0;
+    sentenceRevealActive.current = false;
+    
+    // Cancel any existing animation
+    if (animationIdRef.current) {
+      cancelAnimationFrame(animationIdRef.current);
+      animationIdRef.current = null;
+    }
+    
+    // Ensure draw function is available
+    if (!drawRef.current) {
+      console.log('🎬 Draw function not available during restart, initializing...');
+      draw();
+    }
+    
+    // Restart the animation loop using the stored draw function
+    const animate = () => {
+      if (animationComplete.current) return;
+      
+      frameRef.current++;
+      if (drawRef.current && typeof drawRef.current === 'function') {
+        drawRef.current();
+      } else {
+        console.log('🎬 Draw function still not available during restart, calling draw directly');
+        draw();
+      }
+      requestAnimationFrame(animate);
+    };
+    
+    animate();
+  }
+
+  // Only log state changes, not every render
+  useEffect(() => {
+    if (lastMatrixStateRef.current !== matrixState) {
+      console.log(`🎬 MatrixSpiralCanvas: matrixState changed to ${matrixState}`);
+      lastMatrixStateRef.current = matrixState;
+    }
+  }, [matrixState]);
+
+
+
+  // Handle matrix click for fast-forward or zoom
+  const handleMatrixClick = (event) => {
+    if (matrixState === 'running' && config?.type === 'matrix_spiral') {
+      console.log('🎬 Matrix clicked - triggering fast-forward');
+      
+      // Fast-forward to end state
+      fastForwardToEnd();
+      
+      // Call onAnimationComplete to trigger scenario transition
+      if (onAnimationComplete) {
+        onAnimationComplete();
+      }
+    } else if (matrixState === 'static' && config?.type === 'matrix_static') {
+      // Scenario 1.2: Trigger built-in zoom effect
+      console.log('🎬 Matrix clicked - triggering built-in zoom');
+      zoomRef.current.isZooming = true;
+      zoomRef.current.startTime = Date.now();
+    }
   };
+
+  // Simple character generation
+  const lightChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  function getRandomMatrixChar() {
+    return lightChars[Math.floor(Math.random() * lightChars.length)];
+  }
+  
+  // Responsive font size calculation
+  function getResponsiveFontSize(width, height, distanceFromCenter) {
+    const screenSize = Math.min(width, height);
+    const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02)); // 2% of screen size, min 8px, max 24px
+    return Math.max(6, baseFontSize - distanceFromCenter * (baseFontSize * 0.5));
+  }
+
+  // Simple spiral generation
+  function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
+    const points = [];
+    const progress = Math.min(frame / fillDuration, 1);
+    
+    for (let i = 0; i < total; i++) {
+      const t = i * 0.1 + frame * 0.05;
+      const radius = maxRadius * progress * (i / total);
+      const angle = t;
+
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+
+      points.push({ x, y, index: i, radius: radius });
+    }
+
+    return points;
+  }
 
   // Handle animation configuration and background path changes
   useEffect(() => {
@@ -464,8 +591,6 @@ const MatrixSpiralCanvas = forwardRef(({
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const ctx = canvas.getContext('2d');
-    
     const resize = () => {
       // Get the actual device pixel ratio for crisp rendering
       const devicePixelRatio = window.devicePixelRatio || 1;
@@ -477,7 +602,9 @@ const MatrixSpiralCanvas = forwardRef(({
       
       // Scale the context to match the device pixel ratio
       const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
       ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.clearRect(0, 0, rect.width, rect.height);
       
       // Clear static spiral cache when canvas size changes
       staticSpiralRef.current = null;
@@ -506,125 +633,6 @@ const MatrixSpiralCanvas = forwardRef(({
       }
     };
   }, []);
-
-  // Fast-forward function to skip to end of intro with fully spelled letters
-  const fastForwardToEnd = () => {
-    frameRef.current = 480; // Jump to end of animation (8 seconds)
-    animationComplete.current = true;
-    sentenceRevealActive.current = true;
-    sentenceRevealStart.current = 300; // Set to when sentence reveal started
-    
-    // Trigger intro completion callback
-    if (onIntroComplete) {
-      onIntroComplete();
-    }
-    
-    // Redraw final state immediately with fully spelled letters
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      const { width, height } = canvas;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height);
-      
-      // Draw final state of animation
-      const rect = canvas.getBoundingClientRect();
-      const displayWidth = rect.width;
-      const displayHeight = rect.height;
-      const centerX = displayWidth / 2;
-      const centerY = displayHeight / 2;
-      const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
-      const totalDuration = 480; // 8 seconds
-      
-      // Generate final spiral state
-      const spiral = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
-      
-      // Draw final spiral background with fully revealed phrase
-      spiral.forEach(({ x, y, index, radius }) => {
-        const charIndex = index % (characterStream.current?.length || 1);
-        const char = characterStream.current?.[charIndex] || 'A';
-        
-        const distanceFromCenter = radius / maxRadius;
-        const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-        const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
-        
-        ctx.font = `${fontSize}px monospace`;
-        
-        // Calculate if this should be part of the phrase
-        const totalSpiralChars = spiral.length;
-        const phraseStartIndex = totalSpiralChars - phrase.length;
-        const isPhraseChar = index >= phraseStartIndex;
-        const phraseCharIndex = index - phraseStartIndex;
-        
-        if (isPhraseChar && phraseCharIndex < phrase.length) {
-          // Phrase characters - fully revealed and bright green
-          const phraseChar = phrase[phraseCharIndex];
-          ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
-          ctx.shadowColor = '#00ffcc';
-          ctx.shadowBlur = 5;
-          ctx.fillText(phraseChar, x, y);
-        } else {
-          // Background spiral - faded to background
-          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
-          ctx.shadowBlur = 0;
-          ctx.fillText(char, x, y);
-        }
-      });
-      
-      // Draw fully spelled horizontal sentence
-      const sentenceWidth = phrase.length * 20;
-      const startX = centerX - sentenceWidth / 2;
-      const sentenceY = centerY;
-      
-      ctx.font = '20px monospace';
-      ctx.fillStyle = 'rgba(0,255,180,0.9)';
-      ctx.shadowColor = '#00ffcc';
-      ctx.shadowBlur = 8;
-      
-      // Draw ALL letters of the phrase (fully spelled out)
-      for (let i = 0; i < phrase.length; i++) {
-        ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
-      }
-    }
-  };
-
-  // Restart animation function
-  const restartAnimation = () => {
-    console.log('Restarting Matrix animation...');
-    frameRef.current = 0;
-    animationComplete.current = false;
-    sentenceRevealStart.current = 0;
-    sentenceRevealActive.current = false;
-    
-    // Cancel any existing animation
-    if (animationIdRef.current) {
-      cancelAnimationFrame(animationIdRef.current);
-      animationIdRef.current = null;
-    }
-    
-    // Ensure draw function is available
-    if (!drawRef.current) {
-      console.log('🎬 Draw function not available during restart, initializing...');
-      draw();
-    }
-    
-    // Restart the animation loop using the stored draw function
-    const animate = () => {
-      if (animationComplete.current) return;
-      
-      frameRef.current++;
-      if (drawRef.current && typeof drawRef.current === 'function') {
-        drawRef.current();
-      } else {
-        console.log('🎬 Draw function still not available during restart, calling draw directly');
-        draw();
-      }
-      requestAnimationFrame(animate);
-    };
-    
-    animate();
-  };
 
   // Expose functions through ref
   useImperativeHandle(ref, () => ({
