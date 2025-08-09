@@ -442,6 +442,23 @@ const LayeredInterface = () => {
             );
           }
           
+          // For static background type, show background image
+          if (animationConfig?.type === 'static_background' && backgroundPath) {
+            return (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(${backgroundPath})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }} />
+            );
+          }
+          
           return animationConfig?.type === 'dungeon_vault' ? (
             <DungeonVaultCanvas 
               ref={dungeonRef}
