@@ -125,12 +125,15 @@ const MatrixSpiralCanvas = forwardRef(({
         if (progress >= 1) {
           zoomRef.current.isZooming = false;
           zoomRef.current.isCompleted = true;
-          // Immediate transition without static pause
-          if (transitionToScenario) {
-            transitionToScenario(2, 1); // Direct transition to scenario 2.1
-          } else if (onAnimationComplete) {
-            onAnimationComplete(); // Fallback to original callback
-          }
+          // Maintain zoom state and transition smoothly
+          setTimeout(() => {
+            if (transitionToScenario) {
+              // Keep zoom state during transition
+              transitionToScenario(2, 1);
+            } else if (onAnimationComplete) {
+              onAnimationComplete();
+            }
+          }, 100); // Small delay to ensure zoom state is maintained
         }
       } else if (zoomRef.current.isCompleted) {
         // Maintain final zoom state

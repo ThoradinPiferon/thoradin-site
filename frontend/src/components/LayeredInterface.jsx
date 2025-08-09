@@ -424,6 +424,24 @@ const LayeredInterface = () => {
       <div className="background-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
         {(() => {
           console.log(`🎬 Canvas selection: scenarioData?.backgroundType = "${scenarioData?.backgroundType}", animationConfig?.type = "${animationConfig?.type}"`);
+          
+          // For scenario 2.1, show background image instead of canvas
+          if (currentScene === 2 && currentSubscene === 1 && backgroundPath) {
+            return (
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundImage: `url(${backgroundPath})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }} />
+            );
+          }
+          
           return animationConfig?.type === 'dungeon_vault' ? (
             <DungeonVaultCanvas 
               ref={dungeonRef}
