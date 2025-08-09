@@ -68,14 +68,20 @@ const LayeredInterface = () => {
   
   const loadScenario = async (sceneId, subsceneId) => {
     console.log(`🎭 Loading scenario: ${sceneId}.${subsceneId}`);
+    console.log(`🔍 Parameters - sceneId: "${sceneId}", subsceneId: "${subsceneId}"`);
     setIsLoadingScenario(true);
     
     try {
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001'}/api/scenario?sceneId=${sceneId}&subsceneId=${subsceneId}`;
-      console.log(`🔗 API URL: ${apiUrl}`);
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      const apiUrl = `${baseUrl}/api/scenario?sceneId=${sceneId}&subsceneId=${subsceneId}`;
+      console.log(`🔗 Base URL: ${baseUrl}`);
+      console.log(`🔗 Full API URL: ${apiUrl}`);
+      console.log(`🔗 URL encoded: ${encodeURIComponent(apiUrl)}`);
       
+      console.log(`📡 Making fetch request to: ${apiUrl}`);
       const response = await fetch(apiUrl);
       console.log(`📡 Response status: ${response.status}`);
+      console.log(`📡 Response URL: ${response.url}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

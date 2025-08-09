@@ -77,6 +77,13 @@ const MatrixSpiralCanvas = forwardRef(({
   function getRandomMatrixChar() {
     return lightChars[Math.floor(Math.random() * lightChars.length)];
   }
+  
+  // Responsive font size calculation
+  function getResponsiveFontSize(width, height, distanceFromCenter) {
+    const screenSize = Math.min(width, height);
+    const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02)); // 2% of screen size, min 8px, max 24px
+    return Math.max(6, baseFontSize - distanceFromCenter * (baseFontSize * 0.5));
+  }
 
   // Simple spiral generation
   function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDuration = 900) {
@@ -135,7 +142,7 @@ const MatrixSpiralCanvas = forwardRef(({
         
         const distanceFromCenter = radius / maxRadius;
         const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-        const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
+        const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
         
         ctx.font = `${fontSize}px monospace`;
         
@@ -211,7 +218,7 @@ const MatrixSpiralCanvas = forwardRef(({
       
       const distanceFromCenter = radius / maxRadius;
       const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-      const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
+      const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
       
       ctx.font = `${fontSize}px monospace`;
       
@@ -451,10 +458,22 @@ const MatrixSpiralCanvas = forwardRef(({
     const ctx = canvas.getContext('2d');
     
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      // Get the actual device pixel ratio for crisp rendering
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      // Set canvas size to match display size
+      canvas.width = rect.width * devicePixelRatio;
+      canvas.height = rect.height * devicePixelRatio;
+      
+      // Scale the context to match the device pixel ratio
+      const ctx = canvas.getContext('2d');
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+      
       // Clear static spiral cache when canvas size changes
       staticSpiralRef.current = null;
+      
+      console.log(`🎬 Canvas resized to: ${canvas.width}x${canvas.height} (device ratio: ${devicePixelRatio})`);
     };
     
     window.addEventListener('resize', resize);
@@ -640,7 +659,7 @@ const MatrixSpiralCanvas = forwardRef(({
           
           const distanceFromCenter = radius / maxRadius;
           const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-          const fontSize = Math.max(8, 16 - distanceFromCenter * 8);
+          const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
           
           ctx.font = `${fontSize}px monospace`;
           
@@ -704,9 +723,13 @@ const MatrixSpiralCanvas = forwardRef(({
           zIndex: 1,
           width: '100vw',
           height: '100vh',
+          maxWidth: '100%',
+          maxHeight: '100%',
           objectFit: 'cover',
+          objectPosition: 'center',
           pointerEvents: 'none',
-          display: backgroundPath ? 'block' : 'none'
+          display: backgroundPath ? 'block' : 'none',
+          overflow: 'hidden'
         }}
         autoPlay
         muted
@@ -725,10 +748,14 @@ const MatrixSpiralCanvas = forwardRef(({
           zIndex: 1,
           width: '100vw',
           height: '100vh',
+          maxWidth: '100%',
+          maxHeight: '100%',
           background: 'black',
           pointerEvents: matrixState === 'running' && config?.type === 'matrix_spiral' ? 'auto' : 'none',
           cursor: matrixState === 'running' && config?.type === 'matrix_spiral' ? 'pointer' : 'default',
-          display: backgroundPath ? 'none' : 'block'
+          display: backgroundPath ? 'none' : 'block',
+          objectFit: 'cover',
+          overflow: 'hidden'
         }} 
         onClick={handleMatrixClick}
       />
