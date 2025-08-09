@@ -168,6 +168,12 @@ const MatrixSpiralCanvas = forwardRef(({
           console.log('✅ Built-in zoom completed');
           zoomRef.current.isZooming = false;
           
+          // Stop the current animation loop
+          if (animationIdRef.current) {
+            cancelAnimationFrame(animationIdRef.current);
+            animationIdRef.current = null;
+          }
+          
           // Trigger scenario transition after zoom
           if (onAnimationComplete) {
             onAnimationComplete();
@@ -397,13 +403,23 @@ const MatrixSpiralCanvas = forwardRef(({
     // Draw static state once
     draw();
     
-    // Always start animation loop for static state to handle zoom effects
-    console.log('🎬 Static state - starting animation loop for zoom responsiveness');
-    const animate = () => {
-      draw();
+    // Only start animation loop if zooming is active
+    if (zoomRef.current.isZooming) {
+      console.log('🎬 Static state with zoom - starting animation loop');
+      const animate = () => {
+        if (zoomRef.current.isZooming) {
+          draw();
+          animationIdRef.current = requestAnimationFrame(animate);
+        } else {
+          console.log('🎬 Zoom completed - stopping animation loop');
+          // Draw one final frame without zoom
+          draw();
+        }
+      };
       animationIdRef.current = requestAnimationFrame(animate);
-    };
-    animationIdRef.current = requestAnimationFrame(animate);
+    } else {
+      console.log('🎬 Static state - no zoom active, single draw only');
+    }
   };
 
   // Handle animation configuration and background path changes
