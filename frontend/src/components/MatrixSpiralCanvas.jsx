@@ -234,10 +234,8 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
       }
       
-      // No animation loop for static state, but continue if zooming
-      if (!zoomRef.current.isZooming) {
-        return;
-      }
+      // No animation loop for static state
+      return;
     }
 
     // Scene 1.1: Animated Matrix background
@@ -398,6 +396,19 @@ const MatrixSpiralCanvas = forwardRef(({
     
     // Draw static state once
     draw();
+    
+    // Don't start a new animation loop for static state
+    // Only continue if zooming is active
+    if (zoomRef.current.isZooming) {
+      console.log('🎬 Static state with zoom - starting animation loop');
+      const animate = () => {
+        if (zoomRef.current.isZooming) {
+          draw();
+          animationIdRef.current = requestAnimationFrame(animate);
+        }
+      };
+      animationIdRef.current = requestAnimationFrame(animate);
+    }
   };
 
   // Handle animation configuration and background path changes
@@ -430,8 +441,8 @@ const MatrixSpiralCanvas = forwardRef(({
       if (config?.type === 'matrix_spiral' && matrixState === 'running') {
         console.log(`🎬 ✅ Starting matrix spiral animation with config:`, config);
         startMatrixAnimation();
-      } else if (config?.type === 'static') {
-        console.log(`🎬 Using static background - drawing static state`);
+      } else if (config?.type === 'matrix_static' && matrixState === 'static') {
+        console.log(`🎬 ✅ Drawing static matrix state for scenario 1.2`);
         // Static mode - draw static state once
         drawStaticState();
       } else if (!config) {
