@@ -273,9 +273,8 @@ const MatrixSpiralCanvas = forwardRef(({
     } else if (matrixState === 'static' && config?.type === 'matrix_static') {
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      const clickX = (event.clientX - rect.left) * dpr;
-      const clickY = (event.clientY - rect.top) * dpr;
+      const clickX = event.clientX - rect.left;
+      const clickY = event.clientY - rect.top;
       zoomRef.current.isZooming = true;
       zoomRef.current.startTime = Date.now();
       zoomRef.current.target = { x: clickX, y: clickY };
@@ -287,11 +286,10 @@ const MatrixSpiralCanvas = forwardRef(({
     if (!canvas) return;
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      canvas.width = rect.width;
+      canvas.height = rect.height;
       const ctx = canvas.getContext('2d');
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       staticSpiralRef.current = null;
     };
     window.addEventListener('resize', resize);
