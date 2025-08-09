@@ -18,7 +18,7 @@ async function updateScenario21WithBackground() {
         }
       },
       update: {
-        backgroundPath: '/assets/thoradin-vault-bg.jpg',
+        backgroundPath: '/assets/thoradin-vault-bg.png',
         gridConfig: {
           columns: 11,
           rows: 7,
@@ -39,7 +39,7 @@ async function updateScenario21WithBackground() {
         subsceneId: 1,
         title: "Thoradin's Vault",
         description: "Ancient mystical chamber with glowing symbols and stone pedestals",
-        backgroundPath: '/assets/thoradin-vault-bg.jpg',
+        backgroundPath: '/assets/thoradin-vault-bg.png',
         gridConfig: {
           columns: 11,
           rows: 7,
