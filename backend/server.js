@@ -19,7 +19,8 @@ const allowedOrigins = [
   'https://www.thoradinpiferon.com',
   'https://thoradinpiferon.com',
   'https://thoradin-site.vercel.app',
-  'https://thoradin-site-git-main-thoradinpiferon.vercel.app'
+  'https://thoradin-site-git-main-thoradinpiferon.vercel.app',
+  'https://thoradin-site-dt49cyysm-thoradins-projects.vercel.app'
 ];
 
 // Add environment variable for additional origins
@@ -67,6 +68,32 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     version: '1.0.0'
   });
+});
+
+// Database seed endpoint (temporary)
+app.get('/api/seed-db', async (req, res) => {
+  try {
+    console.log('🌱 Manual database seed triggered...');
+    const { execSync } = await import('child_process');
+    
+    // Run the database fix first
+    execSync('npm run fix:db', { stdio: 'pipe' });
+    
+    // Then run the seed script
+    execSync('npm run db:seed', { stdio: 'pipe' });
+    
+    res.json({
+      success: true,
+      message: 'Database seeded successfully'
+    });
+  } catch (error) {
+    console.error('❌ Database seed failed:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Database seed failed',
+      error: error.message
+    });
+  }
 });
 
 
