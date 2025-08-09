@@ -74,7 +74,7 @@ const MatrixSpiralCanvas = forwardRef(({
     const sentenceRevealDuration = 300; // 5 seconds - when sentence starts revealing
 
     // Handle different animation states based on matrixState
-    if (matrixState === 'static') {
+    if (matrixState === 'static' || animationComplete.current) {
       // Scene 1.2: Draw static final state with fully typed letters
       if (!staticSpiralRef.current) {
         staticSpiralRef.current = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
@@ -349,78 +349,11 @@ const MatrixSpiralCanvas = forwardRef(({
       animationIdRef.current = null;
     }
     
-    // Mark animation as complete
+    // Mark animation as complete and set to static state
     animationComplete.current = true;
     
-    // Force immediate static state rendering
-    const canvas = canvasRef.current;
-    if (canvas) {
-      const ctx = canvas.getContext('2d');
-      const { width, height } = canvas;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height);
-      
-      // Draw static final state immediately
-      const centerX = width / 2;
-      const centerY = height / 2;
-      const maxRadius = Math.max(width, height) * 0.5;
-      const totalDuration = 480;
-      
-      // Use cached static spiral or generate it
-      if (!staticSpiralRef.current) {
-        staticSpiralRef.current = generateSpiralPoints(350, centerX, centerY, totalDuration, maxRadius, totalDuration);
-      }
-      const spiral = staticSpiralRef.current;
-      
-      // Pre-calculate static values
-      const totalSpiralChars = spiral.length;
-      const phraseStartIndex = totalSpiralChars - phrase.length;
-      const phraseLength = phrase.length;
-      
-      // Draw static spiral background with fully revealed phrase
-      spiral.forEach(({ x, y, index, radius }) => {
-        const charIndex = index % (characterStream.current?.length || 1);
-        const char = characterStream.current?.[charIndex] || 'A';
-        
-        const distanceFromCenter = radius / maxRadius;
-        const baseOpacity = Math.max(0.1, 1 - distanceFromCenter * 0.5);
-        const fontSize = getResponsiveFontSize(width, height, distanceFromCenter);
-        
-        ctx.font = `${fontSize}px monospace`;
-        
-        const isPhraseChar = index >= phraseStartIndex;
-        const phraseCharIndex = index - phraseStartIndex;
-        
-        if (isPhraseChar && phraseCharIndex < phraseLength) {
-          // Phrase characters - fully revealed and bright green
-          const phraseChar = phrase[phraseCharIndex];
-          ctx.fillStyle = `rgba(0,255,180,${baseOpacity * 0.9})`;
-          ctx.shadowColor = '#00ffcc';
-          ctx.shadowBlur = 5;
-          ctx.fillText(phraseChar, x, y);
-        } else {
-          // Background spiral - faded to background
-          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
-          ctx.shadowBlur = 0;
-          ctx.fillText(char, x, y);
-        }
-      });
-      
-      // Draw fully spelled horizontal sentence
-      const sentenceWidth = phraseLength * 20;
-      const startX = centerX - sentenceWidth / 2;
-      const sentenceY = centerY;
-      
-      ctx.font = '20px monospace';
-      ctx.fillStyle = 'rgba(0,255,180,0.9)';
-      ctx.shadowColor = '#00ffcc';
-      ctx.shadowBlur = 8;
-      
-      for (let i = 0; i < phraseLength; i++) {
-        ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
-      }
-    }
+    // Force immediate static state rendering using the same draw function
+    draw();
     
     console.log('✅ Fast-forward completed');
   }
