@@ -70,31 +70,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Database seed endpoint (temporary)
-app.get('/api/seed-db', async (req, res) => {
-  try {
-    console.log('🌱 Manual database seed triggered...');
-    const { execSync } = await import('child_process');
-    
-    // Run the database fix first
-    execSync('npm run fix:db', { stdio: 'pipe' });
-    
-    // Then run the seed script
-    execSync('npm run db:seed', { stdio: 'pipe' });
-    
-    res.json({
-      success: true,
-      message: 'Database seeded successfully'
-    });
-  } catch (error) {
-    console.error('❌ Database seed failed:', error.message);
-    res.status(500).json({
-      success: false,
-      message: 'Database seed failed',
-      error: error.message
-    });
-  }
-});
+
 
 
 
