@@ -257,43 +257,9 @@ const LayeredInterface = () => {
       return;
     }
     
-    // Special handler for F1 in scene 1.2 (11x7 grid)
-    if (currentScene === 1 && currentSubscene === 2 && tileId === 'F1') {
-      console.log(`🎯 Special F1 handler in scene 1.2 - triggering zoom and transition to scenario 2.1`);
-      
-      // Perform zoom animation
-      if (cursorPos && matrixRef.current && matrixRef.current.performCursorZoom) {
-        await matrixRef.current.performCursorZoom({
-          centerX: cursorPos.x,
-          centerY: cursorPos.y,
-          duration: 1200
-        });
-      }
-      
-      // Transition to scenario 2.1
-      await transitionToScenario(2, 1);
-      return;
-    }
+
     
-    // Default zoom behavior for all scenes when no specific handler exists
-    if (!tileHandler && cursorPos) {
-      console.log(`🎯 Default zoom behavior for ${tileId}`);
-      
-      // Use appropriate canvas zoom functionality
-      const currentCanvasRef = scenarioData?.backgroundType === 'dungeon_vault' ? dungeonRef : matrixRef;
-      
-      if (currentCanvasRef.current && currentCanvasRef.current.performCursorZoom) {
-        await currentCanvasRef.current.performCursorZoom({
-          centerX: cursorPos.x,
-          centerY: cursorPos.y,
-          duration: 1200
-        });
-      } else {
-        // Fallback to simulated zoom
-        await performCursorZoom(cursorPos);
-      }
-      return;
-    }
+
     
     // Find tile handler
     const tileHandler = tileHandlers.find(t => t.id === tileId);
@@ -323,14 +289,7 @@ const LayeredInterface = () => {
           console.warn(`⚠️ Unknown handler type: ${tileHandler.handler}`);
       }
     } else {
-      console.log(`🎮 No handler found for ${tileId}, using default behavior`);
-      
-      // Default: zoom to tile
-      if (cursorPos) {
-        await performCursorZoom(cursorPos, () => {
-          console.log(`🎭 Post-zoom callback for ${tileId}`);
-        });
-      }
+      console.log(`🎮 No handler found for ${tileId}`);
     }
   };
   
@@ -449,7 +408,15 @@ const LayeredInterface = () => {
 
       {/* LAYER 2: GRID SYSTEM - Always invisible for backend communication */}
       {isGridReady && gridConfig && (
-        <div className="grid-layer" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}>
+        <div className="grid-layer" style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          zIndex: 2,
+          pointerEvents: (currentScene === 1 && currentSubscene === 2) ? 'none' : 'auto'
+        }}>
           <GridPlay
             gridConfig={gridConfig}
             sceneName={`Scene ${currentScene}.${currentSubscene}`}
