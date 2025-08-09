@@ -57,23 +57,17 @@ const MatrixSpiralCanvas = forwardRef(({
     const ctx = canvasElement.getContext('2d');
     const { width, height } = canvasElement;
     
-    // Get the actual display dimensions (accounting for device pixel ratio scaling)
-    const rect = canvasElement.getBoundingClientRect();
-    const displayWidth = rect.width;
-    const displayHeight = rect.height;
-    
-    // Clear with CSS pixel dimensions after scaling
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
-    ctx.clearRect(0, 0, displayWidth, displayHeight);
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
 
-    // Use display dimensions for centering (not the full pixel dimensions)
-    const centerX = displayWidth / 2;
-    const centerY = displayHeight / 2;
-    const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
+    // Use canvas dimensions for centering
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const maxRadius = Math.max(width, height) * 0.5;
     
     // Debug centering (only log occasionally to avoid spam)
     if (frameRef.current % 60 === 0) { // Log every 60 frames (about once per second)
-      console.log(`🎬 Drawing frame ${frameRef.current}: canvas ${width}x${height}, display ${displayWidth}x${displayHeight}, center (${centerX}, ${centerY}), maxRadius ${maxRadius}`);
+      console.log(`🎬 Drawing frame ${frameRef.current}: canvas ${width}x${height}, center (${centerX}, ${centerY}), maxRadius ${maxRadius}`);
     }
     const fillDuration = 900; // 15 seconds
     const totalDuration = 480; // 8 seconds total
@@ -365,19 +359,13 @@ const MatrixSpiralCanvas = forwardRef(({
       const ctx = canvas.getContext('2d');
       const { width, height } = canvas;
       
-      // Get the actual display dimensions
-      const rect = canvas.getBoundingClientRect();
-      const displayWidth = rect.width;
-      const displayHeight = rect.height;
-      
-      // Clear with CSS pixel dimensions
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
-      ctx.clearRect(0, 0, displayWidth, displayHeight);
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
       
       // Draw static final state immediately
-      const centerX = displayWidth / 2;
-      const centerY = displayHeight / 2;
-      const maxRadius = Math.max(displayWidth, displayHeight) * 0.5;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const maxRadius = Math.max(width, height) * 0.5;
       const totalDuration = 480;
       
       // Use cached static spiral or generate it
@@ -592,28 +580,18 @@ const MatrixSpiralCanvas = forwardRef(({
     if (!canvas) return;
     
     const resize = () => {
-      // Get the actual device pixel ratio for crisp rendering
-      const devicePixelRatio = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      
       // Set canvas size to match display size
-      canvas.width = rect.width * devicePixelRatio;
-      canvas.height = rect.height * devicePixelRatio;
-      
-      // Scale the context to match the device pixel ratio
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset any old transforms
-      ctx.scale(devicePixelRatio, devicePixelRatio);
-      ctx.clearRect(0, 0, rect.width, rect.height);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
       
       // Clear static spiral cache when canvas size changes
       staticSpiralRef.current = null;
       
-      console.log(`🎬 Canvas resized to: ${canvas.width}x${canvas.height} (device ratio: ${devicePixelRatio})`);
+      console.log(`🎬 Canvas resized to: ${canvas.width}x${canvas.height}`);
       console.log(`🎬 Canvas rect: ${rect.width}x${rect.height}, position: ${rect.left},${rect.top}`);
       console.log(`🎬 Window size: ${window.innerWidth}x${window.innerHeight}`);
       console.log(`🎬 Document size: ${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`);
-      console.log(`🎬 Effective drawing area: ${rect.width}x${rect.height} (after device pixel ratio scaling)`);
     };
     
     window.addEventListener('resize', resize);
