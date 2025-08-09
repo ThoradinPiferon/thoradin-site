@@ -234,15 +234,11 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.fillText(phrase[i], startX + (i * 20), sentenceY);
       }
       
-      // No animation loop for static state
-      return;
+      // Continue to next section for animation loop
     }
 
-    // Scene 1.1: Animated Matrix background
-    if (matrixState !== 'running') {
-      // Not running - don't animate
-      return;
-    }
+    // Scene 1.1: Animated Matrix background (only if running)
+    if (matrixState === 'running') {
 
     // Check if sentence reveal should start
     if (frameRef.current >= sentenceRevealDuration && !sentenceRevealActive.current) {
@@ -322,7 +318,7 @@ const MatrixSpiralCanvas = forwardRef(({
         ctx.fillText(char, x, y);
       }
     });
-
+  }
     // Draw horizontal sentence reveal
     if (sentenceRevealActive.current) {
       const sentenceProgress = (frameRef.current - sentenceRevealStart.current) / 180;
@@ -719,8 +715,6 @@ const MatrixSpiralCanvas = forwardRef(({
       console.log('✅ Spiral stopped and static state rendered');
     }
   }));
-
-
 
   return (
     <>
