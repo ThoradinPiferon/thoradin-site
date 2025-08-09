@@ -59,7 +59,7 @@ const MatrixSpiralCanvas = forwardRef(({
   function getResponsiveFontSize(width, height, distanceFromCenter) {
     const screenSize = Math.min(width, height);
     const baseFontSize = Math.max(8, Math.min(24, screenSize * 0.02));
-    return Math.max(6, baseFontSize * (0.6 + distanceFromCenter * 0.4)); // Reduced scaling factor from 0.8 to 0.4
+    return Math.max(6, baseFontSize * (0.6 + distanceFromCenter * 0.24)); // Reduced by 40% from 0.4 to 0.24
   }
 
   function generateSpiralPoints(total, centerX, centerY, frame, maxRadius, fillDur) {
@@ -141,7 +141,7 @@ const MatrixSpiralCanvas = forwardRef(({
           ctx.shadowBlur = 5;
           ctx.fillText(phraseChar, x, y);
         } else {
-          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.2})`;
+          ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.1})`; // Reduced from 0.2 to 0.1 for more dimmed effect
           ctx.shadowBlur = 0;
           ctx.fillText(char, x, y);
         }
@@ -210,11 +210,11 @@ const MatrixSpiralCanvas = forwardRef(({
         } else {
           if (sentenceRevealActive.current) {
             const fadeProgress = (frameRef.current - sentenceRevealStart.current) / 180;
-            const fadeOpacity = Math.max(0.05, baseOpacity * 0.2 * (1 - fadeProgress * 0.5));
+            const fadeOpacity = Math.max(0.05, baseOpacity * 0.1 * (1 - fadeProgress * 0.5)); // Reduced from 0.2 to 0.1
             ctx.fillStyle = `rgba(0,255,0,${fadeOpacity})`;
             ctx.shadowBlur = 0;
           } else {
-            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.8})`;
+            ctx.fillStyle = `rgba(0,255,0,${baseOpacity * 0.4})`; // Reduced from 0.8 to 0.4 for more dimmed effect
             ctx.shadowColor = '#00ff00';
             ctx.shadowBlur = 1;
           }
