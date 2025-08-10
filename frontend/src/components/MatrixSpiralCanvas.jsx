@@ -30,22 +30,23 @@ const MatrixSpiralCanvas = forwardRef(({
   const animationComplete = useRef(false);
   const animationIdRef = useRef(null);
   const drawRef = useRef(null);
-
+ 
   const staticSpiralRef = useRef(null);
   const lastMatrixStateRef = useRef(null);
+  const handoffDoneRef = useRef(false);
+  const staticLoopActiveRef = useRef(false);
+  const zoomRef = useRef({
+    isZooming: false,
+    startTime: 0,
+    target: { x: 0, y: 0 },
+    duration: 2500,
+    isCompleted: false
+  });
 
   const sentenceRevealStart = useRef(0);
   const sentenceRevealActive = useRef(false);
 
   // Now stores target click point
-  const zoomRef = useRef({
-    isZooming: false,
-    startTime: 0,
-    duration: 2500, // Increased to 2.5 seconds for longer zoom
-    target: { x: 0, y: 0 },
-    isCompleted: false // Track if zoom has completed
-  });
-
   const backgroundRef = useRef(null);
 
   // Constants
@@ -125,24 +126,25 @@ const MatrixSpiralCanvas = forwardRef(({
         if (progress >= 1) {
           console.log('🎬 Zoom animation completed - progress:', progress);
           console.log('🎬 Zoom state before completion:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
-          
+          console.log('🎬 Handoff guard status:', { handoffDone: handoffDoneRef.current });
           zoomRef.current.isZooming = false;
           zoomRef.current.isCompleted = true;
-          
           console.log('🎬 Zoom state after completion:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
-          
-          // Maintain zoom state and transition smoothly
-          setTimeout(() => {
-            console.log('🎬 Executing transition after zoom completion');
-            if (transitionToScenario) {
-              console.log('🎬 Calling transitionToScenario(2, 1)');
-              // Keep zoom state during transition
-              transitionToScenario(2, 1);
-            } else if (onAnimationComplete) {
-              console.log('🎬 Calling onAnimationComplete (fallback)');
-              onAnimationComplete();
-            }
-          }, 100); // Small delay to ensure zoom state is maintained
+          if (!handoffDoneRef.current) {
+            handoffDoneRef.current = true;
+            console.log('🎬 Handoff guard set - executing single transition');
+            setTimeout(() => {
+              if (transitionToScenario) {
+                console.log('🎬 Calling transitionToScenario(2, 1)');
+                transitionToScenario(2, 1);
+              } else if (onAnimationComplete) {
+                console.log('🎬 Calling onAnimationComplete (fallback)');
+                onAnimationComplete();
+              }
+            }, 100);
+          } else {
+            console.log('🎬 Handoff already done - skipping transition');
+          }
         }
       } else if (zoomRef.current.isCompleted) {
         // Maintain final zoom state
@@ -301,12 +303,13 @@ const MatrixSpiralCanvas = forwardRef(({
 
   function drawStaticState() {
     if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+    if (staticLoopActiveRef.current) return;
     draw();
     const animate = () => {
       draw();
-      // Always continue animation loop for zoom responsiveness
       animationIdRef.current = requestAnimationFrame(animate);
     };
+    staticLoopActiveRef.current = true;
     animationIdRef.current = requestAnimationFrame(animate);
   }
 
@@ -319,6 +322,18 @@ const MatrixSpiralCanvas = forwardRef(({
   useEffect(() => {
     if (lastMatrixStateRef.current !== matrixState) {
       lastMatrixStateRef.current = matrixState;
+      if (matrixState !== 'static') {
+        zoomRef.current.isZooming = false;
+        zoomRef.current.isCompleted = false;
+        handoffDoneRef.current = false;
+        staticLoopActiveRef.current = false;
+        console.log('🎬 Left static state - reset zoom guards');
+      } else {
+        handoffDoneRef.current = false;
+        staticLoopActiveRef.current = false;
+        console.log('🎬 Entered static state - reset handoff guard');
+      }
+      console.log('🎬 Matrix state changed to:', matrixState);
     }
   }, [matrixState]);
 
@@ -327,19 +342,20 @@ const MatrixSpiralCanvas = forwardRef(({
       console.log('🎬 Matrix clicked - triggering fast-forward');
       fastForwardToEnd();
       if (onAnimationComplete) onAnimationComplete();
-    } else if (matrixState === 'static' && config?.type === 'matrix_static') {
+    } else if (matrixState === 'static') {
+      if (zoomRef.current.isZooming || zoomRef.current.isCompleted || handoffDoneRef.current) {
+        console.log('🎬 Matrix click blocked - zoom in progress or handoff done');
+        return;
+      }
       console.log('🎬 Matrix clicked - triggering zoom effect');
       console.log('🎬 Zoom state before:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
-      
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const clickX = event.clientX - rect.left;
       const clickY = event.clientY - rect.top;
-      
       zoomRef.current.isZooming = true;
       zoomRef.current.startTime = Date.now();
       zoomRef.current.target = { x: clickX, y: clickY };
-      
       console.log('🎬 Zoom triggered with target:', { x: clickX, y: clickY });
       console.log('🎬 Zoom state after:', { isZooming: zoomRef.current.isZooming, isCompleted: zoomRef.current.isCompleted });
     }
@@ -364,6 +380,7 @@ const MatrixSpiralCanvas = forwardRef(({
     return () => {
       window.removeEventListener('resize', resize);
       if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+      staticLoopActiveRef.current = false;
     };
   }, []);
 
@@ -383,6 +400,11 @@ const MatrixSpiralCanvas = forwardRef(({
         drawStaticState();
       }
     }
+    
+    return () => {
+      if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+      staticLoopActiveRef.current = false;
+    };
   }, [config, backgroundPath, matrixState]);
 
   useImperativeHandle(ref, () => ({
@@ -390,6 +412,17 @@ const MatrixSpiralCanvas = forwardRef(({
     fastForwardToEnd,
     drawStaticState
   }));
+
+  // Cleanup effect for component unmount
+  useEffect(() => {
+    return () => {
+      if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current);
+      staticLoopActiveRef.current = false;
+      handoffDoneRef.current = false;
+      zoomRef.current.isZooming = false;
+      zoomRef.current.isCompleted = false;
+    };
+  }, []);
 
   return (
     <>
