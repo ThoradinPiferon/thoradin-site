@@ -1,8 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from './MatrixSpiralCanvas';
 import DungeonVaultCanvas from './DungeonVaultCanvas';
-import GridPlay from './GridPlay';
+import TreeOfWisdomCanvas from './TreeOfWisdomCanvas';
 import ThoradinChat from './ThoradinChat';
+import ThresholdRitual from './ThresholdRitual';
+import { getGridId } from '../utils/gridHelpers';
 
 /**
  * 🏛️ CLEAN LAYERED ARCHITECTURE
@@ -23,6 +26,9 @@ const LayeredInterface = () => {
   const [currentScene, setCurrentScene] = useState(1);
   const [currentSubscene, setCurrentSubscene] = useState(1);
   const [scenarioData, setScenarioData] = useState(null);
+  const [showThresholdRitual, setShowThresholdRitual] = useState(false);
+  const [playerChoice, setPlayerChoice] = useState(null);
+  const [isRitualComplete, setIsRitualComplete] = useState(false);
   const [isLoadingScenario, setIsLoadingScenario] = useState(true); // Start loading immediately
   const [sessionId, setSessionId] = useState(null);
   const [animationConfig, setAnimationConfig] = useState(null);
@@ -35,6 +41,7 @@ const LayeredInterface = () => {
   const [matrixState, setMatrixState] = useState('running'); // Start running so animation triggers when config loads
   const matrixRef = useRef(null);
   const dungeonRef = useRef(null);
+  const treeRef = useRef(null);
   
   // ============================================================================
   // LAYER 2: GRID SYSTEM - Interactive tiles
@@ -480,22 +487,36 @@ const LayeredInterface = () => {
             );
           }
           
-          return animationConfig?.type === 'dungeon_vault' ? (
-            <DungeonVaultCanvas 
-              ref={dungeonRef}
-              onAnimationComplete={handleAnimationComplete}
-              backgroundPath={backgroundPath}
-            />
-          ) : (
-            <MatrixSpiralCanvas 
-              ref={matrixRef}
-              matrixState={matrixState}
-              animationConfig={animationConfig}
-              backgroundPath={backgroundPath}
-              onAnimationComplete={handleAnimationComplete}
-              transitionToScenario={transitionToScenario}
-            />
-          );
+          // Choose canvas based on animation type
+          if (animationConfig?.type === 'tree_of_wisdom') {
+            return (
+              <TreeOfWisdomCanvas 
+                ref={treeRef}
+                onAnimationComplete={handleAnimationComplete}
+                backgroundPath={backgroundPath}
+                animationConfig={animationConfig}
+              />
+            );
+          } else if (animationConfig?.type === 'dungeon_vault') {
+            return (
+              <DungeonVaultCanvas 
+                ref={dungeonRef}
+                onAnimationComplete={handleAnimationComplete}
+                backgroundPath={backgroundPath}
+              />
+            );
+          } else {
+            return (
+              <MatrixSpiralCanvas 
+                ref={matrixRef}
+                matrixState={matrixState}
+                animationConfig={animationConfig}
+                backgroundPath={backgroundPath}
+                onAnimationComplete={handleAnimationComplete}
+                transitionToScenario={transitionToScenario}
+              />
+            );
+          }
         })()}
       </div>
 
