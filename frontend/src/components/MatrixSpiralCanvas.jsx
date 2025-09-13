@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react
 import { getGridId } from '../utils/gridHelpers';
 
 const MatrixSpiralCanvas = forwardRef(({ 
-  phrase = "ENTER THE VAULT: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", 
+  phrase = "CLICK TO ENTER: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", 
   onGridZoom, 
   onIntroComplete,
   matrixState = 'running',
