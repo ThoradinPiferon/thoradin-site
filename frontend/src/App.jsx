@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import LayeredInterface from './components/LayeredInterface';
+import LayeredInterface from './components/shared/LayeredInterface';
 import './App.css';
 
 function App() {

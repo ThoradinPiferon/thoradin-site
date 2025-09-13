@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
-import MatrixSpiralCanvas from './MatrixSpiralCanvas';
-import DungeonVaultCanvas from './DungeonVaultCanvas';
-import TreeOfWisdomCanvas from './TreeOfWisdomCanvas';
+import MatrixSpiralCanvas from '../scene1/MatrixSpiralCanvas';
+import DungeonVaultCanvas from '../scene1/DungeonVaultCanvas';
+import TreeOfWisdomCanvas from '../scene2/TreeOfWisdomCanvas';
 import ThoradinChat from './ThoradinChat';
 import ThresholdRitual from './ThresholdRitual';
 import { getGridId } from '../utils/gridHelpers';
