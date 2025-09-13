@@ -5,9 +5,8 @@ This folder is organized to align with the backend scenario system, making it ea
 ## Folder Structure
 
 ### 📁 scene1/
-**Scene 1: Matrix Awakening & Vault**
-- `MatrixSpiralCanvas.jsx` - The iconic matrix spiral animation (Scene 1.1)
-- `DungeonVaultCanvas.jsx` - Underground vault scene (Scene 1.3)
+**Scene 1: Matrix Awakening**
+- `MatrixSpiralCanvas.jsx` - The iconic matrix spiral animation (Scene 1.1 & 1.2)
 
 ### 📁 scene2/
 **Scene 2: Tree of Wisdom**
@@ -29,7 +28,7 @@ This structure directly corresponds to the backend scenarios:
 |-------|----------|-------|-----------|
 | 1.1 | Matrix Awakening | Thoradin's Web of Consciousness | MatrixSpiralCanvas |
 | 1.2 | Fast-Forward Matrix Complete | static | MatrixSpiralCanvas (static) |
-| 1.3 | Thoradin's Vault | dungeon_vault | DungeonVaultCanvas |
+| 1.3 | Thoradin's Vault | dungeon_vault | MatrixSpiralCanvas (fallback) |
 | 2.1 | Tree of Wisdom Intro | tree_of_wisdom | TreeOfWisdomCanvas |
 
 ## Adding New Scenes
@@ -43,6 +42,6 @@ When adding new scenes:
 ## Animation Types
 
 - `matrix_spiral` → MatrixSpiralCanvas
-- `dungeon_vault` → DungeonVaultCanvas  
+- `dungeon_vault` → MatrixSpiralCanvas (fallback)
 - `tree_of_wisdom` → TreeOfWisdomCanvas
 - `static` → Static background or MatrixSpiralCanvas in static mode

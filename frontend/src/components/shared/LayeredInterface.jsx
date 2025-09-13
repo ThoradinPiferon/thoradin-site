@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GridPlay from './GridPlay';
 import MatrixSpiralCanvas from '../scene1/MatrixSpiralCanvas';
-import DungeonVaultCanvas from '../scene1/DungeonVaultCanvas';
 import TreeOfWisdomCanvas from '../scene2/TreeOfWisdomCanvas';
 import ThoradinChat from './ThoradinChat';
 import ThresholdRitual from './ThresholdRitual';
@@ -40,7 +39,6 @@ const LayeredInterface = () => {
   
   const [matrixState, setMatrixState] = useState('running'); // Start running so animation triggers when config loads
   const matrixRef = useRef(null);
-  const dungeonRef = useRef(null);
   const treeRef = useRef(null);
   
   // ============================================================================
@@ -498,11 +496,16 @@ const LayeredInterface = () => {
               />
             );
           } else if (animationConfig?.type === 'dungeon_vault') {
+            // Fallback to MatrixSpiralCanvas for dungeon_vault (Scene 1.3 not implemented)
+            console.log('⚠️ DungeonVaultCanvas not available, using MatrixSpiralCanvas fallback');
             return (
-              <DungeonVaultCanvas 
-                ref={dungeonRef}
-                onAnimationComplete={handleAnimationComplete}
+              <MatrixSpiralCanvas 
+                ref={matrixRef}
+                matrixState={matrixState}
+                animationConfig={animationConfig}
                 backgroundPath={backgroundPath}
+                onAnimationComplete={handleAnimationComplete}
+                transitionToScenario={transitionToScenario}
               />
             );
           } else {
