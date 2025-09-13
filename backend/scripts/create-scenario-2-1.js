@@ -9,8 +9,8 @@ async function createScenario21() {
     const scenarioData = {
       sceneId: 2,
       subsceneId: 1,
-      title: "Thoradin's Vault",
-      description: "Deep underground, roots of an ancient tree hang from the ceiling. A massive vault door stands closed, with Thoradin waiting before it.",
+      title: "The Mystery of the Tree of Wisdom (Intro)",
+      description: "A rainy, dark forest night. At the center stands the Tree of Wisdom, massive, with gnarled roots and faint glowing spirals etched into its bark. A cloaked gardener stands on the right side, holding a lantern that casts a warm glow and a shovel planted in the wet ground.",
       gridConfig: { 
         rows: 7, 
         cols: 11,
@@ -20,30 +20,35 @@ async function createScenario21() {
         invisibleMode: true,
         matrixAnimationMode: false,
         triggerTile: null,
-        backgroundType: "dungeon_vault"
+        backgroundType: "tree_of_wisdom"
       },
       animationConfig: {
-        type: "dungeon_vault",
+        type: "tree_of_wisdom",
         speed: "normal",
         colors: {
-          primary: "#1a0f0f",
-          secondary: "#2a1a1a",
-          background: "#000000"
+          primary: "#2d5016",
+          secondary: "#4a7c59",
+          background: "#0a1a0a"
         },
-        text: "THORADIN'S VAULT: ENTER THE UNDERGROUND REALM",
+        text: "THE MYSTERY OF THE TREE OF WISDOM: RAINY FOREST NIGHT",
         duration: 0,
         effects: { 
-          glow: false, 
+          glow: true, 
           fade: false, 
           spiral: false,
-          dungeonTheme: true
+          rainEffect: true,
+          thunderEffect: true,
+          lanternGlow: true
         },
         interactiveParams: { 
           zoomSpeed: 1.2, 
           cursorSensitivity: 0.8, 
-          animationPause: false 
+          animationPause: false,
+          rainIntensity: 0.7,
+          thunderFrequency: 0.3
         }
-      }
+      },
+      backgroundPath: "tree-wisdom-rainy-night.jpg"
     };
     
     await prisma.scenario.upsert({
