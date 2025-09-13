@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import SceneViewer from './SceneViewer';
-import { getGridId } from '../utils/gridHelpers';
+import SceneViewer from '../SceneViewer';
+import { getGridId } from '../../utils/gridHelpers';
 import { 
   generateTileIds, 
   generateGridActions, 

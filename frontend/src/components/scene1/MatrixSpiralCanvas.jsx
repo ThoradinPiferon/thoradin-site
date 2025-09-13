@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
-import { getGridId } from '../utils/gridHelpers';
+import { getGridId } from '../../utils/gridHelpers';
 
 const MatrixSpiralCanvas = forwardRef(({ 
   phrase = "CLICK TO ENTER: WELCOME TO THORADIN'S WEB OF CONSCIOUSNESS", 

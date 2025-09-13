@@ -5,7 +5,7 @@ import DungeonVaultCanvas from '../scene1/DungeonVaultCanvas';
 import TreeOfWisdomCanvas from '../scene2/TreeOfWisdomCanvas';
 import ThoradinChat from './ThoradinChat';
 import ThresholdRitual from './ThresholdRitual';
-import { getGridId } from '../utils/gridHelpers';
+import { getGridId } from '../../utils/gridHelpers';
 
 /**
  * 🏛️ CLEAN LAYERED ARCHITECTURE
