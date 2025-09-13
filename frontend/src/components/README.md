@@ -28,7 +28,6 @@ This structure directly corresponds to the backend scenarios:
 |-------|----------|-------|-----------|
 | 1.1 | Matrix Awakening | Thoradin's Web of Consciousness | MatrixSpiralCanvas |
 | 1.2 | Fast-Forward Matrix Complete | static | MatrixSpiralCanvas (static) |
-| 1.3 | Thoradin's Vault | dungeon_vault | MatrixSpiralCanvas (fallback) |
 | 2.1 | Tree of Wisdom Intro | tree_of_wisdom | TreeOfWisdomCanvas |
 
 ## Adding New Scenes
@@ -42,6 +41,11 @@ When adding new scenes:
 ## Animation Types
 
 - `matrix_spiral` → MatrixSpiralCanvas
-- `dungeon_vault` → MatrixSpiralCanvas (fallback)
 - `tree_of_wisdom` → TreeOfWisdomCanvas
 - `static` → Static background or MatrixSpiralCanvas in static mode
+
+## Scenario Flow
+
+1. **Scene 1.1** → Matrix Spiral Animation → Click A1 → **Scene 1.2**
+2. **Scene 1.2** → Static Matrix → Click F1 → **Scene 2.1** (Tree of Wisdom)
+3. **Scene 2.1** → Tree of Wisdom Animation (End of current flow)

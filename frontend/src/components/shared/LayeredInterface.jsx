@@ -178,9 +178,22 @@ const LayeredInterface = () => {
     console.log('🎬 Animation completed - transitioning to next scenario');
     
     try {
-      // Transition to scenario 1.2
-      const nextSceneId = 1;
-      const nextSubsceneId = 2;
+      // Determine next scenario based on current scene
+      let nextSceneId, nextSubsceneId;
+      
+      if (currentScene === 1 && currentSubscene === 1) {
+        // From Scene 1.1, go to Scene 1.2
+        nextSceneId = 1;
+        nextSubsceneId = 2;
+      } else if (currentScene === 1 && currentSubscene === 2) {
+        // From Scene 1.2, go to Scene 2.1 (Tree of Wisdom)
+        nextSceneId = 2;
+        nextSubsceneId = 1;
+      } else {
+        // Default fallback - stay on current scenario
+        console.log('🎬 No transition defined for current scenario, staying put');
+        return;
+      }
       
       console.log(`🎭 Transitioning to scenario ${nextSceneId}.${nextSubsceneId}`);
       
@@ -495,20 +508,8 @@ const LayeredInterface = () => {
                 animationConfig={animationConfig}
               />
             );
-          } else if (animationConfig?.type === 'dungeon_vault') {
-            // Fallback to MatrixSpiralCanvas for dungeon_vault (Scene 1.3 not implemented)
-            console.log('⚠️ DungeonVaultCanvas not available, using MatrixSpiralCanvas fallback');
-            return (
-              <MatrixSpiralCanvas 
-                ref={matrixRef}
-                matrixState={matrixState}
-                animationConfig={animationConfig}
-                backgroundPath={backgroundPath}
-                onAnimationComplete={handleAnimationComplete}
-                transitionToScenario={transitionToScenario}
-              />
-            );
           } else {
+            // Default to MatrixSpiralCanvas for all other animation types
             return (
               <MatrixSpiralCanvas 
                 ref={matrixRef}
